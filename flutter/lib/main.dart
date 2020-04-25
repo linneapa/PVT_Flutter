@@ -1,111 +1,219 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+void main() {
+  runApp(MaterialApp(
+    home: MyApp(),
+  ));
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class MyApp extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _State createState() => _State();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _State extends State<MyApp> {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  bool keepMeLoggedIn = false;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+        body: Padding(
+            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 30),
+            child: ListView(
+              children: <Widget>[
+                Container(
+                  alignment: Alignment(0, -0.7),
+                  padding: EdgeInsets.only(top: 40.0, bottom: 15),
+                  child: Image.asset(
+                    "assets/logo.png",
+                    width: 95,
+                    height: 95,
+//        fit: BoxFit.cover,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(15),
+                  child: TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Email',
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(15),
+                  child: TextField(
+                    obscureText: true,
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Password',
+                    ),
+                  ),
+                ),
+                FlatButton(
+                  onPressed: () {
+                    //forgot password screen
+                  },
+                  textColor: Colors.greenAccent,
+                  child: Text('Forgot Password'),
+                ),
+                CheckboxListTile(
+                  title: Text("Keep me signed in."),
+                  value: keepMeLoggedIn,
+                  onChanged: (newValue) {
+                    print("Checkin");
+                  },
+                  controlAffinity:
+                      ListTileControlAffinity.leading, //  <-- leading Checkbox
+                ),
+                Container(
+                    padding: EdgeInsets.only(left: 90, right: 90),
+                    child: RaisedButton(
+                      textColor: Colors.black,
+                      color: Colors.greenAccent,
+                      child: Text('Login'),
+                      onPressed: () {
+                        print(nameController.text);
+                        print(passwordController.text);
+                      },
+                    )),
+                Container(
+                    child: Row(
+                  children: <Widget>[
+                    Text('Does not have account?'),
+                    FlatButton(
+                      textColor: Colors.greenAccent,
+                      child: Text(
+                        'Sign up',
+                        style: TextStyle(
+                          fontSize: 15,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => signUp()));
+                      },
+                    )
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                )),
+                Container(
+                  height: 70,
+                  padding: EdgeInsets.only(top: 0),
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: 10),
+                      FacebookSignInButton(onPressed: () {
+                        // ADD AUTH LOGIC HERE
+                      }),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 50,
+                  padding: EdgeInsets.only(top: 0),
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: 2),
+                      GoogleSignInButton(
+                        onPressed: () {
+                          // ADD AUTH LOGIC HERE
+                        },
+                        darkMode: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )));
+  }
+}
+
+class signUp extends StatelessWidget {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController emailConfirmationController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController passwordConfirmationController =
+      TextEditingController();
+
+  bool AgreeTermsAndConditions = false;
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text('Sign Up'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: Padding(
+            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 50),
+            child: ListView(children: <Widget>[
+              Container(
+                padding: EdgeInsets.all(15),
+                child: TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'E-mail',
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(15),
+                child: TextField(
+                  controller: emailConfirmationController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Confirm E-mail',
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(15),
+                child: TextField(
+                  controller: passwordController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Password',
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(15),
+                child: TextField(
+                  controller: passwordConfirmationController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Confirm password',
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(10),
+                child: CheckboxListTile(
+                  title: Text("I agree to the Term & Conditions."),
+                  value: AgreeTermsAndConditions,
+                  onChanged: (newValue) {
+                    print("Checkin");
+                  },
+                  controlAffinity:
+                      ListTileControlAffinity.leading, //  <-- leading Checkbox
+                ),
+              ),
+              Container(
+                  padding: EdgeInsets.only(left: 90, right: 90),
+                  child: RaisedButton(
+                    textColor: Colors.black,
+                    color: Colors.greenAccent,
+                    child: Text('Sign up'),
+                    onPressed: () {},
+                  )),
+            ])));
   }
 }
