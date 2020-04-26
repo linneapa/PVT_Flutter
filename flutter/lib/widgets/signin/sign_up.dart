@@ -11,7 +11,7 @@ class _SignUpState extends State<SignUp> {
     return Container(
         child: Row(
       children: <Widget>[
-        Text('Does not have account?'),
+        Text('Not registered?'),
         FlatButton(
           textColor: Colors.greenAccent,
           child: Text(
