@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'favorites.dart';
+import 'close2me.dart';
+import 'search.dart';
+import 'settings.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
@@ -9,18 +13,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  Future navigateToSettingsPage(context) async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage()));
+  }
+
+  Future navigateToFavouritesPage(context) async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new FavouritesPage()));
+  }
+
+  Future navigateToClose2MePage(context) async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new Close2MePage()));
+  }
+
+  Future navigateToSearchPage(context) async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new SearchPage()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-      title: Text("Parking App", style: TextStyle(color: Colors.white)),
+      title: Text('Parking App', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.greenAccent,
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.settings, color: Colors.white, size: 40),
           tooltip: "Settings",
           onPressed: () {
-            openPage(context);
+            navigateToSettingsPage(context);
           },
         )
       ],
@@ -33,7 +54,9 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 30),
                 RaisedButton(
                     padding: const EdgeInsets.all(16),
-                    onPressed: () => {},
+                    onPressed: () => {
+                      navigateToFavouritesPage(context),
+                    },
                     color: Colors.greenAccent,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(5)
@@ -54,7 +77,9 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 20),
                 RaisedButton(
                     padding: const EdgeInsets.all(16),
-                    onPressed: () => {},
+                    onPressed: () => {
+                      navigateToClose2MePage(context)
+                    },
                     color: Colors.greenAccent,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(7)
@@ -76,7 +101,9 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 20),
                 RaisedButton(
                     padding: const EdgeInsets.all(16),
-                    onPressed: () => {},
+                    onPressed: () => {
+                      navigateToSearchPage(context)
+                    },
                     color: Colors.greenAccent,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(7)
@@ -101,17 +128,3 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-void openPage(BuildContext context) {
-  Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings Page'),
-      ),
-      body: Center(
-        child: Column(
-          children: <Widget>[Text("NOTHING HERE!")],
-        ),
-      ),
-    );
-  }));
-}
