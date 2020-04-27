@@ -14,6 +14,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  final buttonColor = Colors.greenAccent; // set color for all buttons here
+  final iconColor = Colors.white; // set color for all icons here
+
   Future navigateToSettingsPage(context) async {
     Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage()));
   }
@@ -35,10 +38,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
         appBar: AppBar(
       title: Text('Parking App', style: TextStyle(color: Colors.white)),
-      backgroundColor: Colors.greenAccent,
+      backgroundColor: buttonColor,
       actions: <Widget>[
         IconButton(
-          icon: Icon(Icons.settings, color: Colors.white, size: 40),
+          icon: Icon(Icons.settings, color: iconColor, size: 40),
           tooltip: "Settings",
           onPressed: () {
             navigateToSettingsPage(context);
@@ -57,13 +60,13 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () => {
                       navigateToFavouritesPage(context),
                     },
-                    color: Colors.greenAccent,
+                    color: buttonColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(5)
                     ),
                     child: Row(
                       children: <Widget>[
-                        Icon(Icons.favorite, size: 45, color: Colors.white),
+                        Icon(Icons.favorite, size: 45, color: iconColor),
                         SizedBox(width: 5),
                         Text(
                             "Favourites",
@@ -80,14 +83,14 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () => {
                       navigateToClose2MePage(context)
                     },
-                    color: Colors.greenAccent,
+                    color: buttonColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(7)
                     ),
                     child: Row(
                       children: <Widget>[
                         Icon(
-                            Icons.person_pin_circle, size: 45, color: Colors.white),
+                            Icons.person_pin_circle, size: 45, color: iconColor),
                         SizedBox(width: 5),
                         Text(
                             "Close to me",
@@ -104,13 +107,13 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () => {
                       navigateToSearchPage(context)
                     },
-                    color: Colors.greenAccent,
+                    color: buttonColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: new BorderRadius.circular(7)
                     ),
                     child: Row(
                       children: <Widget>[
-                        Icon(Icons.search, size: 45, color: Colors.white),
+                        Icon(Icons.search, size: 45, color: iconColor),
                         SizedBox(width: 5),
                         Text(
                             "Search",

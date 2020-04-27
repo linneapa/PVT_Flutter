@@ -9,19 +9,15 @@ class SearchPage extends StatefulWidget {
   var currentSelectedProximity = 'Very Close';
   var currentSelectedPriceRange = '0 - 50 kr';
 
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold(resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text("Search", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.greenAccent,
         actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.white, size: 40),
-            tooltip: "Settings",
-            onPressed: () {
-            },
-          )
         ],
       ),
       body: Container(
@@ -49,7 +45,13 @@ class SearchPage extends StatefulWidget {
             SizedBox(height: 20),
 
             Text("Address:"),
-            TextField(),
+            TextField(
+              decoration: new InputDecoration(
+                border: new OutlineInputBorder(
+                ),
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
 
             SizedBox(height: 20),
 
@@ -88,6 +90,47 @@ class SearchPage extends StatefulWidget {
                 });
               },
               value: currentSelectedPriceRange,
+            ),
+
+            SizedBox(height: 15),
+
+            Flexible(
+              child: Row(
+                children: <Widget>[
+
+                  SizedBox(width: 40),
+
+                  SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: RaisedButton(
+                        padding: const EdgeInsets.all(16),
+                        onPressed: () => {
+                          //toggleHandicap(context)
+                        },
+                        color: Colors.grey,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(7)
+                        ),
+                        child: Icon(Icons.accessible, color: Colors.black, size: 25),
+                      )
+                  ),
+
+                  SizedBox(width: 15),
+
+                  RaisedButton(
+                      padding: const EdgeInsets.all(16),
+                      onPressed: () => {
+                        //toggleHandicap(context)
+                      },
+                      color: Colors.greenAccent,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(7)
+                      ),
+                      child: Text("Find a parking!")
+                  ),
+                ],
+              )
             ),
           ],
         ),
