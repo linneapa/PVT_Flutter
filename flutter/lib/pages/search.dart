@@ -8,8 +8,7 @@ class SearchPage extends StatefulWidget {
   var currentSelectedVehicle = 'Car';
   var currentSelectedProximity = 'Very Close';
   var currentSelectedPriceRange = '0 - 50 kr';
-
-
+  bool handicapToggled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +102,10 @@ class SearchPage extends StatefulWidget {
                   SizedBox(
                       width: 50,
                       height: 50,
-                      child: RaisedButton(
+                      child: RaisedButton(// Handicap toggle button
                         padding: const EdgeInsets.all(16),
-                        onPressed: () => {
-                          //toggleHandicap(context)
-                        },
-                        color: Colors.grey,
+                        onPressed: () => setState(() => handicapToggled = !handicapToggled),
+                        color: handicapToggled ? Colors.lightBlueAccent : Colors.grey,
                         shape: RoundedRectangleBorder(
                             borderRadius: new BorderRadius.circular(7)
                         ),
@@ -118,11 +115,9 @@ class SearchPage extends StatefulWidget {
 
                   SizedBox(width: 15),
 
-                  RaisedButton(
+                  RaisedButton( // Find a parking button
                       padding: const EdgeInsets.all(16),
-                      onPressed: () => {
-                        //toggleHandicap(context)
-                      },
+                      onPressed: () => {},
                       color: Colors.greenAccent,
                       shape: RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(7)
