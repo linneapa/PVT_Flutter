@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
@@ -27,12 +28,49 @@ class SearchPage extends StatefulWidget {
             SizedBox(height: 10),
             Text("Vehicle:"),
             new DropdownButton<String>(
-              items: <String>['Car', 'Motorcycle', 'Truck', 'Bike'].map((String value) {
-                return new DropdownMenuItem<String>(
-                  value: value,
-                  child: new Text(value),
-                );
-              }).toList(),
+              items: [
+                DropdownMenuItem(
+                  value: "Car",
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Icon(Icons.directions_car),
+                      SizedBox(width: 10),
+                      Text(
+                        "Car",
+                      ),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: "Motorcycle",
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Icon(Icons.motorcycle),
+                      SizedBox(width: 10),
+                      Text(
+                        "Motorcycle",
+                      ),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: "2",
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Icon(MdiIcons.truck),
+                      SizedBox(width: 10),
+                      Text(
+                        "Truck",
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+
               onChanged: (String newSelectedValue) {
                 setState(() {
                   this.currentSelectedVehicle = newSelectedValue;
