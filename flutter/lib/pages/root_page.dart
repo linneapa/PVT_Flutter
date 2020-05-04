@@ -1,8 +1,10 @@
 import 'package:ezsgame/firebase/authentication.dart';
+import 'package:ezsgame/pages/close2me.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/pages/login_sign_up.dart';
 
 import 'home_page.dart';
+import 'close2me.dart';
 
 enum AuthStatus {
   NOT_DETERMINED,
@@ -78,7 +80,7 @@ class _RootPageState extends State<RootPage> {
         break;
       case AuthStatus.LOGGED_IN:
         if (_userId.length > 0 && _userId != null) {
-          return new HomePage(
+          return new Close2MePage(
             userId: _userId,
             auth: widget.auth,
             logoutCallback: logoutCallback,
