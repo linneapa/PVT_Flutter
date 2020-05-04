@@ -24,6 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_auth_buttons: ^0.8.0
+  firebase_auth: ^0.14.0+5
+  firebase_database: ^3.0.7
 
   google_maps_flutter: ^0.5.26+4
   location: ^3.0.0
