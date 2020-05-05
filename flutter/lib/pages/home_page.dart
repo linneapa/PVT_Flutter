@@ -24,7 +24,10 @@ class _HomePageState extends State<HomePage> {
   final iconColor = Colors.white; // set color for all icons here
 
   Future navigateToSettingsPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+    )));
   }
 
   Future navigateToFavouritesPage(context) async {

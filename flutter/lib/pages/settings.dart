@@ -22,6 +22,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await widget.auth.signOut();
       widget.logoutCallback();
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       print(e);
     }
