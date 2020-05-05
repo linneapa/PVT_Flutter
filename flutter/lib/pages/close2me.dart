@@ -20,7 +20,11 @@ class Close2MePage extends StatefulWidget{
 class _Close2MePageState extends State<Close2MePage> {
 
   Future navigateToSettingsPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new SettingsPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+    )));
+
   }
 
   Future navigateToFavoritesPage(context) async {
