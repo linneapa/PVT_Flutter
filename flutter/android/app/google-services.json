@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1083716032757",
+    "firebase_url": "https://pvt-parking.firebaseio.com",
+    "project_id": "pvt-parking",
+    "storage_bucket": "pvt-parking.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083716032757:android:7d9df10c7f943183f68dbc",
+        "android_client_info": {
+          "package_name": "com.example.pvt_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1083716032757-cgj7fr5fq5fct0cet9n1hmfoa5b2rbdt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-zfxRxIjRp3bOjC4CkAj-w_ac42ifS8Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1083716032757-cgj7fr5fq5fct0cet9n1hmfoa5b2rbdt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
