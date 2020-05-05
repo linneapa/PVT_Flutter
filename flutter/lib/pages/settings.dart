@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'dart:async';
-import 'close2me.dart';
+import 'map_page.dart';
 import 'favorites.dart';
 
 
@@ -33,7 +33,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future navigateToMapPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new Close2MePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new MapPage()));
   }
 
   Future navigateToCurrentPage(context) async {

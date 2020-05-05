@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings.dart';
-import 'close2me.dart';
+import 'map_page.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
@@ -14,7 +14,7 @@ class FavouritesPage extends StatefulWidget {
     }
 
     Future navigateToMapPage(context) async {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => new Close2MePage()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => new MapPage()));
     }
 
     Future navigateToCurrentPage(context) async {
