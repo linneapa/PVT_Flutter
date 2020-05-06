@@ -3,7 +3,7 @@ import 'package:ezsgame/firebase/authentication.dart';
 import 'dart:async';
 import 'map_page.dart';
 import 'favorites.dart';
-
+import 'SizeConfig.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key, this.auth, this.logoutCallback})
@@ -42,6 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Inställningar", style: TextStyle(color: Colors.white)),
@@ -57,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
-              SizedBox(height: 425),
+              SizedBox(height: SizeConfig.blockSizeVertical * 70),
               Expanded(
                 child: Row(
                   children: <Widget>[

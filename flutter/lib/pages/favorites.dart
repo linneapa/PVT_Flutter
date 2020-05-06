@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'map_page.dart';
+import 'SizeConfig.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
@@ -22,6 +23,7 @@ class FavouritesPage extends StatefulWidget {
     }
 
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Favoriter", style: TextStyle(color: Colors.white)),
@@ -33,7 +35,7 @@ class FavouritesPage extends StatefulWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            SizedBox(height: 425),
+            SizedBox(height: SizeConfig.blockSizeVertical * 70),
             Expanded(
               child: Row(
                 children: <Widget>[

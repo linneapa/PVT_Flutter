@@ -5,6 +5,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'settings.dart';
 import 'favorites.dart';
 import 'package:location/location.dart';
+import 'package:flutter/widgets.dart';
+import 'SizeConfig.dart';
 
 class MapPage extends StatefulWidget{
   @override
@@ -212,6 +214,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: TextField(
@@ -248,28 +251,28 @@ class _MapPageState extends State<MapPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               new Container(
-                  height: 425,
-                  child: GoogleMap(
-                      initialCameraPosition: initPosition,
-                      markers: Set<Marker>.of(markers.values),
-                      circles: Set<Circle>.of(circles.values),
-                      onMapCreated: (GoogleMapController controller){
-                        _controller = controller;
-                        setState((){
-                          markers[MarkerId('PhoneLocationMarker')]=Marker(
-                              markerId: MarkerId('PhoneLocationMarker'),
-                              position: initLocation);
+                height: SizeConfig.blockSizeVertical * 70,
+                child: GoogleMap(
+                  initialCameraPosition: initPosition,
+                  markers: Set<Marker>.of(markers.values),
+                  circles: Set<Circle>.of(circles.values),
+                  onMapCreated: (GoogleMapController controller){
+                    _controller = controller;
+                    setState((){
+                      markers[MarkerId('PhoneLocationMarker')]=Marker(
+                          markerId: MarkerId('PhoneLocationMarker'),
+                          position: initLocation);
 //              , icon: arrowIcon );
-                        });
-                      },
-                    ),
+                    });
+                  },
+                ),
               ),
-              FloatingActionButton(
+/*              FloatingActionButton(
                   child: Icon(Icons.my_location,color: Colors.black),
                   backgroundColor: Colors.orange,
                   onPressed: () {
                     showCurrentLocation();
-                  }),
+                  }),*/
               Expanded(
                 child: Row(
                   children: <Widget>[
@@ -334,7 +337,7 @@ class _MapPageState extends State<MapPage> {
           )
       ),
 
-      );
+    );
   }
   void showCurrentLocation() async{
     LocationData newLocation = await _myLocation.getLocation();
