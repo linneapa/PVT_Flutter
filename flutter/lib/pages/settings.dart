@@ -58,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
-              SizedBox(height: SizeConfig.blockSizeVertical * 70),
+              SizedBox(height: SizeConfig.blockSizeVertical * 75),
               Expanded(
                 child: Row(
                   children: <Widget>[

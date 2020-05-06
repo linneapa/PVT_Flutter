@@ -68,7 +68,8 @@ class _MapPageState extends State<MapPage> {
 //    });
     setInitLocation();
   }
-  createDialog(BuildContext context) {
+
+  createDialog(BuildContext context) { // The following code is for the filter popup
     showDialog(
       context: context,
       builder: (context) {
@@ -124,59 +125,55 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ],
                     ),
-                    Flexible(
-                      child: Row(
-                        children: <Widget>[
-                          SliderTheme(
-                            data: SliderThemeData(
-                              thumbColor: Colors.orangeAccent,
-                              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-                              inactiveTickMarkColor: Colors.black,
-                              activeTickMarkColor: Colors.black,
-                              activeTrackColor: Colors.orangeAccent,
-                              inactiveTrackColor: Colors.grey,
+                    Column(
+                      children: <Widget>[
+                        SizedBox(height: SizeConfig.blockSizeVertical * 5,),
+                        Text("Avstånd från dest.(20 m)"),
+                            SliderTheme(
+                              data: SliderThemeData(
+                                thumbColor: Colors.orangeAccent,
+                                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
+                                inactiveTickMarkColor: Colors.black,
+                                activeTickMarkColor: Colors.black,
+                                activeTrackColor: Colors.orangeAccent,
+                                inactiveTrackColor: Colors.grey,
+                              ),
+                              child: Slider(
+                                min: 0,
+                                max: 100,
+                                value: _distanceValue,
+                                divisions:  2,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _distanceValue = value;
+                                  });
+                                },
+                              ),
                             ),
-                            child: Slider(
-                              min: 0,
-                              max: 100,
-                              value: _distanceValue,
-                              divisions:  2,
-                              onChanged: (value) {
-                                setState(() {
-                                  _distanceValue = value;
-                                });
-                              },
-                            ),
+                        SizedBox(height: SizeConfig.blockSizeVertical * 5,),
+                        Text("Prisklass (<15 kr"),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            thumbColor: Colors.orangeAccent,
+                            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
+                            inactiveTickMarkColor: Colors.black,
+                            activeTickMarkColor: Colors.black,
+                            activeTrackColor: Colors.orangeAccent,
+                            inactiveTrackColor: Colors.grey,
                           ),
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: Row(
-                        children: <Widget>[
-                          SliderTheme(
-                            data: SliderThemeData(
-                              thumbColor: Colors.orangeAccent,
-                              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-                              inactiveTickMarkColor: Colors.black,
-                              activeTickMarkColor: Colors.black,
-                              activeTrackColor: Colors.orangeAccent,
-                              inactiveTrackColor: Colors.grey,
-                            ),
-                            child: Slider(
-                              min: 0,
-                              max: 100,
-                              value: _costValue,
-                              divisions:  2,
-                              onChanged: (value) {
-                                setState(() {
-                                  _costValue = value;
-                                });
-                              },
-                            ),
+                          child: Slider(
+                            min: 0,
+                            max: 100,
+                            value: _costValue,
+                            divisions:  2,
+                            onChanged: (value) {
+                              setState(() {
+                                _costValue = value;
+                              });
+                            },
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 30),
                     Align(
@@ -226,12 +223,10 @@ class _MapPageState extends State<MapPage> {
               icon: Icon(Icons.search),
               onPressed: () {
                 setState(() {
-
                 });
               },
             ),
           ),
-
         ),
         actions: <Widget>[
           IconButton(
@@ -246,33 +241,41 @@ class _MapPageState extends State<MapPage> {
           )
         ],
       ),
+
       body: Container(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               new Container(
-                height: SizeConfig.blockSizeVertical * 70,
-                child: GoogleMap(
-                  initialCameraPosition: initPosition,
-                  markers: Set<Marker>.of(markers.values),
-                  circles: Set<Circle>.of(circles.values),
-                  onMapCreated: (GoogleMapController controller){
-                    _controller = controller;
-                    setState((){
-                      markers[MarkerId('PhoneLocationMarker')]=Marker(
-                          markerId: MarkerId('PhoneLocationMarker'),
-                          position: initLocation);
-//              , icon: arrowIcon );
-                    });
-                  },
+                height: SizeConfig.blockSizeVertical * 75,
+                child: Stack(
+                  children: <Widget>[
+                    GoogleMap(
+                      initialCameraPosition: initPosition,
+                      markers: Set<Marker>.of(markers.values),
+                      circles: Set<Circle>.of(circles.values),
+                      onMapCreated: (GoogleMapController controller){
+                        _controller = controller;
+                        setState((){
+                          markers[MarkerId('PhoneLocationMarker')]=Marker(
+                              markerId: MarkerId('PhoneLocationMarker'),
+                              position: initLocation);
+                          //, icon: arrowIcon );
+                        });
+                      },
+                    ),
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: FloatingActionButton(
+                          child: Icon(Icons.my_location,color: Colors.black),
+                          backgroundColor: Color.fromRGBO(160,160,160, 1.0),
+                          onPressed: () {
+                            showCurrentLocation();
+                          }),
+                    ),
+                  ],
                 ),
               ),
-/*              FloatingActionButton(
-                  child: Icon(Icons.my_location,color: Colors.black),
-                  backgroundColor: Colors.orange,
-                  onPressed: () {
-                    showCurrentLocation();
-                  }),*/
               Expanded(
                 child: Row(
                   children: <Widget>[
@@ -336,9 +339,9 @@ class _MapPageState extends State<MapPage> {
             ],
           )
       ),
-
     );
   }
+
   void showCurrentLocation() async{
     LocationData newLocation = await _myLocation.getLocation();
     _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
