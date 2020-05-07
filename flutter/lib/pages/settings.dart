@@ -59,63 +59,15 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
               SizedBox(height: SizeConfig.blockSizeVertical * 75),
-              Expanded(
+              Expanded( // Code for the bottom navigation bar below.
                 child: Row(
                   children: <Widget>[
-                    SizedBox(width: 15),
-                    FlatButton(
-                        onPressed: () =>
-                        {
-                          navigateToFavoritesPage(context),
-                        },
-                        child: Column(
-                          children: <Widget>[
-                            Icon(Icons.favorite, size: 45, color: Colors.grey),
-                            Text(
-                                "Favoriter",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                )
-                            )
-                          ],
-                        )
-                    ),
-                    SizedBox(width: 20,),
-                    FlatButton(
-                        onPressed: () =>
-                        {
-                          navigateToMapPage(context)
-                        },
-                        child: Column(
-                          children: <Widget>[
-                            Icon(Icons.map, size: 45, color: Colors.grey),
-                            Text(
-                                "Karta",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                )
-                            )
-                          ],
-                        )
-                    ),
-                    SizedBox(width: 20,),
-                    FlatButton(
-                        onPressed: () =>
-                        {
-                          navigateToCurrentPage(context),
-                        },
-                        child: Column(
-                          children: <Widget>[
-                            Icon(Icons.settings, size: 45, color: Colors.orangeAccent),
-                            Text(
-                                "Inställningar",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                )
-                            )
-                          ],
-                        )
-                    ),
+                    SizedBox(width: SizeConfig.blockSizeHorizontal * 5),
+                    showFavoritesNavigationButton(),
+                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
+                    showMapNavigationButton(),
+                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
+                    showSettingsNavigationButton(),
                   ],
                 ),
               )
@@ -124,5 +76,50 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  Widget showFavoritesNavigationButton() {
+    return FlatButton(
+        onPressed: () => {navigateToFavoritesPage(context)},
+        child: Column(
+          children: <Widget>[
+            Icon(Icons.favorite, size: 45, color: Colors.grey),
+            Text(
+                "Favoriter",
+                style: TextStyle(fontSize: 13))
+          ],
+        )
+    );
+  }
+
+  Widget showMapNavigationButton() {
+    return FlatButton(
+        onPressed: () => {navigateToMapPage(context)},
+        child: Column(
+          children: <Widget>[
+            Icon(Icons.map, size: 45, color: Colors.grey),
+            Text(
+                "Karta",
+                 style: TextStyle(fontSize: 13)
+            )
+          ],
+        )
+    );
+  }
+
+  Widget showSettingsNavigationButton() {
+    return FlatButton(
+        onPressed: () => {navigateToCurrentPage(context),},
+        child: Column(
+          children: <Widget>[
+            Icon(Icons.settings, size: 45, color: Colors.orangeAccent),
+            Text(
+                "Inställningar",
+                style: TextStyle(fontSize: 13,)
+            )
+          ],
+        )
+    );
+  }
+
 }
 
