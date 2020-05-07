@@ -1,4 +1,5 @@
 import 'package:ezsgame/firebase/authentication.dart';
+import 'package:ezsgame/pages/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 
@@ -40,13 +41,16 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     if (validateAndSave()) {
       String userId = "";
       try {
-        if (_isLoginForm) {
           userId = await widget.auth.signIn(_email, _password);
+          if (userId == null) { //meaning the email hasn't been verified
+            setState(() {
+              _isLoading = false;
+              _errorMessage = "E-postadressen har inte verifierats än.";
+            });
+            return;
+          }
           print('Signed in: $userId');
-        } else {
-          userId = await widget.auth.signUp(_email, _password);
-          print('Signed up user: $userId');
-        }
+        
         setState(() {
           _isLoading = false;
         });
@@ -105,29 +109,6 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       width: 0.0,
     );
   }
-
-//  void _showVerifyEmailSentDialog() {
-//    showDialog(
-//      context: context,
-//      builder: (BuildContext context) {
-//        // return object of type Dialog
-//        return AlertDialog(
-//          title: new Text("Verify your account"),
-//          content:
-//              new Text("Link to verify account has been sent to your email"),
-//          actions: <Widget>[
-//            new FlatButton(
-//              child: new Text("Dismiss"),
-//              onPressed: () {
-//                toggleFormMode();
-//                Navigator.of(context).pop();
-//              },
-//            ),
-//          ],
-//        );
-//      },
-//    );
-//  }
 
   Widget _showForm() {
     return Scaffold(
@@ -267,8 +248,12 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
             ),
           ),
           onPressed: () {
-            /* Navigator.push(
-                context, MaterialPageRoute(builder: (context) => signUp()));*/
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SignupPage(
+                        auth: widget.auth,
+                        loginCallback: widget.loginCallback)));
           },
         )
       ],
