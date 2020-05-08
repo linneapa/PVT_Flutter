@@ -55,7 +55,10 @@ class _MapPageState extends State<MapPage> {
   Future navigateToCurrentPage(context) async {}
 
   Future navigateToFavoritesPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new FavouritesPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new FavouritesPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+    )));
   }
 
   Future navigateToSettingsPage(context) async {

@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'settings.dart';
 import 'map_page.dart';
 import 'SizeConfig.dart';
+import 'package:ezsgame/firebase/authentication.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
   _FavouritesPageState createState() => _FavouritesPageState();
+
+  FavouritesPage({Key key, this.auth, this.logoutCallback})
+      : super(key: key);
+  final BaseAuth auth;
+  final VoidCallback logoutCallback;
 }
 
 class _FavouritesPageState extends State<FavouritesPage> {
@@ -13,12 +19,18 @@ class _FavouritesPageState extends State<FavouritesPage> {
 
   Future navigateToSettingsPage(context) async {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => new SettingsPage()));
+        context, MaterialPageRoute(builder: (context) => new SettingsPage(
+          auth: widget.auth,
+          logoutCallback: widget.logoutCallback,
+        )));
   }
 
   Future navigateToMapPage(context) async {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => new MapPage()));
+        context, MaterialPageRoute(builder: (context) => new MapPage(
+          auth: widget.auth,
+          logoutCallback: widget.logoutCallback,
+        )));
   }
 
   Widget build(BuildContext context) {
