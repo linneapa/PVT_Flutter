@@ -40,7 +40,7 @@ class _MapPageState extends State<MapPage> {
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   Map<CircleId,Circle> circles = <CircleId, Circle>{};
   BitmapDescriptor arrowIcon;
-  LatLng initLocation;
+  LatLng initLocation = LatLng(59.3293, 18.0686);
 
   @override
   void initState() {
