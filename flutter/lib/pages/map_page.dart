@@ -32,7 +32,7 @@ class _MapPageState extends State<MapPage> {
   var _costValue = 0.0;
 
   static final CameraPosition initPosition = CameraPosition(
-    target: LatLng(37.77483, -122.41942),
+    target: LatLng(59.3293, 18.0686),
     zoom: 12,
   );
   Location _myLocation = Location();
