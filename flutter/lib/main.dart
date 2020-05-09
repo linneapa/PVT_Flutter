@@ -9,11 +9,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        title: 'PVT map',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primaryColor: Colors.white,
         ),
-        home: new RootPage(auth: new Auth())
-    );
+        home: new RootPage(auth: new Auth()));
   }
 }
