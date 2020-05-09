@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ezsgame/firebase/authentication.dart';
@@ -35,12 +37,15 @@ class _MapPageState extends State<MapPage> {
     target: LatLng(37.77483, -122.41942),
     zoom: 12,
   );
-  Location _myLocation = Location();
+  Location location = Location();
+  LocationData _myLocation;
   GoogleMapController _controller;
+  StreamSubscription<LocationData> _locationSubscription;
   Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
   Map<CircleId,Circle> circles = <CircleId, Circle>{};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
+  String _error;
 
   @override
   void initState() {
@@ -68,9 +73,23 @@ class _MapPageState extends State<MapPage> {
     )));
   }
 
+  Future<void> _listenLocation() async {
+    _locationSubscription = location.onLocationChanged.handleError((dynamic err) {
+      setState(() {
+        _error = err.code;
+      });
+      _locationSubscription.cancel();
+    }).listen((LocationData currentLocation) {
+      setState(() {
+        _myLocation = currentLocation;
+        updatePinOnMap();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    _listenLocation();
     SizeConfig().init(context);
     return Scaffold(resizeToAvoidBottomPadding: false,
       appBar: AppBar(
@@ -151,7 +170,7 @@ class _MapPageState extends State<MapPage> {
         setState((){
           markers[MarkerId('PhoneLocationMarker')]=Marker(
               markerId: MarkerId('PhoneLocationMarker'),
-              position: initLocation);
+              position: LatLng(_myLocation.latitude,_myLocation.longitude));
           //, icon: arrowIcon );
         });
       },
@@ -160,7 +179,7 @@ class _MapPageState extends State<MapPage> {
 
   Widget showMyLocationButton() {
     return Align(
-      alignment: Alignment.bottomLeft,
+      alignment: Alignment.bottomCenter,
       child: FloatingActionButton(
           child: Icon(Icons.my_location,color: Colors.black),
           backgroundColor: Color.fromRGBO(160,160,160, 1.0),
@@ -231,10 +250,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   void showCurrentLocation() async{
-    LocationData newLocation = await _myLocation.getLocation();
+    _myLocation = await location.getLocation();
     _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
         bearing: 0,
-        target: LatLng(newLocation.latitude, newLocation.longitude),
+        target: LatLng(_myLocation.latitude, _myLocation.longitude),
         tilt: 0,
         zoom: 18)));
   }
@@ -243,10 +262,16 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<LatLng> getCurrentLocation() async{
-    LocationData newLocation = await _myLocation.getLocation();
-    return LatLng(newLocation.latitude, newLocation.longitude);
+    _myLocation = await location.getLocation();
+    return LatLng(_myLocation.latitude, _myLocation.longitude);
   }
 
+  void updatePinOnMap() async{
+    markers[MarkerId('PhoneLocationMarker')]=Marker(
+        markerId: MarkerId('PhoneLocationMarker'),
+        position: LatLng(_myLocation.latitude,_myLocation.longitude)
+    );
+  }
 
   createDialog(BuildContext context) { // The following code is for the filter popup page.
     showDialog(
