@@ -299,15 +299,19 @@ class _MapPageState extends State<MapPage> {
                           height: SizeConfig.blockSizeVertical * 5,
                         ),
                         Text("Avstånd från dest.(20 m)"),
-                        Row(children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
                           Text("Lågt"),
-                          showDistanceSlider(),
+                          Expanded(child: showDistanceSlider()),
                           Text("Högt"),
                         ]),
                         Text("Prisklass (<15 kr)"),
-                        Row(children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
                           Text("Lågt"),
-                          showDistanceSlider(),
+                          Expanded(child: showDistanceSlider()),
                           Text("Högt"),
                         ]),
                       ],
