@@ -29,11 +29,17 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future navigateToFavoritesPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new FavouritesPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new FavouritesPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+    )));
   }
 
   Future navigateToMapPage(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => new MapPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => new MapPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+    )));
   }
 
   Future navigateToCurrentPage(context) async {
