@@ -300,22 +300,26 @@ class _MapPageState extends State<MapPage> {
                         ),
                         Text("Avstånd från dest.(20 m)"),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                          Text("Lågt"),
-                          Expanded(child: showDistanceSlider()),
-                          Text("Högt"),
-                        ]),
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text("Kort"),
+                              Expanded(child: showDistanceSlider()),
+                              Text("Långt"),
+                            ]),
+                        SizedBox(
+                          height: SizeConfig.blockSizeVertical * 3,
+                        ),
                         Text("Prisklass (<15 kr)"),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                          Text("Lågt"),
-                          Expanded(child: showDistanceSlider()),
-                          Text("Högt"),
-                        ]),
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text("Låg"),
+                              Expanded(child: showCostSlider()),
+                              Text("Hög"),
+                            ]),
                       ],
                     ),
+                    SizedBox(height: SizeConfig.blockSizeVertical * 5),
                     showHandicapIconButton(),
                   ],
                 ),
