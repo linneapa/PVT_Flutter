@@ -32,6 +32,7 @@ dependencies:
   permission: ^0.1.7
   material_design_icons_flutter: 4.0.5145 # some additional sweet icons
   google_sign_in: ^4.4.4
+  flutter_facebook_login: ^3.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
