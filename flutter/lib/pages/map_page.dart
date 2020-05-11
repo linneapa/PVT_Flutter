@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ezsgame/firebase/authentication.dart';
@@ -32,7 +33,7 @@ class _MapPageState extends State<MapPage> {
   var _costValue = 0.0;
 
   static final CameraPosition initPosition = CameraPosition(
-    target: LatLng(37.77483, -122.41942),
+    target: LatLng(59.3293, 18.0686),
     zoom: 12,
   );
   Location location = Location();
@@ -166,20 +167,35 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  final Map<String, Marker> _markers = {};
+
+  Future<void> _onMapCreated(GoogleMapController controller) async {
+    final parkings = await Services.fetchParkering();
+    setState(() {
+      _markers.clear();
+      for (final parking in parkings.features) {
+        final marker = Marker(
+            markerId: MarkerId(parking.properties.address),
+            position: LatLng(parking.geometry.coordinates[0][1],
+                parking.geometry.coordinates[0][0]),
+            infoWindow: InfoWindow(
+              title: parking.properties.cityDistrict,
+              snippet: parking.properties.address,
+            )
+        );
+        _markers[parking.properties.cityDistrict] = marker;
+      }
+    });
+  }
+
   Widget showGoogleMaps() {
     return GoogleMap(
-      initialCameraPosition: initPosition,
-      markers: Set<Marker>.of(markers.values),
-      circles: Set<Circle>.of(circles.values),
-      onMapCreated: (GoogleMapController controller) {
-        _controller = controller;
-        setState(() {
-          markers[MarkerId('PhoneLocationMarker')] = Marker(
-              markerId: MarkerId('PhoneLocationMarker'),
-              position: LatLng(_myLocation.latitude, _myLocation.longitude));
-          //, icon: arrowIcon );
-        });
-      },
+      onMapCreated: _onMapCreated,
+      initialCameraPosition: CameraPosition(
+        target: const LatLng(59.3293, 18.0686),
+        zoom: 12,
+      ),
+      markers: _markers.values.toSet(),
     );
   }
 
