@@ -1,0 +1,42 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build and Test Flutter App
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on: 
+  push:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test: 
+    runs-on: windows-latest 
+    #sequence of tasks
+    steps: 
+      - uses: actions/checkout@v1
+        #flutter environment setup:
+      - uses: subosito/flutter-action@v1 
+        with: 
+          flutter-version: '1.12.13+hotfix.9'
+      - run: flutter pub get
+      - run: flutter analyze
+  
+  android_drive: 
+    runs-on: windows-latest
+    needs: test
+    steps: 
+      - uses: actions/checkout@v1
+      - uses: subosito/flutter-action@v1
+        with: 
+          flutter-version: '1.12.13+hotfix.9'
+      - name: Run Flutter Driver tests
+        uses: reactivecircus/android-emulator-runner@v1
+        with: 
+          api-level: 29
+          target: default
+          arch: x86
+          profile: Pixel 2
+          script: flutter drive --target=flutter/test_driver/app.dart
+      
+    
