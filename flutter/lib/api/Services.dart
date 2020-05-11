@@ -18,13 +18,13 @@ class Services {
 
     String url;
     if (car) {
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else if(lastbil) {
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else if (motorcycle){
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel/all?maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else if (handicaped){
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/all?&maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else {
       return null;
     }
