@@ -269,14 +269,39 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
         children: <Widget>[
           SizedBox(height: 2),
           GoogleSignInButton(
-            onPressed: () {
-              // ADD AUTH LOGIC HERE
-            },
+            onPressed: validateGoogleSignIn,
             darkMode: true,
           ),
         ],
       ),
     );
+  }
+
+  void validateGoogleSignIn() async {
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+    String userId = "";
+    try {
+      userId = await widget.auth.signInWithGoogle();
+
+      print('Signed in: $userId');
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (userId.length > 0 && userId != null) {
+        widget.loginCallback();
+      }
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message;
+      });
+    }
   }
 
   Widget facebookSignin() {
@@ -286,11 +311,37 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       child: Column(
         children: <Widget>[
           SizedBox(height: 10),
-          FacebookSignInButton(onPressed: () {
-            // ADD AUTH LOGIC HERE
-          }),
+          FacebookSignInButton(
+            onPressed: validateFacebookSignIn,
+          )
         ],
       ),
     );
+  }
+
+  void validateFacebookSignIn() async {
+    setState(() {
+      _errorMessage = "";
+      _isLoading = true;
+    });
+    String userId = "";
+    try {
+      userId = await widget.auth.signInWithFacebook();
+
+      print('Signed in: $userId');
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (userId.length > 0 && userId != null) {
+        widget.loginCallback();
+      }
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 }
