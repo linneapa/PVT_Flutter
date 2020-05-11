@@ -162,6 +162,7 @@ class _MapPageState extends State<MapPage> {
       ),
       onPressed: () {
         createDialog(context);
+        showGoogleMaps();
         // do something
       },
     );
@@ -170,7 +171,7 @@ class _MapPageState extends State<MapPage> {
   final Map<String, Marker> _markers = {};
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    final parkings = await Services.fetchParkering();
+    final parkings = await Services.fetchParkering(carToggled, truckToggled, motorcycleToggled, handicapToggled);
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
@@ -488,6 +489,7 @@ class _MapPageState extends State<MapPage> {
   Widget showOkButton() {
     return FlatButton(
       onPressed: () => {
+        _onMapCreated(_controller),
         Navigator.pop(context),
       },
       child: Text("Klar"),
