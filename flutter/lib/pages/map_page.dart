@@ -10,6 +10,7 @@ import 'favorites.dart';
 import 'package:location/location.dart';
 import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
+import 'package:search_map_place/search_map_place.dart';
 
 class MapPage extends StatefulWidget {
   @override
@@ -36,6 +37,8 @@ class _MapPageState extends State<MapPage> {
     target: LatLng(59.3293, 18.0686),
     zoom: 12,
   );
+
+  Completer<GoogleMapController> _mapController = Completer();
   Location location = Location();
   LocationData _myLocation;
   GoogleMapController _controller;
@@ -99,28 +102,26 @@ class _MapPageState extends State<MapPage> {
     SizeConfig().init(context);
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      appBar: AppBar(
-        title: showSearchTextField(),
-        actions: <Widget>[
-          showFilterButton(),
-        ],
-      ),
+
       body: Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            new Container(
+        Flexible(
+        child:
+            Container(
               // Google maps container with a set size below.
-              height: SizeConfig.blockSizeVertical * 75,
+              height: SizeConfig.blockSizeVertical * 50,
               child: Stack(
                 // Stack used to allow myLocationButton on top of google maps.
                 children: <Widget>[
                   showGoogleMaps(),
+                  showTopBar(),
                   showMyLocationButton(),
                 ],
-              ),
-            ),
-            Expanded(
+
+            ),),),
+            Flexible(
               // Code for the bottom navigation bar below.
               child: Row(
                 children: <Widget>[
@@ -139,38 +140,68 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget showSearchTextField() {
-    return TextField(
-      decoration: new InputDecoration(
-        hintText: 'Sök gata, adress, etc.',
-        border: new OutlineInputBorder(),
-        prefixIcon: IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-            setState(() {});
-          },
+  Widget showTopBar() {
+    return Align(
+      alignment: Alignment.topCenter,
+        child: Row(
+          children: <Widget> [
+            Expanded(child: showSearchTextField()),
+            Flexible(child: showFilterButton()),
+          ],
         ),
-      ),
+    );
+  }
+
+
+  Widget showSearchTextField() {
+        return SearchMapPlaceWidget(
+        apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
+        // The language of the autocompletion
+        language: 'en',
+        // The position used to give better recomendations. In this case we are using the user position
+        location: LatLng(59.3293, 18.0686),
+        radius: 30000,
+        onSelected: (Place place) async {
+          print("HELLOOOOOOO");
+          final geolocation = await place.geolocation;
+
+          // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
+         final GoogleMapController controller = await _mapController.future;
+
+
+          controller.animateCamera(
+              CameraUpdate.newLatLng(geolocation.coordinates));
+          controller.animateCamera(
+              CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+          
+        }
     );
   }
 
   Widget showFilterButton() {
-    return IconButton(
-      icon: Icon(
-        MdiIcons.filterMenu,
-        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
-      ),
-      onPressed: () {
-        createDialog(context);
-        showGoogleMaps();
-        // do something
-      },
+
+  //  return Align(
+    //  alignment: Alignment.topRight,
+      return IconButton(
+        icon: Icon(
+          MdiIcons.filterMenu,
+          color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () {
+          createDialog(context);
+          showGoogleMaps();
+          // do something
+        },
+ //     ),
     );
+
   }
 
   final Map<String, Marker> _markers = {};
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
+    _mapController.complete(controller);
+
     final parkings = await Services.fetchParkering(carToggled, truckToggled, motorcycleToggled, handicapToggled);
     setState(() {
       _markers.clear();
