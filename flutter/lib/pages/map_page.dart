@@ -107,11 +107,9 @@ class _MapPageState extends State<MapPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-        Flexible(
-        child:
             Container(
               // Google maps container with a set size below.
-              height: SizeConfig.blockSizeVertical * 50,
+              height: SizeConfig.blockSizeVertical * 90,
               child: Stack(
                 // Stack used to allow myLocationButton on top of google maps.
                 children: <Widget>[
@@ -120,7 +118,7 @@ class _MapPageState extends State<MapPage> {
                   showMyLocationButton(),
                 ],
 
-            ),),),
+            ),),
             Flexible(
               // Code for the bottom navigation bar below.
               child: Row(
@@ -143,11 +141,17 @@ class _MapPageState extends State<MapPage> {
   Widget showTopBar() {
     return Align(
       alignment: Alignment.topCenter,
-        child: Row(
+        child: Column( children: <Widget> [
+        Container(height: 30), //empty container to move down the searchfield 
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget> [
+           // Flexible(child: Container(height: 10,)),
             Expanded(child: showSearchTextField()),
             Flexible(child: showFilterButton()),
           ],
+        ),
+        ],
         ),
     );
   }
@@ -157,12 +161,13 @@ class _MapPageState extends State<MapPage> {
         return SearchMapPlaceWidget(
         apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
         // The language of the autocompletion
-        language: 'en',
-        // The position used to give better recomendations. In this case we are using the user position
+        language: 'se',
+        // The position used to give better recomendations. 
         location: LatLng(59.3293, 18.0686),
         radius: 30000,
+        //darkMode: true,
+        placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
-          print("HELLOOOOOOO");
           final geolocation = await place.geolocation;
 
           // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
