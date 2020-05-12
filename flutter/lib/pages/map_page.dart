@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -9,10 +10,6 @@ import 'favorites.dart';
 import 'package:location/location.dart';
 import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
-import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
-import 'IconInfo.dart';
-
 
 class MapPage extends StatefulWidget {
   @override
@@ -26,15 +23,14 @@ class MapPage extends StatefulWidget {
   final String userId;
 }
 
-class _MapPageState extends State<MapPage> with ChangeNotifier {
-
+class _MapPageState extends State<MapPage> {
   bool handicapToggled = false;
+  bool carToggled = true;
+  bool truckToggled = false;
+  bool motorcycleToggled = false;
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
-  var _globalCarToggled = true;
-  var _globalTruckToggled = false;
-  var _globalMotorcycleToggled = false;
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -97,51 +93,50 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     _listenLocation();
     SizeConfig().init(context);
-      return Scaffold(
-        resizeToAvoidBottomPadding: false,
-        appBar: AppBar(
-          title: showSearchTextField(),
-          actions: <Widget>[
-            showFilterButton(),
+    return Scaffold(
+      resizeToAvoidBottomPadding: false,
+      appBar: AppBar(
+        title: showSearchTextField(),
+        actions: <Widget>[
+          showFilterButton(),
+        ],
+      ),
+      body: Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            new Container(
+              // Google maps container with a set size below.
+              height: SizeConfig.blockSizeVertical * 75,
+              child: Stack(
+                // Stack used to allow myLocationButton on top of google maps.
+                children: <Widget>[
+                  showGoogleMaps(),
+                  showMyLocationButton(),
+                ],
+              ),
+            ),
+            Expanded(
+              // Code for the bottom navigation bar below.
+              child: Row(
+                children: <Widget>[
+                  SizedBox(width: SizeConfig.blockSizeHorizontal * 5),
+                  showFavoritesNavigationButton(),
+                  SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
+                  showMapNavigationButton(),
+                  SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
+                  showSettingsNavigationButton(),
+                ],
+              ),
+            ),
           ],
         ),
-        body: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              new Container(
-                // Google maps container with a set size below.
-                height: SizeConfig.blockSizeVertical * 75,
-                child: Stack(
-                  // Stack used to allow myLocationButton on top of google maps.
-                  children: <Widget>[
-                    showGoogleMaps(),
-                    showMyLocationButton(),
-                  ],
-                ),
-              ),
-              Expanded(
-                // Code for the bottom navigation bar below.
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 1),
-                    showFavoritesNavigationButton(),
-                    showMapNavigationButton(),
-                    showSettingsNavigationButton(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      ),
+    );
   }
 
   Widget showSearchTextField() {
@@ -167,6 +162,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       ),
       onPressed: () {
         createDialog(context);
+        showGoogleMaps();
         // do something
       },
     );
@@ -175,7 +171,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   final Map<String, Marker> _markers = {};
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    final parkings = await Services.fetchParkering();
+    final parkings = await Services.fetchParkering(carToggled, truckToggled, motorcycleToggled, handicapToggled);
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
@@ -186,7 +182,8 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
-            ));
+            )
+        );
         _markers[parking.properties.cityDistrict] = marker;
       }
     });
@@ -292,73 +289,67 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     showDialog(
       context: context,
       builder: (context) {
-        return ChangeNotifierProvider(
-          create: (context) => IconInfo(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                content: Container(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Text("Filter"),
-                          showSwitchButton(),
-                        ],
-                      ),
-                      Row(
-                        children: <Widget>[
-                            CarIconButton(),
-                            TruckIconButton(),
-                            MotorcycleIconButton()
-                            ],
-                          ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Text("Avstånd från destination:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Kort"),
-                                Expanded(child: showDistanceSlider()),
-                                Text("Långt"),
-                              ]),
-                          Text("Prisklass:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Låg"),
-                                Expanded(child: showCostSlider()),
-                                Text("Hög"),
-                              ]),
-                        ],
-                      ),
-                      showHandicapIconButton(),
-                    ],
-                  ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              content: Container(
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text("Filter"),
+                        showSwitchButton(),
+                      ],
+                    ),
+                    Row(
+                      // Code for vehicle icons below.
+                      children: <Widget>[
+                        showCarIconButton(),
+                        showTruckIconButton(),
+                        showMotorcycleIconButton(),
+                      ],
+                    ),
+                    Column(
+                      children: <Widget>[
+                        SizedBox(
+                          height: SizeConfig.blockSizeVertical * 5,
+                        ),
+                        Text("Avstånd från dest.(20 m)"),
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text("Kort"),
+                              Expanded(child: showDistanceSlider()),
+                              Text("Långt"),
+                            ]),
+                        SizedBox(
+                          height: SizeConfig.blockSizeVertical * 3,
+                        ),
+                        Text("Prisklass (<15 kr)"),
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text("Låg"),
+                              Expanded(child: showCostSlider()),
+                              Text("Hög"),
+                            ]),
+                      ],
+                    ),
+                    SizedBox(height: SizeConfig.blockSizeVertical * 5),
+                    showHandicapIconButton(),
+                  ],
                 ),
-                actions: <Widget>[
-                  ShowCancelButton(),
-                  ShowOkButton(),
-                ],
-              );
-            },
-          ),
+              ),
+              actions: <Widget>[
+                showCancelButton(),
+                showOkButton(),
+              ],
+            );
+          },
         );
       },
-    ).then((val) { // retrieve and update the state of the icons
-      IconInfo ic = val;
-      if (ic != null) {
-        _globalMotorcycleToggled = ic.motorcycleToggled;
-        _globalTruckToggled = ic.truckToggled;
-        _globalCarToggled = ic.carToggled;
-      }
-    });
+    );
   }
 
   Widget showSwitchButton() {
@@ -379,6 +370,44 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     });
   }
 
+  Widget showCarIconButton() {
+    return StatefulBuilder(builder: (context, setState) {
+      return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          Icons.directions_car,
+          color: carToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () => setState(() => carToggled = !carToggled),
+      );
+    });
+  }
+
+  Widget showTruckIconButton() {
+    return StatefulBuilder(builder: (context, setState) {
+      return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          MdiIcons.truck,
+          color: truckToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () => setState(() => truckToggled = !truckToggled),
+      );
+    });
+  }
+
+  Widget showMotorcycleIconButton() {
+    return StatefulBuilder(builder: (context, setState) {
+      return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          Icons.motorcycle,
+          color: motorcycleToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () => setState(() => motorcycleToggled = !motorcycleToggled),
+      );
+    });
+  }
 
   Widget showDistanceSlider() {
     return StatefulBuilder(builder: (context, setState) {
@@ -450,112 +479,20 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     });
   }
 
-}
-
-class CarIconButton extends StatelessWidget {
-
-  @override
-  Widget build(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
-    return IconButton(
-        iconSize: 50,
-        icon: Icon(
-          Icons.directions_car,
-          color: iconInfo.carToggled ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () {
-          iconInfo.car = !iconInfo.carToggled;
-
-          bool truckValue = iconInfo.truckToggled;
-          if (truckValue)
-            iconInfo.truck = !truckValue;
-
-          bool motorcycleValue = iconInfo.truckToggled;
-          if (motorcycleValue)
-            iconInfo.motorcycle = !motorcycleValue;
-        }
-    );
-  }
-}
-
-class TruckIconButton extends StatelessWidget {
-
-    @override
-    Widget build(BuildContext context) {
-      var iconInfo = Provider.of<IconInfo>(context);
-      return IconButton(
-          iconSize: 50,
-          icon: Icon(
-            MdiIcons.truck,
-            color: iconInfo.truckToggled ? Colors.orangeAccent : Colors.grey,
-          ),
-          onPressed: () {
-            iconInfo.truck = !iconInfo.truckToggled;
-
-            bool carValue = iconInfo.carToggled;
-            if (carValue)
-              iconInfo.car = !carValue;
-
-            bool motorcycleValue = iconInfo.truckToggled;
-            if (motorcycleValue)
-              iconInfo.motorcycle = !motorcycleValue;
-
-          }
-      );
-    }
-}
-
-class MotorcycleIconButton extends StatelessWidget {
-
-  @override
-  Widget build(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
-    return IconButton(
-        iconSize: 50,
-        icon: Icon(
-          Icons.motorcycle,
-          color: iconInfo.motorcycleToggled ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () {
-          iconInfo.motorcycle = !iconInfo.motorcycleToggled;
-
-          bool carValue = iconInfo.carToggled;
-          if (carValue)
-            iconInfo.car = !carValue;
-
-          bool truckValue = iconInfo.truckToggled;
-          if (truckValue)
-            iconInfo.truck = !truckValue;
-        }
-    );
-  }
-}
-
-class ShowCancelButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
+  Widget showCancelButton() {
     return FlatButton(
-      onPressed: () => Navigator.pop(context, iconInfo),
+      onPressed: () => Navigator.pop(context),
       child: Text("Avbryt"),
     );
   }
-}
 
-class ShowOkButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
+  Widget showOkButton() {
     return FlatButton(
       onPressed: () => {
-        Navigator.pop(context, iconInfo),
+        _onMapCreated(_controller),
+        Navigator.pop(context),
       },
       child: Text("Klar"),
     );
   }
 }
-
-
-
-
-
