@@ -500,7 +500,7 @@ class CarIconButton extends StatelessWidget {
           if (truckValue)
             iconInfo.truck = !truckValue;
 
-          bool motorcycleValue = iconInfo.truckToggled;
+          bool motorcycleValue = iconInfo.motorcycleToggled;
           if (motorcycleValue)
             iconInfo.motorcycle = !motorcycleValue;
         }
