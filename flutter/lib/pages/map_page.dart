@@ -1,10 +1,12 @@
 import 'dart:async';
-
 import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'IconInfo.dart';
+import 'package:flutter/foundation.dart';
 import 'settings.dart';
 import 'favorites.dart';
 import 'package:location/location.dart';
@@ -23,11 +25,12 @@ class MapPage extends StatefulWidget {
   final String userId;
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with ChangeNotifier {
+
   bool handicapToggled = false;
-  bool carToggled = true;
-  bool truckToggled = false;
-  bool motorcycleToggled = false;
+  var _globalCarToggled = true;
+  var _globalTruckToggled = false;
+  var _globalMotorcycleToggled = false;
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
@@ -62,35 +65,37 @@ class _MapPageState extends State<MapPage> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => new FavouritesPage(
-                  auth: widget.auth,
-                  logoutCallback: widget.logoutCallback,
-                )));
+            builder: (context) =>
+            new FavouritesPage(
+              auth: widget.auth,
+              logoutCallback: widget.logoutCallback,
+            )));
   }
 
   Future navigateToSettingsPage(context) async {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => new SettingsPage(
-                  auth: widget.auth,
-                  logoutCallback: widget.logoutCallback,
-                )));
+            builder: (context) =>
+            new SettingsPage(
+              auth: widget.auth,
+              logoutCallback: widget.logoutCallback,
+            )));
   }
 
   Future<void> _listenLocation() async {
     _locationSubscription =
         location.onLocationChanged.handleError((dynamic err) {
-      setState(() {
-        _error = err.code;
-      });
-      _locationSubscription.cancel();
-    }).listen((LocationData currentLocation) {
-      setState(() {
-        _myLocation = currentLocation;
-        updatePinOnMap();
-      });
-    });
+          setState(() {
+            _error = err.code;
+          });
+          _locationSubscription.cancel();
+        }).listen((LocationData currentLocation) {
+          setState(() {
+            _myLocation = currentLocation;
+            updatePinOnMap();
+          });
+        });
   }
 
   @override
@@ -123,12 +128,12 @@ class _MapPageState extends State<MapPage> {
             Expanded(
               // Code for the bottom navigation bar below.
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  SizedBox(width: SizeConfig.blockSizeHorizontal * 5),
+                  SizedBox(width: SizeConfig.blockSizeHorizontal * 1),
                   showFavoritesNavigationButton(),
-                  SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                   showMapNavigationButton(),
-                  SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                   showSettingsNavigationButton(),
                 ],
               ),
@@ -171,7 +176,7 @@ class _MapPageState extends State<MapPage> {
   final Map<String, Marker> _markers = {};
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    final parkings = await Services.fetchParkering(carToggled, truckToggled, motorcycleToggled, handicapToggled);
+    var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
@@ -214,9 +219,10 @@ class _MapPageState extends State<MapPage> {
 
   Widget showFavoritesNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              navigateToFavoritesPage(context),
-            },
+        onPressed: () =>
+        {
+          navigateToFavoritesPage(context),
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.favorite, size: 45, color: Colors.grey),
@@ -230,9 +236,10 @@ class _MapPageState extends State<MapPage> {
 
   Widget showMapNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              // This button does nothing yet...
-            },
+        onPressed: () =>
+        {
+          // This button does nothing yet...
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.map, size: 45, color: Colors.orangeAccent),
@@ -246,9 +253,10 @@ class _MapPageState extends State<MapPage> {
 
   Widget showSettingsNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              navigateToSettingsPage(context),
-            },
+        onPressed: () =>
+        {
+          navigateToSettingsPage(context),
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.settings, size: 45, color: Colors.grey),
@@ -289,67 +297,73 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              content: Container(
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text("Filter"),
-                        showSwitchButton(),
-                      ],
-                    ),
-                    Row(
-                      // Code for vehicle icons below.
-                      children: <Widget>[
-                        showCarIconButton(),
-                        showTruckIconButton(),
-                        showMotorcycleIconButton(),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        SizedBox(
-                          height: SizeConfig.blockSizeVertical * 5,
-                        ),
-                        Text("Avstånd från dest.(20 m)"),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text("Kort"),
-                              Expanded(child: showDistanceSlider()),
-                              Text("Långt"),
-                            ]),
-                        SizedBox(
-                          height: SizeConfig.blockSizeVertical * 3,
-                        ),
-                        Text("Prisklass (<15 kr)"),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text("Låg"),
-                              Expanded(child: showCostSlider()),
-                              Text("Hög"),
-                            ]),
-                      ],
-                    ),
-                    SizedBox(height: SizeConfig.blockSizeVertical * 5),
-                    showHandicapIconButton(),
-                  ],
+        return ChangeNotifierProvider(
+          create: (context) => IconInfo(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                content: Container(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text("Filter"),
+                          showSwitchButton(),
+                        ],
+                      ),
+                      Row(
+                        children: <Widget>[
+                          CarIconButton(),
+                          TruckIconButton(),
+                          MotorcycleIconButton()
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text("Avstånd från destination:"),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Kort"),
+                                Expanded(child: showDistanceSlider()),
+                                Text("Långt"),
+                              ]),
+                          Text("Prisklass:"),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Låg"),
+                                Expanded(child: showCostSlider()),
+                                Text("Hög"),
+                              ]),
+                        ],
+                      ),
+                      showHandicapIconButton(),
+                    ],
+                  ),
                 ),
-              ),
-              actions: <Widget>[
-                showCancelButton(),
-                showOkButton(),
-              ],
-            );
-          },
+                actions: <Widget>[
+                  showCancelButton(context),
+                  showOkButton(context),
+                ],
+              );
+            },
+          ),
         );
       },
-    );
+    ).then((val) { // retrieve and update the state of the icons
+      IconInfo ic = val;
+      if (ic != null) {
+        _globalMotorcycleToggled = ic.motorcycleToggled;
+        _globalTruckToggled = ic.truckToggled;
+        _globalCarToggled = ic.carToggled;
+      }
+    });
   }
 
   Widget showSwitchButton() {
@@ -366,45 +380,6 @@ class _MapPageState extends State<MapPage> {
           activeTrackColor: Colors.orangeAccent,
           activeColor: Colors.orange,
         ),
-      );
-    });
-  }
-
-  Widget showCarIconButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return IconButton(
-        iconSize: 50,
-        icon: Icon(
-          Icons.directions_car,
-          color: carToggled ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () => setState(() => carToggled = !carToggled),
-      );
-    });
-  }
-
-  Widget showTruckIconButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return IconButton(
-        iconSize: 50,
-        icon: Icon(
-          MdiIcons.truck,
-          color: truckToggled ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () => setState(() => truckToggled = !truckToggled),
-      );
-    });
-  }
-
-  Widget showMotorcycleIconButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return IconButton(
-        iconSize: 50,
-        icon: Icon(
-          Icons.motorcycle,
-          color: motorcycleToggled ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () => setState(() => motorcycleToggled = !motorcycleToggled),
       );
     });
   }
@@ -479,20 +454,110 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Widget showCancelButton() {
-    return FlatButton(
-      onPressed: () => Navigator.pop(context),
-      child: Text("Avbryt"),
-    );
+  Widget showOkButton(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return StatefulBuilder(builder: (context, setState) {
+      return FlatButton(
+        onPressed: () => {
+          _onMapCreated(_controller),
+          Navigator.pop(context, iconInfo),
+        },
+        child: Text("Klar"),
+      );
+    });
   }
 
-  Widget showOkButton() {
-    return FlatButton(
-      onPressed: () => {
-        _onMapCreated(_controller),
-        Navigator.pop(context),
-      },
-      child: Text("Klar"),
+  Widget showCancelButton(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return StatefulBuilder(builder: (context, setState) {
+      return FlatButton(
+        onPressed: () => {
+          Navigator.pop(context, iconInfo),
+          _onMapCreated(_controller),
+        },
+        child: Text("Avbryt"),
+      );
+    });
+  }
+
+}
+
+class CarIconButton extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          Icons.directions_car,
+          color: iconInfo.carToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () {
+          iconInfo.car = !iconInfo.carToggled;
+
+          bool truckValue = iconInfo.truckToggled;
+          if (truckValue)
+            iconInfo.truck = !truckValue;
+
+          bool motorcycleValue = iconInfo.truckToggled;
+          if (motorcycleValue)
+            iconInfo.motorcycle = !motorcycleValue;
+        }
     );
   }
 }
+
+class TruckIconButton extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          MdiIcons.truck,
+          color: iconInfo.truckToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () {
+          iconInfo.truck = !iconInfo.truckToggled;
+
+          bool carValue = iconInfo.carToggled;
+          if (carValue)
+            iconInfo.car = !carValue;
+
+          bool motorcycleValue = iconInfo.truckToggled;
+          if (motorcycleValue)
+            iconInfo.motorcycle = !motorcycleValue;
+
+        }
+    );
+  }
+}
+
+class MotorcycleIconButton extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return IconButton(
+        iconSize: 50,
+        icon: Icon(
+          Icons.motorcycle,
+          color: iconInfo.motorcycleToggled ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () {
+          iconInfo.motorcycle = !iconInfo.motorcycleToggled;
+
+          bool carValue = iconInfo.carToggled;
+          if (carValue)
+            iconInfo.car = !carValue;
+
+          bool truckValue = iconInfo.truckToggled;
+          if (truckValue)
+            iconInfo.truck = !truckValue;
+        }
+    );
+  }
+}
+
