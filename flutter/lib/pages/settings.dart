@@ -67,12 +67,12 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(height: SizeConfig.blockSizeVertical * 75),
               Expanded( // Code for the bottom navigation bar below.
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 5),
+                    SizedBox(width: SizeConfig.blockSizeHorizontal * 1),
                     showFavoritesNavigationButton(),
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                     showMapNavigationButton(),
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                     showSettingsNavigationButton(),
                   ],
                 ),
