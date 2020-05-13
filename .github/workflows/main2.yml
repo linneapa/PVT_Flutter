@@ -2,11 +2,13 @@
 on: 
   push:
     branches: [ flutter ]
-name: Test Flutter
+name: Flutter tests
 jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+    env: 
+      working-directory: ./flutter 
     steps: 
       - uses: actions/checkout@v1
         with: 
@@ -17,8 +19,12 @@ jobs:
       - uses: subosito/flutter-action@v1
         with: 
           flutter-version: '1.17.0'
-      - run: cd flutter
-      - run: ls -lah
-      #- run: flutter pub get
-      #- run: flutter test
-      #- run: flutter build apk --debug --split-per-abi
+      - name: Flutter get 
+        run: flutter pub get
+        working-directory: ${{env.working.directory}}  
+      - name: Flutter test
+        run: flutter test
+        working-directory: ${{env.working.directory}} 
+      - name: Flutter APK Build
+        run: flutter build apk --debug #--split-per-abi
+        working-directory: ${{env.working.directory}} 
