@@ -2,6 +2,8 @@
 on: 
   push:
     branches: [ flutter ]
+  pull_request:
+    branches: [fliutter ]
 name: Flutter tests
 jobs:
   build:
