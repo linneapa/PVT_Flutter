@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -48,6 +49,18 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
+
+  // this will hold the generated polylines
+  Set<Polyline> _polylines = {};
+  // this will hold each polyline coordinate as Lat and Lng pairs
+  List<LatLng> polylineCoordinates = [];
+  // this is the key object - the PolylinePoints
+  // which generates every polyline between start and finish
+  PolylinePoints polylinePoints = PolylinePoints();
+
+ LatLng testDestinationForDisplayingRoute = LatLng(37.446549, -122.153087);
+
+
   @override
   void initState() {
     super.initState();
@@ -91,8 +104,14 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
           _locationSubscription.cancel();
         }).listen((LocationData currentLocation) {
           setState(() {
+            // Trying to figure out how to update the route as myLocation changes 
+            // bool changed = false;
+            // if(_myLocation != currentLocation) 
+            //   changed = true;
             _myLocation = currentLocation;
             updatePinOnMap();
+            // if(changed) 
+            //    setPolylines(testDestinationForDisplayingRoute);
           });
         });
   }
@@ -174,6 +193,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
 
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
+    setPolylines(testDestinationForDisplayingRoute);
     var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     setState(() {
@@ -197,6 +217,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
+      polylines: _polylines,
       initialCameraPosition: CameraPosition(
         target: const LatLng(59.3293, 18.0686),
         zoom: 12,
@@ -204,6 +225,38 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       markers: _markers.values.toSet(),
     );
   }
+
+  setPolylines(LatLng destination) async {
+   List<PointLatLng> result = (await
+      polylinePoints?.getRouteBetweenCoordinates(
+         "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
+         PointLatLng(_myLocation.latitude, 
+         _myLocation.longitude),
+         PointLatLng(destination.latitude, 
+         destination.longitude))).points;
+   if(result.isNotEmpty){
+      // loop through all PointLatLng points and convert them
+      // to a list of LatLng, required by the Polyline
+      result.forEach((PointLatLng point){
+         polylineCoordinates.add(
+            LatLng(point.latitude, point.longitude));
+      });
+   }
+   setState(() {
+      // create a Polyline instance
+      // with an id, an RGB color and the list of LatLng pairs
+      Polyline polyline = Polyline(
+         polylineId: PolylineId("poly"),
+         color: Color.fromARGB(255, 40, 122, 198),
+         points: polylineCoordinates
+      );
+ 
+      // add the constructed polyline as a set of points
+      // to the polyline set, which will eventually
+      // end up showing up on the map
+      _polylines.add(polyline);
+    });
+}
 
   Widget showMyLocationButton() {
     return Align(
