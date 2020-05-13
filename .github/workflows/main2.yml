@@ -17,7 +17,8 @@ jobs:
       - uses: subosito/flutter-action@v1
         with: 
           flutter-version: '1.17.0'
-      - run: ls -lah 
+      - run: cd flutter
+      - run: ls -lah
       #- run: flutter pub get
       #- run: flutter test
       #- run: flutter build apk --debug --split-per-abi
