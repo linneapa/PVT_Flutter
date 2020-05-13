@@ -4,6 +4,8 @@ import 'package:ezsgame/pages/login_sign_up.dart';
 import 'package:ezsgame/pages/map_page.dart';
 import 'map_page.dart';
 
+//test comment
+
 enum AuthStatus {
   NOT_DETERMINED,
   NOT_LOGGED_IN,
