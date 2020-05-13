@@ -2,23 +2,21 @@
 on: 
   push:
     branches: [ flutter ]
-name: Test Flutter
+name: Flutter tests
 jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+
     steps: 
       - uses: actions/checkout@v1
-        with: 
-          path:  ./PVT_Flutter/flutter
       - uses: actions/setup-java@v1
         with: 
           java-version: '12.x'
       - uses: subosito/flutter-action@v1
         with: 
           flutter-version: '1.17.0'
-      - run: cd flutter
-      - run: ls -lah
-      #- run: flutter pub get
-      #- run: flutter test
-      #- run: flutter build apk --debug --split-per-abi
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter build apk --debug #--split-per-abi
+
