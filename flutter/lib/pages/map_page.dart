@@ -43,12 +43,11 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
-  Map<CircleId, Circle> circles = <CircleId, Circle>{};
+  final Map<String, Marker> _markers = {};
+  final Map<String, Circle> circles = {};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
-
   @override
   void initState() {
     super.initState();
@@ -173,10 +172,10 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     );
   }
 
-  final Map<String, Marker> _markers = {};
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
     var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    _controller = controller;
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
@@ -191,6 +190,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
         );
         _markers[parking.properties.cityDistrict] = marker;
       }
+      updatePinOnMap();
     });
   }
 
@@ -274,7 +274,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
         bearing: 0,
         target: LatLng(_myLocation.latitude, _myLocation.longitude),
         tilt: 0,
-        zoom: 18)));
+        zoom: 16)));
   }
 
   void setInitLocation() async {
@@ -287,7 +287,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   }
 
   void updatePinOnMap() async {
-    markers[MarkerId('PhoneLocationMarker')] = Marker(
+    _markers['PhoneLocationMarker'] = Marker(
         markerId: MarkerId('PhoneLocationMarker'),
         position: LatLng(_myLocation.latitude, _myLocation.longitude));
   }
