@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:async';
+import 'dart:ui';
+import 'dart:typed_data';
 import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -51,14 +55,22 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
+
+
   @override
   void initState() {
     super.initState();
-//    BitmapDescriptor.fromAssetImage(ImageConfiguration(
-//        devicePixelRatio: 2.5), 'assets/direction-arrow.png').then((onValue){
-//          arrowIcon = onValue;
-//    });
+    getBytesFromAsset('assets/direction-arrow.png',64).then((onValue) {
+      arrowIcon = BitmapDescriptor.fromBytes(onValue);
+    });
     setInitLocation();
+  }
+
+  static Future<Uint8List> getBytesFromAsset(String path, int width) async{
+    ByteData data = await rootBundle.load(path);
+    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),targetWidth:width);
+    FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ImageByteFormat.png)).buffer.asUint8List();
   }
 
   Future navigateToCurrentPage(context) async {}
@@ -325,7 +337,9 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   void updatePinOnMap() async {
     _markers['PhoneLocationMarker'] = Marker(
         markerId: MarkerId('PhoneLocationMarker'),
-        position: LatLng(_myLocation.latitude, _myLocation.longitude));
+        position: LatLng(_myLocation.latitude, _myLocation.longitude),
+        //rotation: _myLocation.heading,                                  //acting funny
+        icon: arrowIcon);
   }
 
   createDialog(BuildContext context) {
