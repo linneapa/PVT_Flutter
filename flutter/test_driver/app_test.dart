@@ -1,4 +1,6 @@
+// Run "flutter drive --target=test_driver/app.dart" in terminal from project map
 // Imports the Flutter Driver API.
+import 'package:ezsgame/pages/login_sign_up.dart';
 import 'package:flutter_driver/flutter_driver.dart';
 import 'package:test/test.dart';
 
@@ -8,7 +10,8 @@ void main() {
     // test suite. Note: the Strings provided to the `byValueKey` method must
     // be the same as the Strings we used for the Keys in step 1.
     // final counterTextFinder = find.byValueKey('counter');
-    // final buttonFinder = find.byValueKey('increment');
+    final emailField = find.byValueKey('email');
+    final passwordField = find.byValueKey('password');
 
     FlutterDriver driver;
 
