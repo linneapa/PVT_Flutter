@@ -37,6 +37,6 @@ jobs:
           target: default
           arch: x86
           profile: Pixel 2
-          script: flutter drive --target=flutter/test_driver/app.dart
+          script: flutter drive --target=test_driver/app.dart
       
     

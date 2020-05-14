@@ -1,7 +1,22 @@
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/signup.dart';
+import 'package:ezsgame/pages/forgotPassword.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
+
+// Used for testing
+class EmailFieldValidator{
+  static String validate(String value){
+    return value.isEmpty ? 'Email kan inte vara tom' : null;
+  }
+}
+
+// Used for testing
+class LoginFieldValidator{
+  static String validate(String value){
+    return value.isEmpty ? 'Lösenordet kan inte vara tom' : null;
+  }
+}
 
 class LoginSignupPage extends StatefulWidget {
   LoginSignupPage({this.auth, this.loginCallback});
@@ -41,16 +56,17 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     if (validateAndSave()) {
       String userId = "";
       try {
-          userId = await widget.auth.signIn(_email, _password);
-          if (userId == null) { //meaning the email hasn't been verified
-            setState(() {
-              _isLoading = false;
-              _errorMessage = "E-postadressen har inte verifierats än.";
-            });
-            return;
-          }
-          print('Signed in: $userId');
-        
+        userId = await widget.auth.signIn(_email, _password);
+        if (userId == null) {
+          //meaning the email hasn't been verified
+          setState(() {
+            _isLoading = false;
+            _errorMessage = "E-postadressen har inte verifierats än.";
+          });
+          return;
+        }
+        print('Signed in: $userId');
+
         setState(() {
           _isLoading = false;
         });
@@ -180,7 +196,8 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
           hintText: 'Email',
           border: OutlineInputBorder(),
         ),
-        validator: (value) => value.isEmpty ? 'Email kan inte vara tom' : null,
+        key: Key('email'),
+        validator: EmailFieldValidator.validate,
         onSaved: (value) => _email = value.trim(),
       ),
     );
@@ -194,11 +211,11 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
         obscureText: true,
         autofocus: false,
         decoration: new InputDecoration(
-          border: OutlineInputBorder(),
           hintText: 'Lösenord',
+          border: OutlineInputBorder(),
         ),
-        validator: (value) =>
-            value.isEmpty ? 'Lösenordet kan inte vara tom' : null,
+        key: Key('password'),
+        validator: LoginFieldValidator.validate,
         onSaved: (value) => _password = value.trim(),
       ),
     );
@@ -219,6 +236,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
           textColor: Colors.black,
           color: Colors.greenAccent,
           child: Text('Logga in'),
+          key: Key('LogInButton'),
           onPressed: validateAndSubmit,
         ));
   }
@@ -226,10 +244,14 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
   Widget showForgotPassword() {
     return FlatButton(
       onPressed: () {
-        //forgot password screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForgotPassword(
+              auth: widget.auth, loginCallback: widget.loginCallback)));
       },
       textColor: Colors.greenAccent,
-      child: Text('Glömd lösenord'),
+      child: Text('Glömt lösenord?'),
     );
   }
 

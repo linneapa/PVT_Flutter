@@ -26,8 +26,9 @@ dependencies:
   flutter_auth_buttons: ^0.8.0
   firebase_auth: ^0.16.0
   firebase_database: ^3.1.5
+  http: ^0.12.1
 
-  provider: 4.0.0
+  provider: ^4.0.0
   google_maps_flutter: ^0.5.26+4
   location: ^3.0.2
   permission: ^0.1.7
@@ -43,6 +44,7 @@ dev_dependencies:
   flutter_driver:
     sdk: flutter
   test: any
+  mockito: ^4.1.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
