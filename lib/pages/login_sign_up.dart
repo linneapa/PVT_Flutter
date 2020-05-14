@@ -2,6 +2,7 @@ import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
+import 'package:ezsgame/pages/SizeConfig.dart';
 
 class LoginSignupPage extends StatefulWidget {
   LoginSignupPage({this.auth, this.loginCallback});
@@ -15,6 +16,8 @@ class LoginSignupPage extends StatefulWidget {
 
 class _LoginSignupPageState extends State<LoginSignupPage> {
   final _formKey = new GlobalKey<FormState>();
+
+  SizeConfig sizeConfig;
 
   String _email;
   String _password;
@@ -91,6 +94,8 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     return new Scaffold(
         body: Stack(
       children: <Widget>[
@@ -114,7 +119,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         body: Padding(
-            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 30),
+            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, bottom: SizeConfig.blockSizeVertical * 3, top: SizeConfig.blockSizeVertical),
             child: new Form(
               key: _formKey,
               child: ListView(
@@ -198,7 +203,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
           hintText: 'Lösenord',
         ),
         validator: (value) =>
-            value.isEmpty ? 'Lösenordet kan inte vara tom' : null,
+            value.isEmpty ? 'Lösenordet kan inte vara tomt' : null,
         onSaved: (value) => _password = value.trim(),
       ),
     );
@@ -214,10 +219,10 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showPrimaryButton() {
     return new Container(
-        padding: EdgeInsets.only(left: 90, right: 90),
+        padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 25, right: SizeConfig.blockSizeHorizontal * 25),
         child: RaisedButton(
           textColor: Colors.black,
-          color: Colors.greenAccent,
+          color: Colors.orangeAccent,
           child: Text('Logga in'),
           onPressed: validateAndSubmit,
         ));
@@ -228,8 +233,8 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       onPressed: () {
         //forgot password screen
       },
-      textColor: Colors.greenAccent,
-      child: Text('Glömd lösenord'),
+      textColor: Colors.orangeAccent,
+      child: Text('Glömt ditt lösenord?'),
     );
   }
 
@@ -237,11 +242,11 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     return Container(
         child: Row(
       children: <Widget>[
-        Text('Har inte konto?'),
+        Text('Har du inget konto?'),
         FlatButton(
-          textColor: Colors.greenAccent,
+          textColor: Colors.orangeAccent,
           child: Text(
-            'Registrera',
+            'Registrera dig',
             style: TextStyle(
               fontSize: 15,
               decoration: TextDecoration.underline,
@@ -306,7 +311,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget facebookSignin() {
     return Container(
-      height: 70,
+      height: SizeConfig.blockSizeVertical * 10,
       padding: EdgeInsets.only(top: 0),
       child: Column(
         children: <Widget>[
