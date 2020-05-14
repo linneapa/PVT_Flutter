@@ -12,6 +12,7 @@ import 'favorites.dart';
 import 'package:location/location.dart';
 import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
+import 'package:search_map_place/search_map_place.dart';
 
 class MapPage extends StatefulWidget {
   @override
@@ -39,6 +40,8 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     target: LatLng(59.3293, 18.0686),
     zoom: 12,
   );
+
+  Completer<GoogleMapController> _mapController = Completer();
   Location location = Location();
   LocationData _myLocation;
   GoogleMapController _controller;
@@ -103,28 +106,24 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     SizeConfig().init(context);
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      appBar: AppBar(
-        title: showSearchTextField(),
-        actions: <Widget>[
-          showFilterButton(),
-        ],
-      ),
+
       body: Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            new Container(
+            Container(
               // Google maps container with a set size below.
-              height: SizeConfig.blockSizeVertical * 75,
+              height: SizeConfig.blockSizeVertical * 90,
               child: Stack(
                 // Stack used to allow myLocationButton on top of google maps.
                 children: <Widget>[
                   showGoogleMaps(),
+                  showTopBar(),
                   showMyLocationButton(),
                 ],
-              ),
-            ),
-            Expanded(
+
+            ),),
+            Flexible(
               // Code for the bottom navigation bar below.
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -143,39 +142,76 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     );
   }
 
-  Widget showSearchTextField() {
-    return TextField(
-      decoration: new InputDecoration(
-        hintText: 'Sök gata, adress, etc.',
-        border: new OutlineInputBorder(),
-        prefixIcon: IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-            setState(() {});
-          },
+  Widget showTopBar() {
+    return Align(
+      alignment: Alignment.topCenter,
+        child: Column( children: <Widget> [
+        Container(height: 30), //empty container to move down the searchfield 
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget> [
+           // Flexible(child: Container(height: 10,)),
+            Expanded(child: showSearchTextField()),
+            Flexible(child: showFilterButton()),
+          ],
         ),
-      ),
+        ],
+        ),
+    );
+  }
+
+
+  Widget showSearchTextField() {
+        return SearchMapPlaceWidget(
+        apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
+        // The language of the autocompletion
+        language: 'se',
+        // The position used to give better recomendations. 
+        location: LatLng(59.3293, 18.0686),
+        radius: 30000,
+        //darkMode: true,
+        placeholder: "Sök gata, adress, etc.",
+        onSelected: (Place place) async {
+          final geolocation = await place.geolocation;
+
+          // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
+         final GoogleMapController controller = await _mapController.future;
+
+
+          controller.animateCamera(
+              CameraUpdate.newLatLng(geolocation.coordinates));
+          controller.animateCamera(
+              CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+          
+        }
     );
   }
 
   Widget showFilterButton() {
-    return IconButton(
-      icon: Icon(
-        MdiIcons.filterMenu,
-        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
-      ),
-      onPressed: () {
-        createDialog(context);
-        showGoogleMaps();
-        // do something
-      },
+
+  //  return Align(
+    //  alignment: Alignment.topRight,
+      return IconButton(
+        icon: Icon(
+          MdiIcons.filterMenu,
+          color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+        ),
+        onPressed: () {
+          createDialog(context);
+          showGoogleMaps();
+          // do something
+        },
+ //     ),
     );
+
   }
 
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
     var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
+    _mapController.complete(controller);
+
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
