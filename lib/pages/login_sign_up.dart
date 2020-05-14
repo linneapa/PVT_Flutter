@@ -1,5 +1,6 @@
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/signup.dart';
+import 'package:ezsgame/pages/forgotPassword.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
 
@@ -41,16 +42,17 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     if (validateAndSave()) {
       String userId = "";
       try {
-          userId = await widget.auth.signIn(_email, _password);
-          if (userId == null) { //meaning the email hasn't been verified
-            setState(() {
-              _isLoading = false;
-              _errorMessage = "E-postadressen har inte verifierats än.";
-            });
-            return;
-          }
-          print('Signed in: $userId');
-        
+        userId = await widget.auth.signIn(_email, _password);
+        if (userId == null) {
+          //meaning the email hasn't been verified
+          setState(() {
+            _isLoading = false;
+            _errorMessage = "E-postadressen har inte verifierats än.";
+          });
+          return;
+        }
+        print('Signed in: $userId');
+
         setState(() {
           _isLoading = false;
         });
@@ -226,10 +228,14 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
   Widget showForgotPassword() {
     return FlatButton(
       onPressed: () {
-        //forgot password screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForgotPassword(
+              auth: widget.auth, loginCallback: widget.loginCallback)));
       },
       textColor: Colors.greenAccent,
-      child: Text('Glömd lösenord'),
+      child: Text('Glömt lösenord?'),
     );
   }
 
