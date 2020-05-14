@@ -119,7 +119,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         body: Padding(
-            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, bottom: SizeConfig.blockSizeVertical * 3, top: SizeConfig.blockSizeVertical),
+            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, top: SizeConfig.blockSizeVertical), // Please understand that all numerical factors here, and in every other place SizeConfig is used, are completely arbitrary and based solely on what looked good on my phone. -Julius :)
             child: new Form(
               key: _formKey,
               child: ListView(
@@ -164,7 +164,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
   Widget showLogo() {
     return Container(
       alignment: Alignment(0, -0.7),
-      padding: EdgeInsets.only(top: 40.0, bottom: 15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 4, bottom: SizeConfig.blockSizeVertical),
       child: Image.asset(
         "assets/logo.png",
         width: 95,
@@ -176,7 +176,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showEmailInput() {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 4, left: 15, right: 15),
       child: TextFormField(
         maxLines: 1,
         keyboardType: TextInputType.emailAddress,
@@ -193,7 +193,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showPasswordInput() {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 3, bottom: SizeConfig.blockSizeVertical * 2, left: 15, right: 15),
       child: new TextFormField(
         maxLines: 1,
         obscureText: true,
@@ -240,6 +240,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showSignup() {
     return Container(
+      height: SizeConfig.blockSizeVertical * 6,
         child: Row(
       children: <Widget>[
         Text('Har du inget konto?'),
