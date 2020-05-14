@@ -48,12 +48,12 @@ class _FavouritesPageState extends State<FavouritesPage> {
               SizedBox(height: SizeConfig.blockSizeVertical * 75),
               Expanded(
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 5),
+                    SizedBox(width: SizeConfig.blockSizeHorizontal * 1),
                     showFavoritesNavigationButton(),
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                     showMapNavigationButton(),
-                    SizedBox(width: SizeConfig.blockSizeHorizontal * 7),
                     showSettingsNavigationButton(),
                 ],
               ),
