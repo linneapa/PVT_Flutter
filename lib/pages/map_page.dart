@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:async';
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:ezsgame/api/Services.dart';
@@ -11,11 +10,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'IconInfo.dart';
 import 'package:flutter/foundation.dart';
-import 'settings.dart';
-import 'favorites.dart';
 import 'package:location/location.dart';
 import 'package:flutter/widgets.dart';
-import 'SizeConfig.dart';
 import 'package:search_map_place/search_map_place.dart';
 
 class MapPage extends StatefulWidget {
@@ -39,6 +35,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
+
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -73,30 +70,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     return (await fi.image.toByteData(format: ImageByteFormat.png)).buffer.asUint8List();
   }
 
-  Future navigateToCurrentPage(context) async {}
-
-  Future navigateToFavoritesPage(context) async {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-            new FavouritesPage(
-              auth: widget.auth,
-              logoutCallback: widget.logoutCallback,
-            )));
-  }
-
-  Future navigateToSettingsPage(context) async {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-            new SettingsPage(
-              auth: widget.auth,
-              logoutCallback: widget.logoutCallback,
-            )));
-  }
-
   Future<void> _listenLocation() async {
     _locationSubscription =
         location.onLocationChanged.handleError((dynamic err) {
@@ -112,73 +85,49 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
         });
   }
 
+
   @override
   Widget build(BuildContext context) {
     _listenLocation();
-    SizeConfig().init(context);
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-
       body: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+        child: Stack(
           children: <Widget>[
-            Container(
-              // Google maps container with a set size below.
-              height: SizeConfig.blockSizeVertical * 90,
-              child: Stack(
-                // Stack used to allow myLocationButton on top of google maps.
-                children: <Widget>[
-                  showGoogleMaps(),
-                  showTopBar(),
-                  showMyLocationButton(),
-                ],
-
-            ),),
-            Flexible(
-              // Code for the bottom navigation bar below.
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(width: SizeConfig.blockSizeHorizontal * 1),
-                  showFavoritesNavigationButton(),
-                  showMapNavigationButton(),
-                  showSettingsNavigationButton(),
-                ],
-              ),
-            ),
+            showGoogleMaps(),
+            showTopBar(),
+            showMyLocationButton()
           ],
-        ),
-      ),
+        )
+      )
     );
   }
 
   Widget showTopBar() {
     return Align(
       alignment: Alignment.topCenter,
-        child: Column( children: <Widget> [
-        Container(height: 30), //empty container to move down the searchfield 
+      child: Column( children: <Widget> [
+        Container(height: 30), //empty container to move down the searchfield
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget> [
-           // Flexible(child: Container(height: 10,)),
+            // Flexible(child: Container(height: 10,)),
             Expanded(child: showSearchTextField()),
             Flexible(child: showFilterButton()),
           ],
         ),
-        ],
-        ),
+      ],
+      ),
     );
   }
 
 
   Widget showSearchTextField() {
-        return SearchMapPlaceWidget(
+    return SearchMapPlaceWidget(
         apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
         // The language of the autocompletion
         language: 'se',
-        // The position used to give better recomendations. 
+        // The position used to give better recomendations.
         location: LatLng(59.3293, 18.0686),
         radius: 30000,
         //darkMode: true,
@@ -187,33 +136,33 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
           final geolocation = await place.geolocation;
 
           // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
-         final GoogleMapController controller = await _mapController.future;
+          final GoogleMapController controller = await _mapController.future;
 
 
           controller.animateCamera(
               CameraUpdate.newLatLng(geolocation.coordinates));
           controller.animateCamera(
               CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
-          
+
         }
     );
   }
 
   Widget showFilterButton() {
 
-  //  return Align(
+    //  return Align(
     //  alignment: Alignment.topRight,
-      return IconButton(
-        icon: Icon(
-          MdiIcons.filterMenu,
-          color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
-        ),
-        onPressed: () {
-          createDialog(context);
-          showGoogleMaps();
-          // do something
-        },
- //     ),
+    return IconButton(
+      icon: Icon(
+        MdiIcons.filterMenu,
+        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+      ),
+      onPressed: () {
+        createDialog(context);
+        showGoogleMaps();
+        // do something
+      },
+      //     ),
     );
 
   }
@@ -263,57 +212,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             showCurrentLocation();
           }),
     );
-  }
-
-  Widget showFavoritesNavigationButton() {
-    return FlatButton(
-        onPressed: () =>
-        {
-          navigateToFavoritesPage(context),
-        },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.favorite, size: 45, color: Colors.grey),
-            Text("Favoriter",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
-  }
-
-  Widget showMapNavigationButton() {
-    return FlatButton(
-        onPressed: () =>
-        {
-          // This button does nothing yet...
-        },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.map, size: 45, color: Colors.orangeAccent),
-            Text("Karta",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
-  }
-
-  Widget showSettingsNavigationButton() {
-    return FlatButton(
-        onPressed: () =>
-        {
-          navigateToSettingsPage(context),
-        },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.settings, size: 45, color: Colors.grey),
-            Text("Inställningar",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
   }
 
   void showCurrentLocation() async {
@@ -610,4 +508,5 @@ class MotorcycleIconButton extends StatelessWidget {
     );
   }
 }
+
 
