@@ -58,7 +58,8 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   // which generates every polyline between start and finish
   PolylinePoints polylinePoints = PolylinePoints();
 
- LatLng testDestinationForDisplayingRoute = LatLng(37.446549, -122.153087);
+
+ LatLng testDestinationForDisplayingRoute = LatLng(59.368585, 18.050156);
 
 
   @override
@@ -104,14 +105,14 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
           _locationSubscription.cancel();
         }).listen((LocationData currentLocation) {
           setState(() {
-            // Trying to figure out how to update the route as myLocation changes 
-            // bool changed = false;
-            // if(_myLocation != currentLocation) 
-            //   changed = true;
+            // Check if the route needs to be updated
+             bool changed = false;
+             if(_myLocation != currentLocation)
+               changed = true;
             _myLocation = currentLocation;
             updatePinOnMap();
-            // if(changed) 
-            //    setPolylines(testDestinationForDisplayingRoute);
+             if(changed)
+                setPolylines(testDestinationForDisplayingRoute);
           });
         });
   }
@@ -193,7 +194,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
 
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    setPolylines(testDestinationForDisplayingRoute);
     var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     setState(() {
@@ -237,6 +237,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
    if(result.isNotEmpty){
       // loop through all PointLatLng points and convert them
       // to a list of LatLng, required by the Polyline
+      polylineCoordinates.clear();
       result.forEach((PointLatLng point){
          polylineCoordinates.add(
             LatLng(point.latitude, point.longitude));
@@ -265,7 +266,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
           child: Icon(Icons.my_location, color: Colors.black),
           backgroundColor: Color.fromRGBO(160, 160, 160, 1.0),
           onPressed: () {
-            showCurrentLocation();
+            showCurrentLocation(_controller);
           }),
     );
   }
@@ -321,8 +322,9 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
         ));
   }
 
-  void showCurrentLocation() async {
+  void showCurrentLocation(GoogleMapController controller) async {
     _myLocation = await location.getLocation();
+    _controller = controller;
     _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
         bearing: 0,
         target: LatLng(_myLocation.latitude, _myLocation.longitude),
