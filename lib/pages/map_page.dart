@@ -26,7 +26,7 @@ class MapPage extends StatefulWidget {
   final String userId;
 }
 
-class _MapPageState extends State<MapPage> with ChangeNotifier {
+class _MapPageState extends State<MapPage> {
 
   bool handicapToggled = false;
   var _globalCarToggled = true;
@@ -90,16 +90,16 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   Widget build(BuildContext context) {
     _listenLocation();
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
-      body: Container(
-        child: Stack(
-          children: <Widget>[
-            showGoogleMaps(),
-            showTopBar(),
-            showMyLocationButton()
-          ],
+        resizeToAvoidBottomPadding: false,
+        body: Container(
+            child: Stack(
+              children: <Widget>[
+                showGoogleMaps(),
+                showTopBar(),
+                showMyLocationButton()
+              ],
+            )
         )
-      )
     );
   }
 
@@ -508,5 +508,3 @@ class MotorcycleIconButton extends StatelessWidget {
     );
   }
 }
-
-
