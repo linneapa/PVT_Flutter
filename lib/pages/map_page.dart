@@ -28,6 +28,13 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
 
+  @override
+  void setState(fn) {
+    if (this.mounted) {
+      super.setState(fn);
+    }
+  }
+
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
@@ -112,7 +119,7 @@ class _MapPageState extends State<MapPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget> [
             // Flexible(child: Container(height: 10,)),
-            Expanded(child: showSearchTextField()),
+        //    Expanded(child: showSearchTextField()),
             Flexible(child: showFilterButton()),
           ],
         ),
