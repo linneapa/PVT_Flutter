@@ -59,8 +59,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   PolylinePoints polylinePoints = PolylinePoints();
 
 
-  LatLng currentDestination;
-  bool currentlyNavigating = false;
+ LatLng testDestinationForDisplayingRoute = LatLng(59.368585, 18.050156);
 
 
   @override
@@ -112,8 +111,8 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
                changed = true;
             _myLocation = currentLocation;
             updatePinOnMap();
-             if(changed && currentDestination != null)
-                setPolylines(currentDestination);
+             if(changed)
+                setPolylines(testDestinationForDisplayingRoute);
           });
         });
   }
@@ -142,7 +141,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
                 children: <Widget>[
                   showGoogleMaps(),
                   showMyLocationButton(),
-                  showStopRouteButton(),
                 ],
               ),
             ),
@@ -206,24 +204,13 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             position: LatLng(parking.geometry.coordinates[0][1],
                 parking.geometry.coordinates[0][0]),
             infoWindow: InfoWindow(
-              title: "${parking.properties.cityDistrict}",
-              snippet:"Pris: \n${parking.properties.address}\nServicedagar: ${parking.properties.cityDistrict}",
-              onTap: () {startRoute(LatLng(parking.geometry.coordinates[0][1],
-                parking.geometry.coordinates[0][0]));},
-              
+              title: parking.properties.cityDistrict,
+              snippet: parking.properties.address,
             )
         );
         _markers[parking.properties.cityDistrict] = marker;
       }
       updatePinOnMap();
-    });
-  }
-
-  void startRoute(LatLng destination) {
-    currentDestination = destination;
-    setPolylines(currentDestination);
-    currentlyNavigating = true;
-    setState(() {
     });
   }
 
@@ -262,7 +249,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       Polyline polyline = Polyline(
          polylineId: PolylineId("poly"),
          color: Color.fromARGB(255, 40, 122, 198),
-          //color: Color.fromARGB(255, 255, 165, 0), orange
          points: polylineCoordinates
       );
  
@@ -283,28 +269,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             showCurrentLocation(_controller);
           }),
     );
-  }
-
-  Widget showStopRouteButton() {
-    if(currentlyNavigating)
-      return Align(
-        alignment: Alignment.bottomLeft,
-        child: FloatingActionButton(
-            child: Icon(Icons.my_location, color: Colors.black),
-            backgroundColor: Color.fromRGBO(160, 160, 160, 1.0),
-            onPressed: () {
-              stopCurrentRoute();
-            }),
-      );
-    else 
-      return Container(height: 0.0);
-  }
-
-  void stopCurrentRoute() {
-    polylineCoordinates.clear();
-    _polylines.clear();
-    currentDestination = null;
-    currentlyNavigating = false;
   }
 
   Widget showFavoritesNavigationButton() {
