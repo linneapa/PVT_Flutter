@@ -119,7 +119,7 @@ class _MapPageState extends State<MapPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget> [
             // Flexible(child: Container(height: 10,)),
-        //    Expanded(child: showSearchTextField()),
+            Expanded(child: showSearchTextField()),
             Flexible(child: showFilterButton()),
           ],
         ),
@@ -140,16 +140,18 @@ class _MapPageState extends State<MapPage> {
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
+
           final geolocation = await place.geolocation;
 
           // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
           final GoogleMapController controller = await _mapController.future;
 
-
-          controller.animateCamera(
-              CameraUpdate.newLatLng(geolocation.coordinates));
-          controller.animateCamera(
-              CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+          setState(() {
+            controller.animateCamera(
+                CameraUpdate.newLatLng(geolocation.coordinates));
+            controller.animateCamera(
+                CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+          });
 
         }
     );
