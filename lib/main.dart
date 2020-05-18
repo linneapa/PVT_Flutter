@@ -1,3 +1,4 @@
+import 'package:ezsgame/pages/login_sign_up.dart';
 import 'package:ezsgame/pages/map_page.dart';
 import 'package:ezsgame/pages/root_page.dart';
 import 'package:flutter/material.dart';
@@ -15,8 +16,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.white,
       ),
-      //home: new RootPage(auth: new Auth())
-      home: new HomePage(),
+      home: new RootPage(auth: new Auth())
+      //home: new LoginSignupPage(),
     );
   }
 }

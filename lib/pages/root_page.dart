@@ -2,6 +2,7 @@ import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/pages/login_sign_up.dart';
 import 'package:ezsgame/pages/map_page.dart';
+import 'home_page.dart';
 import 'map_page.dart';
 
 enum AuthStatus {
@@ -78,7 +79,7 @@ class _RootPageState extends State<RootPage> {
         break;
       case AuthStatus.LOGGED_IN:
         if (_userId.length > 0 && _userId != null) {
-          return new MapPage(
+          return new HomePage(
             userId: _userId,
             auth: widget.auth,
             logoutCallback: logoutCallback,

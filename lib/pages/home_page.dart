@@ -20,7 +20,7 @@ class HomePage extends StatefulWidget {
   final String userId;
 }
 
-class _HomePageState extends State<HomePage> with ChangeNotifier {
+class _HomePageState extends State<HomePage> {
 
   int _currentNavigationIndex = 1;
 
