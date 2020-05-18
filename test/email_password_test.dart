@@ -16,7 +16,7 @@ void main() {
     });
 
     test('empty password returns error string', () async {
-      final error = 'Lösenordet kan inte vara tom';
+      final error = 'Lösenordet kan inte vara tomt';
 
       final result = LoginFieldValidator.validate('');
       expect(result, error);
