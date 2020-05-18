@@ -24,17 +24,26 @@ class _HomePageState extends State<HomePage> {
 
   int _currentNavigationIndex = 1;
 
-  final List<Widget> _tabs = [
-    FavouritesPage(),
-    MapPage(),
-    SettingsPage(),
+  List<Widget> _tabs() => [
+    FavouritesPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,),
+    MapPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,),
+    SettingsPage(
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> tabs = _tabs();
+
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: _tabs[_currentNavigationIndex],
+      body: tabs[_currentNavigationIndex],
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentNavigationIndex,
           type: BottomNavigationBarType.fixed,

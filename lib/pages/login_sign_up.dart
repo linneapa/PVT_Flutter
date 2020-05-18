@@ -144,12 +144,12 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
                   showLogo(), // done
                   showEmailInput(),
                   showPasswordInput(),
+                  showErrorMessage(),
                   showPrimaryButton(),
                   showForgotPassword(),
                   showSignup(),
                   facebookSignin(),
                   googleSignin(),
-                  showErrorMessage(),
                 ],
               ),
             )));
