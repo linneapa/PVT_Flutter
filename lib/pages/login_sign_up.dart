@@ -3,6 +3,7 @@ import 'package:ezsgame/pages/signup.dart';
 import 'package:ezsgame/pages/forgotPassword.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
+import 'package:ezsgame/pages/SizeConfig.dart';
 
 // Used for testing
 class EmailFieldValidator{
@@ -14,7 +15,7 @@ class EmailFieldValidator{
 // Used for testing
 class LoginFieldValidator{
   static String validate(String value){
-    return value.isEmpty ? 'Lösenordet kan inte vara tom' : null;
+    return value.isEmpty ? 'Lösenordet kan inte vara tomt' : null;
   }
 }
 
@@ -30,6 +31,8 @@ class LoginSignupPage extends StatefulWidget {
 
 class _LoginSignupPageState extends State<LoginSignupPage> {
   final _formKey = new GlobalKey<FormState>();
+
+  SizeConfig sizeConfig;
 
   String _email;
   String _password;
@@ -107,6 +110,8 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     return new Scaffold(
         body: Stack(
       children: <Widget>[
@@ -130,7 +135,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         body: Padding(
-            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 30),
+            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, top: SizeConfig.blockSizeVertical), // Please understand that all numerical factors here, and in every other place SizeConfig is used, are completely arbitrary and based solely on what looked good on my phone. -Julius :)
             child: new Form(
               key: _formKey,
               child: ListView(
@@ -175,7 +180,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
   Widget showLogo() {
     return Container(
       alignment: Alignment(0, -0.7),
-      padding: EdgeInsets.only(top: 40.0, bottom: 15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 4, bottom: SizeConfig.blockSizeVertical),
       child: Image.asset(
         "assets/logo.png",
         width: 95,
@@ -187,7 +192,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showEmailInput() {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 4, left: 15, right: 15),
       child: TextFormField(
         maxLines: 1,
         keyboardType: TextInputType.emailAddress,
@@ -205,7 +210,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showPasswordInput() {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 3, bottom: SizeConfig.blockSizeVertical * 2, left: 15, right: 15),
       child: new TextFormField(
         maxLines: 1,
         obscureText: true,
@@ -231,10 +236,10 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget showPrimaryButton() {
     return new Container(
-        padding: EdgeInsets.only(left: 90, right: 90),
+        padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 25, right: SizeConfig.blockSizeHorizontal * 25),
         child: RaisedButton(
           textColor: Colors.black,
-          color: Colors.greenAccent,
+          color: Colors.orangeAccent,
           child: Text('Logga in'),
           key: Key('LogInButton'),
           onPressed: validateAndSubmit,
@@ -250,20 +255,21 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
             builder: (context) => ForgotPassword(
               auth: widget.auth, loginCallback: widget.loginCallback)));
       },
-      textColor: Colors.greenAccent,
-      child: Text('Glömt lösenord?'),
+      textColor: Colors.orangeAccent,
+      child: Text('Glömt ditt lösenord?'),
     );
   }
 
   Widget showSignup() {
     return Container(
+        height: SizeConfig.blockSizeVertical * 6,
         child: Row(
       children: <Widget>[
-        Text('Har inte konto?'),
+        Text('Har du inget konto?'),
         FlatButton(
-          textColor: Colors.greenAccent,
+          textColor: Colors.orangeAccent,
           child: Text(
-            'Registrera',
+            'Registrera dig',
             style: TextStyle(
               fontSize: 15,
               decoration: TextDecoration.underline,
@@ -328,7 +334,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   Widget facebookSignin() {
     return Container(
-      height: 70,
+      height: SizeConfig.blockSizeVertical * 10,
       padding: EdgeInsets.only(top: 0),
       child: Column(
         children: <Widget>[
