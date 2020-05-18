@@ -1,5 +1,6 @@
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:ezsgame/pages/SizeConfig.dart';
 
 class ForgotPassword extends StatefulWidget {
   ForgotPassword({this.auth, this.loginCallback});
@@ -14,11 +15,15 @@ class ForgotPassword extends StatefulWidget {
 class _ForgotPasswordState extends State<ForgotPassword> {
   final _formKey = new GlobalKey<FormState>();
 
+  SizeConfig sizeConfig;
+
   String _email;
 
   String _errorMessage;
 
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Återställ lösenord'),
@@ -31,7 +36,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         body: Padding(
-            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 30),
+            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, top: SizeConfig.blockSizeVertical * 3),
             child: new Form(
               key: _formKey,
               child: ListView(
@@ -126,10 +131,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   Widget showResetPasswordButton() {
     return Container(
-        padding: EdgeInsets.only(left: 90, right: 90),
+        padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 25, right: SizeConfig.blockSizeHorizontal * 25),
         child: RaisedButton(
           textColor: Colors.black,
-          color: Colors.greenAccent,
+          color: Colors.orangeAccent,
           child: Text('Återställ'),
           onPressed: validateAndSubmit,
         ));
