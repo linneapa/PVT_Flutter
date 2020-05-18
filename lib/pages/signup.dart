@@ -1,5 +1,6 @@
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:ezsgame/pages/SizeConfig.dart';
 
 /*
 TODO:
@@ -23,12 +24,16 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _formKey = new GlobalKey<FormState>();
 
+  SizeConfig sizeConfig;
+
   String _email, _confirmEmail, _password, _confirmPassword;
   bool _termsAndConditionsAgreement = false, _signUpBtnHasBeenPressed = false;
 
   String _errorMessage;
 
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Registrera ny användare'),
@@ -41,7 +46,7 @@ class _SignupPageState extends State<SignupPage> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         body: Padding(
-            padding: EdgeInsets.only(left: 60, right: 60, bottom: 40, top: 30),
+            padding: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal * 10, right: SizeConfig.blockSizeHorizontal * 10, bottom: 0, top: SizeConfig.blockSizeVertical * 5),
             child: new Form(
               key: _formKey,
               child: ListView(
@@ -204,7 +209,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget showVillkorBtn() {
     return FlatButton(
-      textColor: Colors.greenAccent,
+      textColor: Colors.orangeAccent,
       child: Text(
         'Villkoren',
         style: TextStyle(
@@ -223,7 +228,7 @@ class _SignupPageState extends State<SignupPage> {
         padding: EdgeInsets.only(left: 90, right: 90),
         child: RaisedButton(
           textColor: Colors.black,
-          color: Colors.greenAccent,
+          color: Colors.orangeAccent,
           child: Text('Registrera'),
           onPressed: validateAndSubmit,
         ));
