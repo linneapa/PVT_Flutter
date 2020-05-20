@@ -13,6 +13,7 @@ import 'favorites.dart';
 import 'package:location/location.dart';
 import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
+import 'dart:math' as Math;
 
 class MapPage extends StatefulWidget {
   @override
@@ -45,7 +46,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
   final Map<String, Marker> _markers = {};
-  final Map<String, Circle> circles = {};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -57,7 +57,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   // this is the key object - the PolylinePoints
   // which generates every polyline between start and finish
   PolylinePoints polylinePoints = PolylinePoints();
-
 
   LatLng currentDestination;
   bool currentlyNavigating = false;
@@ -113,7 +112,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             _myLocation = currentLocation;
             updatePinOnMap();
              if(changed && currentDestination != null)
-                setPolylines(currentDestination);
+                setPolylines();
           });
         });
   }
@@ -219,14 +218,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     });
   }
 
-  void startRoute(LatLng destination) {
-    currentDestination = destination;
-    setPolylines(currentDestination);
-    currentlyNavigating = true;
-    setState(() {
-    });
-  }
-
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
@@ -238,15 +229,80 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       markers: _markers.values.toSet(),
     );
   }
+  void showArrivedAtDestinationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new Text("Framme :)", textAlign: TextAlign.center,),
+          actions: <Widget>[
+            new RaisedButton(
+              child: new Text("Stäng"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  setPolylines(LatLng destination) async {
-   List<PointLatLng> result = (await
+  void startRoute(LatLng destination) {
+    currentDestination = destination;
+    setPolylines();
+    currentlyNavigating = true;
+    setState(() {
+    });
+  }
+
+  void stopCurrentRoute() {
+    polylineCoordinates.clear();
+    _polylines.clear();
+    currentDestination = null;
+    currentlyNavigating = false;
+    setState(() {
+    });
+  }
+
+  bool reachedDestination() {
+    int radius = 15;
+    //checks if myLocation is within a x meters radius from destination
+    if(distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < radius) {
+      stopCurrentRoute();
+      showArrivedAtDestinationDialog();
+      return true;
+    }
+    return false;
+  }
+
+  //converts degrees to radians
+  double degToRad(deg) {
+    return deg * (Math.pi/180);
+  }
+
+  //uses the Haversine formula to calculate the distance between two points on the map in meters
+  double distanceBetweenPoints(double latA, double lonA, double latB, double lonB) { 
+    int R = 6371000; // Radius of the earth in meters
+    double dLat = degToRad(latB-latA);
+    double dLon = degToRad(lonB-lonA); 
+    double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(degToRad(latA)) * 
+               Math.cos(degToRad(latB)) *  Math.sin(dLon/2) * Math.sin(dLon/2); 
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    double d = R * c; // Distance in meters
+    return d;
+  }
+
+  void setPolylines() async {
+    if(reachedDestination())
+      return;
+    List<PointLatLng> result = (await
       polylinePoints?.getRouteBetweenCoordinates(
          "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
          PointLatLng(_myLocation.latitude, 
          _myLocation.longitude),
-         PointLatLng(destination.latitude, 
-         destination.longitude))).points;
+         PointLatLng(currentDestination.latitude, 
+         currentDestination.longitude))).points;
    if(result.isNotEmpty){
       // loop through all PointLatLng points and convert them
       // to a list of LatLng, required by the Polyline
@@ -298,13 +354,6 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       );
     else 
       return Container(height: 0.0);
-  }
-
-  void stopCurrentRoute() {
-    polylineCoordinates.clear();
-    _polylines.clear();
-    currentDestination = null;
-    currentlyNavigating = false;
   }
 
   Widget showFavoritesNavigationButton() {
