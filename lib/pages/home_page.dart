@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Widget> _tabs() => [
     FavouritesPage(
+      userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
     MapPage(

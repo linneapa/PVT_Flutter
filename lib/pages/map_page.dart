@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/api/Services.dart';
+import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -45,6 +46,7 @@ class _MapPageState extends State<MapPage> {
   var _costValue = 0.0;
   var currMarker;
   var parkings;
+  final db = Firestore.instance;
 
 
   static final CameraPosition initPosition = CameraPosition(
@@ -95,7 +97,6 @@ class _MapPageState extends State<MapPage> {
         });
   }
 
-
   @override
   Widget build(BuildContext context) {
     _listenLocation();
@@ -108,8 +109,8 @@ class _MapPageState extends State<MapPage> {
                 showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
-              ],
-            )
+                ],
+          )
         )
     );
   }
@@ -163,8 +164,6 @@ class _MapPageState extends State<MapPage> {
 
   Widget showFilterButton() {
 
-    //  return Align(
-    //  alignment: Alignment.topRight,
     return IconButton(
       icon: Icon(
         MdiIcons.filterMenu,
@@ -179,13 +178,16 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  addToFavorites() {
-    Firestore.instance.collection('favorites').document('userId').updateData(
-      {
-        'type': 'car',
-        'location': currMarker.markerId.toString()
-      }
+  addToFavorites() async {
+    String id = widget.userId;
+
+    await db.collection('userData').document(id).collection('favorites').add(
+        {
+          'location': currMarker.markerId.toString(),
+          'type': 'car'
+        }
     );
+
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
