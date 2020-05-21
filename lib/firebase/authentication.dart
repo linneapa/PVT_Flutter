@@ -40,6 +40,7 @@ class Auth implements BaseAuth {
 
     if(user.isEmailVerified)
       return user.uid;
+
     return null;
   }
 

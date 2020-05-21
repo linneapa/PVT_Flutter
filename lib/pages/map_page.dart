@@ -180,7 +180,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   addToFavorites() {
-    Firestore.instance.collection('favorites').document().setData(
+    Firestore.instance.collection('favorites').document('userId').updateData(
       {
         'type': 'car',
         'location': currMarker.markerId.toString()

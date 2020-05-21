@@ -44,7 +44,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
         actions: <Widget>[],
       ),
       body: Container(
-        child: new FavoritesList(),
+        //child: new FavoritesList(),
       ),
     );
   }
@@ -53,27 +53,28 @@ class _FavouritesPageState extends State<FavouritesPage> {
 
 }
 
-class FavoritesList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: Firestore.instance.collection('favorites').snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError)
-          return new Text('Error: ${snapshot.error}');
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting: return new Text('Loading...');
-          default:
-            return new ListView(
-              children: snapshot.data.documents.map((DocumentSnapshot document) {
-                return new ListTile(
-                  title: new Text(document['type']),
-                  subtitle: new Text(document['location']),
-                );
-              }).toList(),
-            );
-        }
-      },
-    );
-  }
-}
+//class FavoritesList extends StatelessWidget {
+//  @override
+//  Widget build(BuildContext context) {
+//    return StreamBuilder<QuerySnapshot>(
+//      stream: Firestore.instance.collection('favorites').snapshots(),
+//      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+//        if (snapshot.hasError)
+//          return new Text('Error: ${snapshot.error}');
+//        switch (snapshot.connectionState) {
+//          case ConnectionState.waiting: return new Text('Loading...');
+//          default:
+//            return new ListView(
+//              children: snapshot.data.documents.map((DocumentSnapshot document) {
+//                return new ListTile(
+//                  title: new Text(document['type']),
+//                  subtitle: new Text(document['location']),
+//                );
+//              }).toList(),
+//            );
+//        }
+//      },
+//    );
+//  }
+//}
+//
