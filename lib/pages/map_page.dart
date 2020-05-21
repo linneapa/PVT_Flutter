@@ -196,7 +196,7 @@ class _MapPageState extends State<MapPage> {
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
-            title: Text('nice'),
+            title: Text('Success'),
             content: Text(location + ' added to favorites!')));
   }
 

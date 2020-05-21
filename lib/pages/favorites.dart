@@ -61,6 +61,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
               Row(
                 children: <Widget>[
                   Text(parking['location'], style: new TextStyle(fontSize: 14)),
+                  Icon(Icons.directions_car)
                 ],
               ),
               Row(
