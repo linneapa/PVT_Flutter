@@ -183,14 +183,14 @@ class _MapPageState extends State<MapPage> {
     Firestore.instance.collection('favorites').document().setData(
       {
         'type': 'car',
-        'location': currMarker.toString()
+        'location': currMarker.markerId.toString()
       }
     );
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
             title: Text('nice'),
-            content: Text(currMarker.toString() + ' added to favorites!')));
+            content: Text(currMarker.markerId.toString() + ' added to favorites!')));
   }
 
   Widget showFavoritesButton() {
