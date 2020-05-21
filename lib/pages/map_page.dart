@@ -180,10 +180,15 @@ class _MapPageState extends State<MapPage> {
 
   addToFavorites() async {
     String id = widget.userId;
+    
+    String location = currMarker.markerId.toString();
+    location = location.substring(location.indexOf(":") + 1);
+    location = location.substring(0, location.indexOf("}"));
+    location = location.trim();
 
     await db.collection('userData').document(id).collection('favorites').add(
         {
-          'location': currMarker.markerId.toString(),
+          'location': location,
           'type': 'car'
         }
     );
@@ -192,7 +197,7 @@ class _MapPageState extends State<MapPage> {
         context: context,
         builder: (_) => AlertDialog(
             title: Text('nice'),
-            content: Text(currMarker.markerId.toString() + ' added to favorites!')));
+            content: Text(location + ' added to favorites!')));
   }
 
   Widget showFavoritesButton() {
