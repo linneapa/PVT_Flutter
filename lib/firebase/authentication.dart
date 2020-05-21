@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ezsgame/firebase/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
@@ -34,7 +35,10 @@ class Auth implements BaseAuth {
         email: email, password: password);
 
     FirebaseUser user = result.user;
-    if(user.isEmailVerified) 
+    
+    await DatabaseService(uid: user.uid).updateUserData('car', 'kungsgatan');
+
+    if(user.isEmailVerified)
       return user.uid;
     return null;
   }

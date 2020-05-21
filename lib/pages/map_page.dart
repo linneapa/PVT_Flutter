@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/api/Services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +43,8 @@ class _MapPageState extends State<MapPage> {
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
+  var currMarker;
+  var parkings;
 
 
   static final CameraPosition initPosition = CameraPosition(
@@ -102,6 +105,7 @@ class _MapPageState extends State<MapPage> {
             child: Stack(
               children: <Widget>[
                 showGoogleMaps(),
+                showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
               ],
@@ -173,12 +177,44 @@ class _MapPageState extends State<MapPage> {
       },
       //     ),
     );
+  }
 
+  addToFavorites() {
+    Firestore.instance.collection('favorites').document().setData(
+      {
+        'type': 'car',
+        'location': currMarker.toString()
+      }
+    );
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+            title: Text('nice'),
+            content: Text(currMarker.toString() + ' added to favorites!')));
+  }
+
+  Widget showFavoritesButton() {
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: FlatButton(
+          child: Icon(Icons.favorite_border, color: Colors.green),
+          onPressed: () {
+            if(currMarker != null) addToFavorites();
+          }),
+    );
+  }
+
+  _onMarkerTapped(String address) {
+    if (_markers.containsKey(address)) {
+      final marker = _markers[address];
+      currMarker = marker;
+      print(currMarker.markerId.toString() + '');
+    }
   }
 
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
 
@@ -186,15 +222,17 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
+            onTap: () { _onMarkerTapped(parking.properties.address);},
             markerId: MarkerId(parking.properties.address),
             position: LatLng(parking.geometry.coordinates[0][1],
                 parking.geometry.coordinates[0][0]),
             infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
+              onTap: () { _onMarkerTapped(parking.properties.address);},
             )
         );
-        _markers[parking.properties.cityDistrict] = marker;
+        _markers[parking.properties.address] = marker;
       }
       updatePinOnMap();
     });
@@ -436,6 +474,7 @@ class _MapPageState extends State<MapPage> {
       );
     });
   }
+
 
 }
 

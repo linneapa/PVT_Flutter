@@ -14,6 +14,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
 
+
   signOut() async {
     try {
       await widget.auth.signOut();
