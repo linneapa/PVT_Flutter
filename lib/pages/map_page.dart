@@ -124,7 +124,8 @@ class _MapPageState extends State<MapPage> {
                 showGoogleMaps(),
                 showFavoritesButton(),
                 showTopBar(),
-                showMyLocationButton()
+                showMyLocationButton(),
+                showStopRouteButton(), 
                 ],
           )
         )
@@ -257,7 +258,7 @@ class _MapPageState extends State<MapPage> {
                     parking.geometry.coordinates[0][0]));
               },
             ));
-        _markers[parking.properties.cityDistrict] = marker;
+        _markers[parking.properties.address] = marker;
       }
       updatePinOnMap();
     });
@@ -445,7 +446,7 @@ class _MapPageState extends State<MapPage> {
   Widget showStopRouteButton() {
     if (currentlyNavigating)
       return Align(
-        alignment: Alignment.bottomLeft,
+        alignment: Alignment.centerLeft, //temporary placement
         child: FloatingActionButton(
             child: Text("Stopp", style: TextStyle(color: Colors.white)),
             backgroundColor: Color.fromRGBO(255, 165, 0, 1.0),
@@ -457,56 +458,7 @@ class _MapPageState extends State<MapPage> {
       return Container(height: 0.0);
   }
 
-  Widget showFavoritesNavigationButton() {
-    return FlatButton(
-        onPressed: () => {
-              navigateToFavoritesPage(context),
-            },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.favorite, size: 45, color: Colors.grey),
-            Text("Favoriter",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
-  }
-
-  Widget showMapNavigationButton() {
-    return FlatButton(
-        onPressed: () => {
-              // This button does nothing yet...
-            },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.map, size: 45, color: Colors.orangeAccent),
-            Text("Karta",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
-  }
-
-  Widget showSettingsNavigationButton() {
-    return FlatButton(
-        onPressed: () => {
-              navigateToSettingsPage(context),
-            },
-        child: Column(
-          children: <Widget>[
-            Icon(Icons.settings, size: 45, color: Colors.grey),
-            Text("Inställningar",
-                style: TextStyle(
-                  fontSize: 13,
-                ))
-          ],
-        ));
-  }
-
   void showCurrentLocation(GoogleMapController controller) async {
-  void showCurrentLocation() async {
     _myLocation = await location.getLocation();
     _controller = controller;
     _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
