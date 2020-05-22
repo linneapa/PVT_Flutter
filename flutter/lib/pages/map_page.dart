@@ -28,6 +28,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> with ChangeNotifier {
+
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
@@ -60,6 +61,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   LatLng currentDestination;
   bool currentlyNavigating = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -76,39 +78,43 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => new FavouritesPage(
-                  auth: widget.auth,
-                  logoutCallback: widget.logoutCallback,
-                )));
+            builder: (context) =>
+            new FavouritesPage(
+              auth: widget.auth,
+              logoutCallback: widget.logoutCallback,
+            )));
   }
 
   Future navigateToSettingsPage(context) async {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => new SettingsPage(
-                  auth: widget.auth,
-                  logoutCallback: widget.logoutCallback,
-                )));
+            builder: (context) =>
+            new SettingsPage(
+              auth: widget.auth,
+              logoutCallback: widget.logoutCallback,
+            )));
   }
 
   Future<void> _listenLocation() async {
     _locationSubscription =
         location.onLocationChanged.handleError((dynamic err) {
-      setState(() {
-        _error = err.code;
-      });
-      _locationSubscription.cancel();
-    }).listen((LocationData currentLocation) {
-      setState(() {
-        // Check if the route needs to be updated
-        bool changed = false;
-        if (_myLocation != currentLocation) changed = true;
-        _myLocation = currentLocation;
-        updatePinOnMap();
-        if (changed && currentDestination != null) setPolylines();
-      });
-    });
+          setState(() {
+            _error = err.code;
+          });
+          _locationSubscription.cancel();
+        }).listen((LocationData currentLocation) {
+          setState(() {
+            // Check if the route needs to be updated
+             bool changed = false;
+             if(_myLocation != currentLocation)
+               changed = true;
+            _myLocation = currentLocation;
+            updatePinOnMap();
+             if(changed && currentDestination != null)
+                setPolylines();
+          });
+        });
   }
 
   @override
@@ -187,9 +193,9 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     );
   }
 
+
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    var parkings = await Services.fetchParkering(_globalCarToggled,
-        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    var parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     setState(() {
       _markers.clear();
@@ -201,11 +207,11 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
             infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
-              onTap: () {
-                startRoute(LatLng(parking.geometry.coordinates[0][1],
-                    parking.geometry.coordinates[0][0]));
-              },
-            ));
+              onTap: () {startRoute(LatLng(parking.geometry.coordinates[0][1],
+                parking.geometry.coordinates[0][0]));},
+              
+            )
+        );
         _markers[parking.properties.cityDistrict] = marker;
       }
       updatePinOnMap();
@@ -223,73 +229,18 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       markers: _markers.values.toSet(),
     );
   }
-
-  Widget showMuchTrafficBtn() {
-    return ButtonTheme(
-      minWidth: 100.0,
-      height: 50.0,
-      child: RaisedButton(
-        color: Colors.redAccent,
-        child: new Text("Hög", style: TextStyle(color: Colors.black)),
-        onPressed: () {
-          var now = new DateTime.now();
-          print(now);
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-  }
-
-  Widget showNotMuchTrafficBtn() {
-    return ButtonTheme(
-      minWidth: 100.0,
-      height: 50.0,
-      child: new RaisedButton(
-        color: Colors.green,
-        child: new Text("Låg", style: TextStyle(color: Colors.black)),
-        onPressed: () {
-          var now = new DateTime.now();
-
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-  }
-
-  Widget showExitArrivedAtDestinationWindow() {
-    return FlatButton(
-      onPressed: () {
-        Navigator.of(context).pop();
-      },
-      child: Icon(Icons.close),
-    );
-  }
-
   void showArrivedAtDestinationDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          //shape:,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              new Text(
-                "Du har anlänt!", textAlign: TextAlign.center, style: 
-                TextStyle(fontWeight: FontWeight.bold),
-              ),
-              showExitArrivedAtDestinationWindow(),
-            ],
-          ),
+          title: new Text("Framme :)", textAlign: TextAlign.center,),
           actions: <Widget>[
-            Text(
-              "Var snäll och svara om parkeringen är högtrafikerad.\n"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                showMuchTrafficBtn(),
-                showNotMuchTrafficBtn(),
-              ],
+            new RaisedButton(
+              child: new Text("Stäng"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
@@ -301,7 +252,8 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     currentDestination = destination;
     setPolylines();
     currentlyNavigating = true;
-    setState(() {});
+    setState(() {
+    });
   }
 
   void stopCurrentRoute() {
@@ -309,15 +261,14 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
     _polylines.clear();
     currentDestination = null;
     currentlyNavigating = false;
-    setState(() {});
+    setState(() {
+    });
   }
 
   bool reachedDestination() {
     int radius = 15;
     //checks if myLocation is within a x meters radius from destination
-    if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude,
-            currentDestination.latitude, currentDestination.longitude) <
-        radius) {
+    if(distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < radius) {
       stopCurrentRoute();
       showArrivedAtDestinationDialog();
       return true;
@@ -327,57 +278,56 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
 
   //converts degrees to radians
   double degToRad(deg) {
-    return deg * (Math.pi / 180);
+    return deg * (Math.pi/180);
   }
 
   //uses the Haversine formula to calculate the distance between two points on the map in meters
-  double distanceBetweenPoints(
-      double latA, double lonA, double latB, double lonB) {
+  double distanceBetweenPoints(double latA, double lonA, double latB, double lonB) { 
     int R = 6371000; // Radius of the earth in meters
-    double dLat = degToRad(latB - latA);
-    double dLon = degToRad(lonB - lonA);
-    double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(degToRad(latA)) *
-            Math.cos(degToRad(latB)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    double dLat = degToRad(latB-latA);
+    double dLon = degToRad(lonB-lonA); 
+    double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(degToRad(latA)) * 
+               Math.cos(degToRad(latB)) *  Math.sin(dLon/2) * Math.sin(dLon/2); 
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     double d = R * c; // Distance in meters
     return d;
   }
 
   void setPolylines() async {
-    if (reachedDestination()) return;
-    List<PointLatLng> result =
-        (await polylinePoints?.getRouteBetweenCoordinates(
-                "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
-                PointLatLng(_myLocation.latitude, _myLocation.longitude),
-                PointLatLng(
-                    currentDestination.latitude, currentDestination.longitude)))
-            .points;
-    if (result.isNotEmpty) {
+    if(reachedDestination())
+      return;
+    List<PointLatLng> result = (await
+      polylinePoints?.getRouteBetweenCoordinates(
+         "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
+         PointLatLng(_myLocation.latitude, 
+         _myLocation.longitude),
+         PointLatLng(currentDestination.latitude, 
+         currentDestination.longitude))).points;
+   if(result.isNotEmpty){
       // loop through all PointLatLng points and convert them
       // to a list of LatLng, required by the Polyline
       polylineCoordinates.clear();
-      result.forEach((PointLatLng point) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      result.forEach((PointLatLng point){
+         polylineCoordinates.add(
+            LatLng(point.latitude, point.longitude));
       });
-    }
-    setState(() {
+   }
+   setState(() {
       // create a Polyline instance
       // with an id, an RGB color and the list of LatLng pairs
       Polyline polyline = Polyline(
-          polylineId: PolylineId("poly"),
-          color: Color.fromARGB(255, 40, 122, 198),
+         polylineId: PolylineId("poly"),
+         color: Color.fromARGB(255, 40, 122, 198),
           //color: Color.fromARGB(255, 255, 165, 0), orange
-          points: polylineCoordinates);
-
+         points: polylineCoordinates
+      );
+ 
       // add the constructed polyline as a set of points
       // to the polyline set, which will eventually
       // end up showing up on the map
       _polylines.add(polyline);
     });
-  }
+}
 
   Widget showMyLocationButton() {
     return Align(
@@ -392,7 +342,7 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
   }
 
   Widget showStopRouteButton() {
-    if (currentlyNavigating)
+    if(currentlyNavigating)
       return Align(
         alignment: Alignment.bottomLeft,
         child: FloatingActionButton(
@@ -402,15 +352,16 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
               stopCurrentRoute();
             }),
       );
-    else
+    else 
       return Container(height: 0.0);
   }
 
   Widget showFavoritesNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              navigateToFavoritesPage(context),
-            },
+        onPressed: () =>
+        {
+          navigateToFavoritesPage(context),
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.favorite, size: 45, color: Colors.grey),
@@ -424,9 +375,10 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
 
   Widget showMapNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              // This button does nothing yet...
-            },
+        onPressed: () =>
+        {
+          // This button does nothing yet...
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.map, size: 45, color: Colors.orangeAccent),
@@ -440,9 +392,10 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
 
   Widget showSettingsNavigationButton() {
     return FlatButton(
-        onPressed: () => {
-              navigateToSettingsPage(context),
-            },
+        onPressed: () =>
+        {
+          navigateToSettingsPage(context),
+        },
         child: Column(
           children: <Widget>[
             Icon(Icons.settings, size: 45, color: Colors.grey),
@@ -666,9 +619,11 @@ class _MapPageState extends State<MapPage> with ChangeNotifier {
       );
     });
   }
+
 }
 
 class CarIconButton extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -682,11 +637,11 @@ class CarIconButton extends StatelessWidget {
           iconInfo.car = !iconInfo.carToggled;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue) 
+          if (truckValue)
             iconInfo.truck = !truckValue;
 
           bool motorcycleValue = iconInfo.motorcycleToggled;
-          if (motorcycleValue) 
+          if (motorcycleValue)
             iconInfo.motorcycle = !motorcycleValue;
         }
     );
@@ -694,6 +649,7 @@ class CarIconButton extends StatelessWidget {
 }
 
 class TruckIconButton extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -707,18 +663,20 @@ class TruckIconButton extends StatelessWidget {
           iconInfo.truck = !iconInfo.truckToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue) 
+          if (carValue)
             iconInfo.car = !carValue;
 
           bool motorcycleValue = iconInfo.truckToggled;
-          if (motorcycleValue) 
+          if (motorcycleValue)
             iconInfo.motorcycle = !motorcycleValue;
+
         }
     );
   }
 }
 
 class MotorcycleIconButton extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -732,13 +690,14 @@ class MotorcycleIconButton extends StatelessWidget {
           iconInfo.motorcycle = !iconInfo.motorcycleToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue) 
+          if (carValue)
             iconInfo.car = !carValue;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue) 
+          if (truckValue)
             iconInfo.truck = !truckValue;
         }
     );
   }
 }
+
