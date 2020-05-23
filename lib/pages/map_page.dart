@@ -79,6 +79,7 @@ class _MapPageState extends State<MapPage> {
   var currentDestinationMarker;
   bool currentlyNavigating = false;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
+  final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
   @override
   void initState() {
@@ -278,6 +279,26 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  //returns amount of high traffic ratings between specified hours (although cannot be an interval longer than 10 hours... :) )
+  Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
+    int noOfHighRatings = -1;
+    var tempHoursList = fromHour < untilHour? hours.sublist(fromHour, untilHour) : hours.sublist(0, untilHour) + hours.sublist(fromHour, hours.length);
+    await db.collection('trafficData').document(parkingAdress).collection('high').
+      where("hour", whereIn: tempHoursList).getDocuments().then((value) {
+        noOfHighRatings = value.documents.length;
+      });
+    return noOfHighRatings;
+  }
+
+  Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
+    int noOfLowRatings = -1;
+    await db.collection('trafficData').document(parkingAdress).collection('low').
+      where("hour", whereIn: hours.sublist(fromHour, untilHour)).getDocuments().then((value) {
+        noOfLowRatings = value.documents.length;
+      });
+    return noOfLowRatings;
+  }
+
   void reportTraffic(bool isTraffic) async {
     String id = widget.userId;
     
@@ -294,20 +315,26 @@ class _MapPageState extends State<MapPage> {
     String date = "${now.year}${now.month}${now.day}";
     bool leftFeedbackHereRecently = false;
 
-    //kolla om db innehåller data för denna parkering för denna användare, denna timme, detta datum
-    var document = await db.collection('trafficData').document(location).collection(weekDay).where("hour", isEqualTo: hourOfDay).
-            where("byUser", isEqualTo: id).where("date", isEqualTo: date).getDocuments().then((value) {
+    //check if user has left feedback here recently
+    await db.collection('trafficData').document(location).collection('high').
+            where("byUser", isEqualTo: id).where("date", isEqualTo: date).where("hour", isEqualTo: hourOfDay).getDocuments().then((value) {
+              if(value.documents.isNotEmpty)
+                leftFeedbackHereRecently = true;
+            });
+    if(leftFeedbackHereRecently)
+        await db.collection('trafficData').document(location).collection('low').
+            where("byUser", isEqualTo: id).where("date", isEqualTo: date).where("hour", isEqualTo: hourOfDay).getDocuments().then((value) {
               if(value.documents.isNotEmpty)
                 leftFeedbackHereRecently = true;
             });
         
     if(!leftFeedbackHereRecently) {
-      await db.collection('trafficData').document(location).collection(weekDay).add(
+      await db.collection('trafficData').document(location).collection(isTraffic? 'high':'low').add(
         {
-          'hour': hourOfDay,
+          'weekDay': weekDay,
+          'hour' : hourOfDay,
           'byUser': id,
           'date': date,
-          'amountOfTraffic': (isTraffic? 'high':'low')
         }
       );
 
