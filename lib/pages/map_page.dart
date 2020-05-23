@@ -76,7 +76,9 @@ class _MapPageState extends State<MapPage> {
   PolylinePoints polylinePoints = PolylinePoints();
 
   LatLng currentDestination;
+  var currentDestinationMarker;
   bool currentlyNavigating = false;
+  final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
 
   @override
   void initState() {
@@ -255,7 +257,7 @@ class _MapPageState extends State<MapPage> {
               snippet: parking.properties.address,
               onTap: () {
                 startRoute(LatLng(parking.geometry.coordinates[0][1],
-                    parking.geometry.coordinates[0][0]));
+                    parking.geometry.coordinates[0][0]), parking.properties.address);
               },
             ));
         _markers[parking.properties.address] = marker;
@@ -276,6 +278,55 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void reportTraffic(bool isTraffic) async {
+    String id = widget.userId;
+    
+    String location = currentDestinationMarker.markerId.toString();
+    location = location.substring(location.indexOf(":") + 1);
+    location = location.substring(0, location.indexOf("}"));
+    location = location.trim();
+
+    DateTime now = new DateTime.now();
+
+    int weekDayNumber = now.weekday;
+    String weekDay = weekDays[weekDayNumber-1];
+    int hourOfDay = now.hour;
+    String date = "${now.year}${now.month}${now.day}";
+    bool leftFeedbackHereRecently = false;
+
+    //kolla om db innehåller data för denna parkering för denna användare, denna timme, detta datum
+    var document = await db.collection('trafficData').document(location).collection(weekDay).where("hour", isEqualTo: hourOfDay).
+            where("byUser", isEqualTo: id).where("date", isEqualTo: date).getDocuments().then((value) {
+              if(value.documents.isNotEmpty)
+                leftFeedbackHereRecently = true;
+            });
+        
+    if(!leftFeedbackHereRecently) {
+      await db.collection('trafficData').document(location).collection(weekDay).add(
+        {
+          'hour': hourOfDay,
+          'byUser': id,
+          'date': date,
+          'amountOfTraffic': (isTraffic? 'high':'low')
+        }
+      );
+
+      showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+              title: Text('Tack för feedbacken!'),
+          ),
+      );
+    } else {
+            showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+              title: Text('Du har lämnat feedback här nyligen!'),
+          ),
+      );
+    }
+  }
+
   Widget showMuchTrafficBtn() {
     return ButtonTheme(
       minWidth: 100.0,
@@ -284,9 +335,8 @@ class _MapPageState extends State<MapPage> {
         color: Colors.redAccent,
         child: new Text("Hög", style: TextStyle(color: Colors.black)),
         onPressed: () {
-          var now = new DateTime.now();
-          print(now);
           Navigator.of(context).pop();
+          reportTraffic(true);
         },
       ),
     );
@@ -300,9 +350,8 @@ class _MapPageState extends State<MapPage> {
         color: Colors.green,
         child: new Text("Låg", style: TextStyle(color: Colors.black)),
         onPressed: () {
-          var now = new DateTime.now();
-
           Navigator.of(context).pop();
+          reportTraffic(false);
         },
       ),
     );
@@ -349,7 +398,10 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void startRoute(LatLng destination) {
+  void startRoute(LatLng destination, String destinationAdress) {
+    if (_markers.containsKey(destinationAdress)) 
+      currentDestinationMarker = _markers[destinationAdress];
+
     currentDestination = destination;
     setPolylines();
     currentlyNavigating = true;
@@ -370,8 +422,8 @@ class _MapPageState extends State<MapPage> {
     if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude,
             currentDestination.latitude, currentDestination.longitude) <
         radius) {
-      stopCurrentRoute();
       showArrivedAtDestinationDialog();
+      stopCurrentRoute();
       return true;
     }
     return false;
