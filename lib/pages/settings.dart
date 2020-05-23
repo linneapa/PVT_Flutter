@@ -67,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
-                  title: Text('Standardavstånd',
+                  title: Text('Avstånd från destination',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: SizeConfig.blockSizeVertical * 3.5
