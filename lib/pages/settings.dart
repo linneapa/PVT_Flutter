@@ -56,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
-                  subtitle: Text('Ändra lösenord, etc. (Denna text kommer ändras)',
+                  subtitle: Text('Ändra lösenord, ta bort konto (Denna text kommer ändras)',
                     style: TextStyle(
                       fontSize: SizeConfig.blockSizeVertical * 2.2
                     )
@@ -79,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     )
                   ),
                   onTap: () {
-                    //Do something
+                    createStandardDistanceDialog(context);
                   },
                 ),
                 ListTile(
@@ -89,6 +89,69 @@ class _SettingsPageState extends State<SettingsPage> {
           ).toList(growable: false),
         ),
       ),
+    );
+  }
+
+  createStandardDistanceDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Avstånd i meter',
+                  hintText: 'Radie inom vilken du ser parkeringar',
+                ),
+                onSaved: (String value){
+                  //Save the distance entered
+                },
+                validator: (String value){
+                  return isNumeric(value) ? 'Var god ange ett nummer.' : null;
+                }
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget> [
+                  showCancelButton(context),
+                  showSaveButton(context),
+                ]
+              ),
+            ]
+          )
+        );
+      }
+    );
+  }
+
+  //Borrowed from https://stackoverflow.com/questions/24085385/checking-if-string-is-numeric-in-dart
+  bool isNumeric(String str){
+    if (str == null) {
+      return false;
+    }
+    return double.tryParse(str) != null;
+  }
+
+  Widget showCancelButton(BuildContext context) {
+    return FlatButton(
+      onPressed: () => {
+        Navigator.pop(context),
+      },
+      child: Text('Avbryt'),
+      color: Colors.orangeAccent
+    );
+  }
+
+  Widget showSaveButton(BuildContext context) {
+    return FlatButton(
+      onPressed: () => {
+        //Save content locally
+        Navigator.pop(context),
+      },
+      child: Text('Spara'),
+      color: Colors.orangeAccent
     );
   }
 
