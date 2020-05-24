@@ -46,6 +46,7 @@ class _MapPageState extends State<MapPage> {
   var _costValue = 0.0;
   var currMarker;
   var parkings;
+  var currParking;
   final db = Firestore.instance;
 
 
@@ -180,16 +181,11 @@ class _MapPageState extends State<MapPage> {
 
   addToFavorites() async {
     String id = widget.userId;
-    
-    String location = currMarker.markerId.toString();
-    location = location.substring(location.indexOf(":") + 1);
-    location = location.substring(0, location.indexOf("}"));
-    location = location.trim();
 
     await db.collection('userData').document(id).collection('favorites').add(
         {
-          'location': location,
-          'type': 'car'
+          'location': currParking.properties.address,
+          'district': currParking.properties.cityDistrict
         }
     );
 
@@ -197,7 +193,7 @@ class _MapPageState extends State<MapPage> {
         context: context,
         builder: (_) => AlertDialog(
             title: Text('Success'),
-            content: Text(location + ' added to favorites!')));
+            content: Text(currParking.properties.address + ' added to favorites!')));
   }
 
   Widget showFavoritesButton() {
@@ -211,11 +207,13 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  _onMarkerTapped(String address) {
-    if (_markers.containsKey(address)) {
-      final marker = _markers[address];
+  _onMarkerTapped(String marker, var parking) {
+    if (_markers.containsKey(parking.properties.address)) {
+      final marker = _markers[parking.properties.address];
       currMarker = marker;
-      print(currMarker.markerId.toString() + '');
+      currParking = parking;
+      //print(currMarker.markerId.toString() + '');
+      print(parking.properties.cityDistrict);
     }
   }
 
@@ -229,14 +227,14 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
-            onTap: () { _onMarkerTapped(parking.properties.address);},
+            onTap: () { _onMarkerTapped(parking.properties.address, parking);},
             markerId: MarkerId(parking.properties.address),
             position: LatLng(parking.geometry.coordinates[0][1],
                 parking.geometry.coordinates[0][0]),
             infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
-              onTap: () { _onMarkerTapped(parking.properties.address);},
+              onTap: () { _onMarkerTapped(parking.properties.address, parking);},
             )
         );
         _markers[parking.properties.address] = marker;
