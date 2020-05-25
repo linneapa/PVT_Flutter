@@ -37,10 +37,14 @@ class _SettingsPageState extends State<SettingsPage> {
         title: Text("Inställningar", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.orangeAccent,
         actions: <Widget>[
-          new FlatButton(
+          new Padding(
+          padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.5, bottom: SizeConfig.blockSizeVertical * 1.5, right: SizeConfig.blockSizeHorizontal * 3),
+          child:FlatButton(
+            color: Colors.white,
               child: new Text(
-                  'Logga ut', style: TextStyle(color: Colors.white)),
+                  'Logga ut', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               onPressed: signOut)
+          )
         ],
       ),
       body: Container(
@@ -56,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
-                  subtitle: Text('Ändra lösenord, ta bort konto (Denna text kommer ändras)',
+                  subtitle: Text('Ändra lösenord, ta bort konto (EJ IMPLEMENTERAT)',
                     style: TextStyle(
                       fontSize: SizeConfig.blockSizeVertical * 2.2
                     )
@@ -73,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
-                  subtitle: Text('Ställ in radien från din destination du vill se parkeringar',
+                  subtitle: Text('Ställ in radien från din destination du vill se parkeringar (EJ IMPLEMENTERAT)',
                     style: TextStyle(
                       fontSize: SizeConfig.blockSizeVertical * 2.2
                     )
@@ -211,6 +215,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  //Not sure if this should be handled in-app or if it should be the same as password reset
   createChangePasswordDialog(BuildContext context) {
     showDialog(
         context: context,
@@ -220,15 +225,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     TextFormField(
+                      obscureText: true,
                         decoration: const InputDecoration(
                           labelText: 'Nytt lösenord',
                         ),
                         onSaved: (String value){
                           //Save new password
                         },
-                        validator: (String value){
-                          return isNumeric(value) ? 'Var god ange ett nummer.' : null;
-                        }
                     ),
                     TextFormField(
                       decoration: const InputDecoration(
