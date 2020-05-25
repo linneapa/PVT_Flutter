@@ -29,7 +29,6 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-
   @override
   void setState(fn) {
     if (this.mounted) {
@@ -48,7 +47,6 @@ class _MapPageState extends State<MapPage> {
   var parkings;
   var currParking;
   final db = Firestore.instance;
-
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -71,32 +69,35 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    getBytesFromAsset('assets/direction-arrow.png',64).then((onValue) {
+    getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
   }
 
-  static Future<Uint8List> getBytesFromAsset(String path, int width) async{
+  static Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
-    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),targetWidth:width);
+    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
     FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ImageByteFormat.png)).buffer.asUint8List();
+    return (await fi.image.toByteData(format: ImageByteFormat.png))
+        .buffer
+        .asUint8List();
   }
 
   Future<void> _listenLocation() async {
     _locationSubscription =
         location.onLocationChanged.handleError((dynamic err) {
-          setState(() {
-            _error = err.code;
-          });
-          _locationSubscription.cancel();
-        }).listen((LocationData currentLocation) {
-          setState(() {
-            _myLocation = currentLocation;
-            updatePinOnMap();
-          });
-        });
+      setState(() {
+        _error = err.code;
+      });
+      _locationSubscription.cancel();
+    }).listen((LocationData currentLocation) {
+      setState(() {
+        _myLocation = currentLocation;
+        updatePinOnMap();
+      });
+    });
   }
 
   @override
@@ -112,10 +113,8 @@ class _MapPageState extends State<MapPage> {
             //showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
-                ],
-          )
-        )
-    );
+              ],
+            )));
   }
 
   Widget showTopBar() {
@@ -126,19 +125,21 @@ class _MapPageState extends State<MapPage> {
           Container(
             margin: EdgeInsets.only(top: 50),
           ), //empty container to move down the searchfield
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget> [
-            // Flexible(child: Container(height: 10,)),
-            Expanded(child: showSearchTextField(), flex: 5,),
-            Flexible(child: showFilterButton(), flex: 1),
-          ],
-        ),
-      ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              // Flexible(child: Container(height: 10,)),
+              Expanded(
+                child: showSearchTextField(),
+                flex: 5,
+              ),
+              Flexible(child: showFilterButton(), flex: 1),
+            ],
+          ),
+        ],
       ),
     );
   }
-
 
   Widget showSearchTextField() {
     return SearchMapPlaceWidget(
@@ -151,25 +152,21 @@ class _MapPageState extends State<MapPage> {
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
-
           final geolocation = await place.geolocation;
 
           // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
-            controller.animateCamera(
-                CameraUpdate.newLatLng(geolocation.coordinates));
+            controller
+                .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
                 CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
           });
-
-        }
-    );
+        });
   }
 
   Widget showFilterButton() {
-
     return IconButton(
       icon: Icon(
         MdiIcons.filterMenu,
@@ -187,27 +184,26 @@ class _MapPageState extends State<MapPage> {
   addToFavorites() async {
     String id = widget.userId;
 
-    await db.collection('userData').document(id).collection('favorites').add(
-        {
-          'location': currParking.properties.address,
-          'district': currParking.properties.cityDistrict
-        }
-    );
+    await db.collection('userData').document(id).collection('favorites').add({
+      'location': currParking.properties.address,
+      'district': currParking.properties.cityDistrict
+    });
 
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
             title: Text('Success'),
-            content: Text(currParking.properties.address + ' added to favorites!')));
+            content:
+            Text(currParking.properties.address + ' added to favorites!')));
   }
 
   Widget showFavoritesButton() {
-    return Align(
-      alignment: Alignment.bottomLeft,
+    return Container(
       child: FlatButton(
-          child: Icon(Icons.favorite_border, color: Colors.green),
+          child: Icon(
+              Icons.favorite_border, size: 60, color: Colors.orangeAccent),
           onPressed: () {
-            if(currMarker != null) addToFavorites();
+            if (currMarker != null) addToFavorites();
           }),
     );
   }
@@ -222,9 +218,9 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    parkings = await Services.fetchParkering(_globalCarToggled,
+        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
 
@@ -236,9 +232,9 @@ class _MapPageState extends State<MapPage> {
             _onMarkerTapped(parking.properties.address, parking);
             _pinPillPosition = 0;
           },
-            markerId: MarkerId(parking.properties.address),
-            position: LatLng(parking.geometry.coordinates[0][1],
-                parking.geometry.coordinates[0][0]),
+          markerId: MarkerId(parking.properties.address),
+          position: LatLng(parking.geometry.coordinates[0][1],
+              parking.geometry.coordinates[0][0]),
           /*infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
@@ -269,19 +265,18 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-
   // Animated info window
   Widget showWindow() {
     return AnimatedPositioned(
       bottom: _pinPillPosition,
       right: 0,
       left: 0,
-      duration: Duration(milliseconds: 50),
+      duration: Duration(milliseconds: 100),
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
           margin: EdgeInsets.all(20),
-          height: 200,
+          height: 150,
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(50)),
@@ -292,13 +287,10 @@ class _MapPageState extends State<MapPage> {
                   color: Colors.grey.withOpacity(0.5),
                 )
               ]),
-          child: Column(
-            /*crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,*/
+          child: Row(
             children: <Widget>[
-              showFavoritesButton(),
               _buildLocationInfo(),
-              showChooseParkingBtn()
+              _showFavBtnAndDirectionBtn(),
             ],
           ),
         ),
@@ -307,62 +299,66 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildLocationInfo() {
-    return Expanded(
-      child: Container(
+    return Container(
         margin: EdgeInsets.only(left: 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'District Name:',
+              '  Street Adress: \n',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
             Text(
-              'Street Adress:',
+              '  Stadsdel:',
+              style: TextStyle(fontSize: 15),
             ),
             Text(
-              'Service Hours:',
+              '  Servicedagar: ',
+              style: TextStyle(fontSize: 15),
             ),
             Text(
-              'Max Hours:',
+              '  Max timmar: ',
+              style: TextStyle(fontSize: 15),
             ),
           ],
+        )
+    );
+  }
+
+  Widget showChooseParkingBtn() {
+    return Container(
+      margin: EdgeInsets.only(left: 5, right: 10, top: 10),
+      child: FlatButton(
+        onPressed: null,
+        child: Text('Välj Bort', style: TextStyle(color: Colors.orangeAccent)),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: Colors.blue, width: 1, style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(50),
         ),
       ),
     );
   }
 
-  Widget showChooseParkingBtn() {
-    /*return new OutlineButton(
-        child: new Text("Välj Bort"),
-        onPressed: null,
-        shape: StadiumBorder(),
-
-    );*/
-    return new FlatButton(
-      onPressed: null,
-      child: Text('Button', style: TextStyle(
-          color: Colors.blue
-      )
-      ),
-      shape: RoundedRectangleBorder(side: BorderSide(
-          color: Colors.blue,
-          width: 1,
-          style: BorderStyle.solid
-      ), borderRadius: BorderRadius.circular(50)),
-    );
+  Widget _showFavBtnAndDirectionBtn() {
+    return Container(
+        margin: EdgeInsets.only(left: 120, top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              child: showFavoritesButton(),
+              alignment: Alignment.topRight,
+            ),
+            Container(
+              child: showChooseParkingBtn(),
+              alignment: Alignment.bottomRight,
+            ),
+          ],
+        ));
   }
-
-
-
-
-
-
-
-
-
-
-
 
   Widget showMyLocationButton() {
     return Align(
@@ -408,7 +404,10 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (context) {
         return ChangeNotifierProvider(
-          create: (context) => IconInfo(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
+          create: (context) =>
+              IconInfo(
+                  _globalCarToggled, _globalTruckToggled,
+                  _globalMotorcycleToggled),
           child: StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -466,7 +465,8 @@ class _MapPageState extends State<MapPage> {
           ),
         );
       },
-    ).then((val) { // retrieve and update the state of the icons
+    ).then((val) {
+      // retrieve and update the state of the icons
       IconInfo ic = val;
       if (ic != null) {
         _globalMotorcycleToggled = ic.motorcycleToggled;
@@ -589,12 +589,9 @@ class _MapPageState extends State<MapPage> {
       );
     });
   }
-
-
 }
 
 class CarIconButton extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -608,19 +605,15 @@ class CarIconButton extends StatelessWidget {
           iconInfo.car = !iconInfo.carToggled;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue)
-            iconInfo.truck = !truckValue;
+          if (truckValue) iconInfo.truck = !truckValue;
 
           bool motorcycleValue = iconInfo.motorcycleToggled;
-          if (motorcycleValue)
-            iconInfo.motorcycle = !motorcycleValue;
-        }
-    );
+          if (motorcycleValue) iconInfo.motorcycle = !motorcycleValue;
+        });
   }
 }
 
 class TruckIconButton extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -634,20 +627,15 @@ class TruckIconButton extends StatelessWidget {
           iconInfo.truck = !iconInfo.truckToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue)
-            iconInfo.car = !carValue;
+          if (carValue) iconInfo.car = !carValue;
 
           bool motorcycleValue = iconInfo.truckToggled;
-          if (motorcycleValue)
-            iconInfo.motorcycle = !motorcycleValue;
-
-        }
-    );
+          if (motorcycleValue) iconInfo.motorcycle = !motorcycleValue;
+        });
   }
 }
 
 class MotorcycleIconButton extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
@@ -661,13 +649,10 @@ class MotorcycleIconButton extends StatelessWidget {
           iconInfo.motorcycle = !iconInfo.motorcycleToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue)
-            iconInfo.car = !carValue;
+          if (carValue) iconInfo.car = !carValue;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue)
-            iconInfo.truck = !truckValue;
-        }
-    );
+          if (truckValue) iconInfo.truck = !truckValue;
+        });
   }
 }
