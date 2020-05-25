@@ -41,7 +41,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
         child: StreamBuilder(
             stream: getUserFavoriteParkings(context),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (!snapshot.hasData) return const Text("");
+              if (!snapshot.hasData) return const Text("Loading..");
               return new ListView.builder(
                   itemCount: snapshot.data.documents.length,
                   itemBuilder: (BuildContext context, int index) =>
