@@ -334,7 +334,7 @@ class _MapPageState extends State<MapPage> {
         child: Text('Välj Bort', style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
           side: BorderSide(
-              color: Colors.blue, width: 1, style: BorderStyle.solid),
+              color: Colors.orangeAccent, width: 1, style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(50),
         ),
       ),
