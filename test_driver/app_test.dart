@@ -12,6 +12,7 @@ void main() {
     // final counterTextFinder = find.byValueKey('counter');
     final emailField = find.byValueKey('email');
     final passwordField = find.byValueKey('password');
+    final loginButton = find.byValueKey('LogInButton');
 
     FlutterDriver driver;
 
@@ -27,17 +28,14 @@ void main() {
       }
     });
 
-//  test('starts at 0', () async {
-//    // Use the `driver.getText` method to verify the counter starts at 0.
-//    expect(await driver.getText(counterTextFinder), "0");
-//  });
-//
-//  test('increments the counter', () async {
-//    // First, tap the button.
-//    await driver.tap(buttonFinder);
-//
-//    // Then, verify the counter text is incremented by 1.
-//    expect(await driver.getText(counterTextFinder), "1");
-//  });
+    test('login fails with incorrect email and password', () async {
+      await driver.tap(emailField);
+      await driver.enterText('testfail@testmail.com');
+      await driver.enterText('testmail@testmail.com');
+      await driver.tap(passwordField);
+      await driver.enterText('test');
+      await driver.enterText('testpass');
+      await driver.tap(loginButton);
+    });
   });
 }

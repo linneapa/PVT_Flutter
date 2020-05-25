@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ezsgame/api/ParkingSpace.dart';
 import 'package:ezsgame/api/Services.dart';
 import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:ezsgame/firebase/authentication.dart';
+import 'package:http/io_client.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'IconInfo.dart';
@@ -40,6 +42,8 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  Future<Parkering> futureParkering;
+  IOClient ioClient = IOClient();
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
@@ -84,6 +88,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    futureParkering = Services.fetchParkering(ioClient, _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     getBytesFromAsset('assets/direction-arrow.png',64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
@@ -254,7 +259,8 @@ class _MapPageState extends State<MapPage> {
 
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    final IOClient client = IOClient();
+    parkings = await Services.fetchParkering(client, _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
 
