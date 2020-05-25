@@ -220,7 +220,7 @@ class _MapPageState extends State<MapPage> {
           {
             'location': currParking.properties.address,
             'district': currParking.properties.cityDistrict,
-            'type': currParking.properties.type
+            'type': currParking.properties.type //Breaks functionality for adding to favorites
           }
       );
     }
