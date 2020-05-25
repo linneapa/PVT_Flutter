@@ -116,7 +116,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget> [
                   showCancelButton(context),
-                  showSaveButton(context),
+                  showSaveDistButton(context),
                 ]
               ),
             ]
@@ -144,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget showSaveButton(BuildContext context) {
+  Widget showSaveDistButton(BuildContext context) {
     return FlatButton(
       onPressed: () => {
         //Save content locally
@@ -182,7 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   onTap: () {
-                    //Popup for changing password
+                    createChangePasswordDialog(context);
                   },
                 ),
                 ListTile(
@@ -208,6 +208,56 @@ class _SettingsPageState extends State<SettingsPage> {
               ]).toList(growable: false),
         )
       )
+    );
+  }
+
+  createChangePasswordDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+              content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Nytt lösenord',
+                        ),
+                        onSaved: (String value){
+                          //Save new password
+                        },
+                        validator: (String value){
+                          return isNumeric(value) ? 'Var god ange ett nummer.' : null;
+                        }
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Bekräfta nytt lösenord'
+                      )
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget> [
+                          showCancelButton(context),
+                          showSavePassButton(context),
+                        ]
+                    ),
+                  ]
+              )
+          );
+        }
+    );
+  }
+
+  Widget showSavePassButton(BuildContext context) {
+    return FlatButton(
+        onPressed: () => {
+          //Validate that both fields are filled and content is identical
+          //Save content in Firestore
+          Navigator.pop(context),
+        },
+        child: Text('Spara'),
+        color: Colors.orangeAccent
     );
   }
 
