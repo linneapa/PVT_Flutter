@@ -66,7 +66,7 @@ class _MapPageState extends State<MapPage> {
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
 
-  double _pinPillPosition = -100; // Used in InfoWindow Animation
+  double _pinPillPosition = -300; // Used in InfoWindow Animation
 
   @override
   void initState() {
@@ -109,7 +109,7 @@ class _MapPageState extends State<MapPage> {
               children: <Widget>[
                 showGoogleMaps(),
             showWindow(),
-                //showFavoritesButton(),
+            //showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
                 ],
@@ -121,14 +121,17 @@ class _MapPageState extends State<MapPage> {
   Widget showTopBar() {
     return Align(
       alignment: Alignment.topCenter,
-      child: Column( children: <Widget> [
-        Container(height: 30), //empty container to move down the searchfield
+      child: Column(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.only(top: 50),
+          ), //empty container to move down the searchfield
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget> [
             // Flexible(child: Container(height: 10,)),
-            Expanded(child: showSearchTextField()),
-            Flexible(child: showFilterButton()),
+            Expanded(child: showSearchTextField(), flex: 5,),
+            Flexible(child: showFilterButton(), flex: 1),
           ],
         ),
       ],
@@ -260,7 +263,7 @@ class _MapPageState extends State<MapPage> {
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
-          _pinPillPosition = -100;
+          _pinPillPosition = -300;
         });
       },
     );
@@ -278,7 +281,7 @@ class _MapPageState extends State<MapPage> {
         alignment: Alignment.bottomCenter,
         child: Container(
           margin: EdgeInsets.all(20),
-          height: 90,
+          height: 200,
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(50)),
@@ -289,13 +292,13 @@ class _MapPageState extends State<MapPage> {
                   color: Colors.grey.withOpacity(0.5),
                 )
               ]),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            /*crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,*/
             children: <Widget>[
               showFavoritesButton(),
               _buildLocationInfo(),
-              //_buildMarkerType()
+              showChooseParkingBtn()
             ],
           ),
         ),
@@ -306,26 +309,47 @@ class _MapPageState extends State<MapPage> {
   Widget _buildLocationInfo() {
     return Expanded(
       child: Container(
-        margin: EdgeInsets.only(left: 20),
+        margin: EdgeInsets.only(left: 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'District Name',
+              'District Name:',
             ),
             Text(
-              'Street Adress',
+              'Street Adress:',
             ),
             Text(
-              'Service Hours',
+              'Service Hours:',
             ),
             Text(
-              'Max Hours',
+              'Max Hours:',
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget showChooseParkingBtn() {
+    /*return new OutlineButton(
+        child: new Text("Välj Bort"),
+        onPressed: null,
+        shape: StadiumBorder(),
+
+    );*/
+    return new FlatButton(
+      onPressed: null,
+      child: Text('Button', style: TextStyle(
+          color: Colors.blue
+      )
+      ),
+      shape: RoundedRectangleBorder(side: BorderSide(
+          color: Colors.blue,
+          width: 1,
+          style: BorderStyle.solid
+      ), borderRadius: BorderRadius.circular(50)),
     );
   }
 
