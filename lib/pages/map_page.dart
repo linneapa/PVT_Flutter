@@ -259,7 +259,7 @@ class _MapPageState extends State<MapPage> {
                 if(!currentlyNavigating) {
                   startRoute(LatLng(parking.geometry.coordinates[0][1],
                     parking.geometry.coordinates[0][0]), parking.properties.address);
-                } else if(currentDestination.latitude == parking.geometry.coordinates[0][1] && currentDestination.longitude == parking.geometry.coordinates[0][0]) {
+                } else if(currentDestination.latitude.toStringAsFixed(6) == parking.geometry.coordinates[0][1].toStringAsFixed(6) && currentDestination.longitude.toStringAsFixed(6) == parking.geometry.coordinates[0][0].toStringAsFixed(6)) {
 
                   //TODO: Display usual infoBox but with "Välj bort" instead of "Välj parkering"
                   //and if "Välj bort" is pressed, the following two functions should be called 
