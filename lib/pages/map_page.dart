@@ -201,19 +201,34 @@ class _MapPageState extends State<MapPage> {
 
   addToFavorites() async {
     String id = widget.userId;
+    bool duplicate = false;
 
-    await db.collection('userData').document(id).collection('favorites').add(
-        {
-          'location': currParking.properties.address,
-          'district': currParking.properties.cityDistrict
-        }
-    );
+    QuerySnapshot snapshot = await Firestore.instance
+        .collection('userData')
+        .document(id)
+        .collection('favorites')
+        .getDocuments();
+
+    for (var v in snapshot.documents) {
+      if (v['location'] == currParking.properties.address) {
+        duplicate = true;
+      }
+    }
+
+    if (!duplicate) {
+      await db.collection('userData').document(id).collection('favorites').add(
+          {
+            'location': currParking.properties.address,
+            'district': currParking.properties.cityDistrict
+          }
+      );
+    }
 
     showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-            title: Text('Success'),
-            content: Text(currParking.properties.address + ' added to favorites!')));
+        builder: (_) => new AlertDialog(
+            title: duplicate ? Text('Misslyckades') : Text("Success"),
+            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
   }
 
   Widget showFavoritesButton() {
@@ -305,8 +320,8 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          // insetPadding: EdgeInsets.all(60),
-          actionsPadding: EdgeInsets.all(10),
+          //insetPadding: EdgeInsets.all(60),
+          //actionsPadding: EdgeInsets.all(10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)), 
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
