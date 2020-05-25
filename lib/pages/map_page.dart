@@ -66,6 +66,7 @@ class _MapPageState extends State<MapPage> {
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
 
+  double _pinPillPosition = -100; // Used in InfoWindow Animation
 
   @override
   void initState() {
@@ -108,7 +109,7 @@ class _MapPageState extends State<MapPage> {
               children: <Widget>[
                 showGoogleMaps(),
             showWindow(),
-            showFavoritesButton(),
+                //showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
                 ],
@@ -265,8 +266,8 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  double _pinPillPosition = -100;
 
+  // Animated info window
   Widget showWindow() {
     return AnimatedPositioned(
       bottom: _pinPillPosition,
@@ -277,7 +278,7 @@ class _MapPageState extends State<MapPage> {
         alignment: Alignment.bottomCenter,
         child: Container(
           margin: EdgeInsets.all(20),
-          height: 70,
+          height: 90,
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(50)),
@@ -291,16 +292,45 @@ class _MapPageState extends State<MapPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
-            /*children: <Widget>[
-              _buildAvatar(),
+            children: <Widget>[
+              showFavoritesButton(),
               _buildLocationInfo(),
-              _buildMarkerType()
-            ],*/
+              //_buildMarkerType()
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildLocationInfo() {
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.only(left: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'District Name',
+            ),
+            Text(
+              'Street Adress',
+            ),
+            Text(
+              'Service Hours',
+            ),
+            Text(
+              'Max Hours',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+
 
 
 
