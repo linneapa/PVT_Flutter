@@ -68,7 +68,6 @@ class _MapPageState extends State<MapPage> {
   String _error;
   LatLng currentDestination;
   var currentDestinationMarker;
-  bool currentlyNavigating = false;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
   final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
@@ -132,7 +131,7 @@ class _MapPageState extends State<MapPage> {
             showWindow(),
             //showFavoritesButton(),
             showTopBar(),
-            showMyLocationButton()
+            showMyLocationButton(),
             showStopRouteButton(),
           ],
         )));
@@ -363,7 +362,7 @@ class _MapPageState extends State<MapPage> {
     return Container(
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
-        onPressed: null,
+        onPressed: navigateMe,
         child: Text('Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
@@ -377,13 +376,13 @@ class _MapPageState extends State<MapPage> {
 
   navigateMe() {
     if (!currentlyNavigating) {
-      startRoute(LatLng(parking.geometry.coordinates[0][1],
-          parking.geometry.coordinates[0][0]), parking.properties.address);
+      startRoute(LatLng(currParking.geometry.coordinates[0][1],
+          currParking.geometry.coordinates[0][0]), currParking.properties.address);
     } else if
     (currentDestination.latitude.toStringAsFixed(6) ==
-        parking.geometry.coordinates[0][1].toStringAsFixed(6) &&
+        currParking.geometry.coordinates[0][1].toStringAsFixed(6) &&
         currentDestination.longitude.toStringAsFixed(6) ==
-            parking.geometry.coordinates[0][0].toStringAsFixed(6)) {}
+            currParking.geometry.coordinates[0][0].toStringAsFixed(6)) {}
   }
 
   Widget _showFavBtnAndDirectionBtn() {
