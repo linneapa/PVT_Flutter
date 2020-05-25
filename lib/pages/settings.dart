@@ -253,7 +253,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return FlatButton(
         onPressed: () => {
           //Validate that both fields are filled and content is identical
-          //Save content in Firestore
+          //Save content in Firebase
           Navigator.pop(context),
         },
         child: Text('Spara'),
