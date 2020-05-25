@@ -37,17 +37,21 @@ class _SettingsPageState extends State<SettingsPage> {
         title: Text("Inställningar", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.orangeAccent,
         actions: <Widget>[
-          new FlatButton(
+          new Padding(
+          padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.5, bottom: SizeConfig.blockSizeVertical * 1.5, right: SizeConfig.blockSizeHorizontal * 3),
+          child:FlatButton(
+            color: Colors.white,
               child: new Text(
-                  'Logga ut', style: TextStyle(color: Colors.white)),
+                  'Logga ut', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               onPressed: signOut)
+          )
         ],
       ),
       body: Container(
         child:ListView(
           children: ListTile.divideTiles(
               context: context,
-              tiles: [ //TEMPORARY ITEMS
+              tiles: [
                 ListTile(
                   contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
                   title: Text('Kontoinställningar',
@@ -56,13 +60,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
-                  subtitle: Text('Ändra lösenord, ta bort konto (Denna text kommer ändras)',
+                  subtitle: Text('Ändra lösenord, ta bort konto (EJ IMPLEMENTERAT)',
                     style: TextStyle(
                       fontSize: SizeConfig.blockSizeVertical * 2.2
                     )
                   ),
                   onTap: () {
-                    //Do something
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => showAccountSettings()));
                   },
                 ),
                 ListTile(
@@ -73,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
-                  subtitle: Text('Ställ in radien från din destination du vill se parkeringar',
+                  subtitle: Text('Ställ in radien från din destination du vill se parkeringar (EJ IMPLEMENTERAT)',
                     style: TextStyle(
                       fontSize: SizeConfig.blockSizeVertical * 2.2
                     )
@@ -116,7 +120,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget> [
                   showCancelButton(context),
-                  showSaveButton(context),
+                  showSaveDistButton(context),
                 ]
               ),
             ]
@@ -144,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget showSaveButton(BuildContext context) {
+  Widget showSaveDistButton(BuildContext context) {
     return FlatButton(
       onPressed: () => {
         //Save content locally
@@ -152,6 +156,111 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       child: Text('Spara'),
       color: Colors.orangeAccent
+    );
+  }
+
+  Widget showAccountSettings() {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kontoinställningar', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.orangeAccent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          color: Colors.white,
+          onPressed: () => {
+            Navigator.pop(context),
+          }
+        )
+      ),
+      body: Container(
+        child: ListView(
+          children: ListTile.divideTiles(
+            context: context,
+              tiles: [
+                ListTile(
+                  contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
+                  title: Text('Byt lösenord',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: SizeConfig.blockSizeVertical * 3.5
+                    ),
+                  ),
+                  onTap: () {
+                    createChangePasswordDialog(context);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
+                  title: Text('Ta bort konto',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: SizeConfig.blockSizeVertical * 3.5
+                    ),
+                  ),
+                  subtitle: Text('Denna funktionalitet är ej implementerad än, kontakta oss om du vill att ditt konto raderas.',
+                      style: TextStyle(
+                          fontSize: SizeConfig.blockSizeVertical * 2.2
+                      )
+                  ),
+                  onTap: () {
+                    //Not available yet
+                  },
+                ),
+                ListTile(
+                  //Empty ListTile to draw divider below the item above
+                ),
+              ]).toList(growable: false),
+        )
+      )
+    );
+  }
+
+  //Not sure if this should be handled in-app or if it should be the same as password reset
+  createChangePasswordDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+              content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextFormField(
+                      obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Nytt lösenord',
+                        ),
+                        onSaved: (String value){
+                          //Save new password
+                        },
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Bekräfta nytt lösenord'
+                      )
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget> [
+                          showCancelButton(context),
+                          showSavePassButton(context),
+                        ]
+                    ),
+                  ]
+              )
+          );
+        }
+    );
+  }
+
+  Widget showSavePassButton(BuildContext context) {
+    return FlatButton(
+        onPressed: () => {
+          //Validate that both fields are filled and content is identical
+          //Save content in Firebase
+          Navigator.pop(context),
+        },
+        child: Text('Spara'),
+        color: Colors.orangeAccent
     );
   }
 
