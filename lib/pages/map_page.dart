@@ -36,6 +36,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
@@ -107,14 +108,14 @@ class _MapPageState extends State<MapPage> {
         resizeToAvoidBottomPadding: false,
         body: Container(
             child: Stack(
-              children: <Widget>[
-                showGoogleMaps(),
+          children: <Widget>[
+            showGoogleMaps(),
             showWindow(),
             //showFavoritesButton(),
-                showTopBar(),
-                showMyLocationButton()
-              ],
-            )));
+            showTopBar(),
+            showMyLocationButton()
+          ],
+        )));
   }
 
   Widget showTopBar() {
@@ -194,26 +195,26 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => AlertDialog(
             title: Text('Success'),
             content:
-            Text(currParking.properties.address + ' added to favorites!')));
+                Text(currParking.properties.address + ' added to favorites!')));
   }
 
   Widget showFavoritesButton() {
     return Container(
       child: FlatButton(
-          child: Icon(
-              Icons.favorite_border, size: 60, color: Colors.orangeAccent),
+          child:
+              Icon(Icons.favorite_border, size: 60, color: Colors.orangeAccent),
           onPressed: () {
             if (currMarker != null) addToFavorites();
           }),
     );
   }
 
-  _onMarkerTapped(String marker, var parking) {
+  _onMarkerTapped(String address, var parking) {
     if (_markers.containsKey(parking.properties.address)) {
       final marker = _markers[parking.properties.address];
       currMarker = marker;
       currParking = parking;
-      //print(currMarker.markerId.toString() + '');
+      print(currMarker.markerId.toString() + '');
       print(parking.properties.cityDistrict);
     }
   }
@@ -268,7 +269,7 @@ class _MapPageState extends State<MapPage> {
   // Animated info window
   Widget showWindow() {
     return AnimatedPositioned(
-      bottom: _pinPillPosition,
+      bottom: _pinPillPosition + 40,
       right: 0,
       left: 0,
       duration: Duration(milliseconds: 100),
@@ -287,7 +288,7 @@ class _MapPageState extends State<MapPage> {
                   color: Colors.grey.withOpacity(0.5),
                 )
               ]),
-          child: Row(
+          child: Column(
             children: <Widget>[
               _buildLocationInfo(),
               _showFavBtnAndDirectionBtn(),
@@ -299,31 +300,42 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildLocationInfo() {
-    return Container(
-        margin: EdgeInsets.only(left: 5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '  Street Adress: \n',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '  Stadsdel:',
-              style: TextStyle(fontSize: 15),
-            ),
-            Text(
-              '  Servicedagar: ',
-              style: TextStyle(fontSize: 15),
-            ),
-            Text(
-              '  Max timmar: ',
-              style: TextStyle(fontSize: 15),
-            ),
-          ],
-        )
-    );
+    if (currMarker != null) {
+      return Container(
+          margin: EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                currParking.properties.address == null
+                    ? ' '
+                    : currParking.properties.address,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.cityDistrict == null
+                    ? 'Stadsdel '
+                    : 'Stadsdel: ' + currParking.properties.cityDistrict,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.otherInfo == null
+                    ? 'Info: '
+                    : 'Info: ' + currParking.properties.otherInfo,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.maxHours == null
+                    ? 'Max antal timmar: '
+                    : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ));
+    }else {
+      return Container();
+    }
   }
 
   Widget showChooseParkingBtn() {
@@ -331,7 +343,8 @@ class _MapPageState extends State<MapPage> {
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
         onPressed: null,
-        child: Text('Välj Bort', style: TextStyle(color: Colors.orangeAccent)),
+        child: Text('Välj Parkering',
+            style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
           side: BorderSide(
               color: Colors.orangeAccent, width: 1, style: BorderStyle.solid),
@@ -341,23 +354,32 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  navigateMe() {
+    if (!currentlyNavigating) {
+      startRoute(LatLng(parking.geometry.coordinates[0][1],
+          parking.geometry.coordinates[0][0]), parking.properties.address);
+    } else if
+    (currentDestination.latitude.toStringAsFixed(6) ==
+        parking.geometry.coordinates[0][1].toStringAsFixed(6) &&
+        currentDestination.longitude.toStringAsFixed(6) ==
+            parking.geometry.coordinates[0][0].toStringAsFixed(6)) {}
+  }
+
   Widget _showFavBtnAndDirectionBtn() {
     return Container(
-        margin: EdgeInsets.only(left: 120, top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              child: showFavoritesButton(),
-              alignment: Alignment.topRight,
-            ),
-            Container(
-              child: showChooseParkingBtn(),
-              alignment: Alignment.bottomRight,
-            ),
-          ],
-        ));
+        child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Container(
+          child: showChooseParkingBtn(),
+          alignment: Alignment.bottomLeft,
+        ),
+        Container(
+          child: showFavoritesButton(),
+          alignment: Alignment.bottomRight,
+        ),
+      ],
+    ));
   }
 
   Widget showMyLocationButton() {
@@ -404,10 +426,8 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (context) {
         return ChangeNotifierProvider(
-          create: (context) =>
-              IconInfo(
-                  _globalCarToggled, _globalTruckToggled,
-                  _globalMotorcycleToggled),
+          create: (context) => IconInfo(
+              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
           child: StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
