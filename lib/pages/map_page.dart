@@ -263,14 +263,17 @@ class _MapPageState extends State<MapPage> {
 
                   //TODO: Display usual infoBox but with "Välj bort" instead of "Välj parkering"
                   //and if "Välj bort" is pressed, the following two functions should be called 
-                  showChooseAnotherParkingDialog();
+                 
+                  if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+                    showChooseAnotherParkingDialog();
                   stopCurrentRoute();
 
                 } else{
                   //TODO: Display usual infoBox
                   //and if "Välj parkering" is pressed, the following functions should be called 
 
-                  showChooseAnotherParkingDialog();
+                  if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+                    showChooseAnotherParkingDialog();
                   stopCurrentRoute();
                   //och sen startar rutten
                   startRoute(LatLng(parking.geometry.coordinates[0][1],
