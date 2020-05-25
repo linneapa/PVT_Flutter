@@ -66,6 +66,11 @@ class _MapPageState extends State<MapPage> {
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
+  LatLng currentDestination;
+  var currentDestinationMarker;
+  bool currentlyNavigating = false;
+  final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
+  final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
   // this will hold the generated polylines
   Set<Polyline> _polylines = {};
@@ -74,12 +79,6 @@ class _MapPageState extends State<MapPage> {
   // this is the key object - the PolylinePoints
   // which generates every polyline between start and finish
   PolylinePoints polylinePoints = PolylinePoints();
-
-  LatLng currentDestination;
-  var currentDestinationMarker;
-  bool currentlyNavigating = false;
-  final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
-  final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
   @override
   void initState() {
@@ -257,8 +256,26 @@ class _MapPageState extends State<MapPage> {
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
               onTap: () {
-                startRoute(LatLng(parking.geometry.coordinates[0][1],
+                if(!currentlyNavigating) {
+                  startRoute(LatLng(parking.geometry.coordinates[0][1],
                     parking.geometry.coordinates[0][0]), parking.properties.address);
+                } else if(currentDestination.latitude == parking.geometry.coordinates[0][1] && currentDestination.longitude == parking.geometry.coordinates[0][0]) {
+
+                  //TODO: Display usual infoBox but with "Välj bort" instead of "Välj parkering"
+                  //and if "Välj bort" is pressed, the following two functions should be called 
+                  showChooseAnotherParkingDialog();
+                  stopCurrentRoute();
+
+                } else{
+                  //TODO: Display usual infoBox
+                  //and if "Välj parkering" is pressed, the following functions should be called 
+
+                  showChooseAnotherParkingDialog();
+                  stopCurrentRoute();
+                  //och sen startar rutten
+                  startRoute(LatLng(parking.geometry.coordinates[0][1],
+                    parking.geometry.coordinates[0][0]), parking.properties.address);
+                }
               },
             ));
         _markers[parking.properties.address] = marker;
@@ -279,6 +296,70 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void showChooseAnotherParkingDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          // insetPadding: EdgeInsets.all(60),
+          actionsPadding: EdgeInsets.all(10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)), 
+          side: BorderSide(color: Colors.black, width: 1),),
+          actions: <Widget>[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                  Text(
+                    "\n  Varför valde du bort denna  \nparkering?\n", textAlign: TextAlign.center, style: 
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                  ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  showParkingOccupiedBtn(),
+                  Text("               "), //ugly solution but it refused to seperate the btns for some reason
+                  showAnotherReasonBtn(),
+                ],
+              ),
+            ],
+          ),
+          ]
+        );
+      },
+    );
+  }
+
+  Widget showParkingOccupiedBtn() {
+    return ButtonTheme(
+      minWidth: 100.0,
+      height: 50.0,
+      child: RaisedButton(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4)) , side: BorderSide(color: Colors.grey, width: 2)),
+         color: Colors.white,
+        child: new Text("Upptagen", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        onPressed: () {
+          Navigator.of(context).pop();
+          reportTraffic(true);
+        },
+      ),
+    );
+  }
+
+  Widget showAnotherReasonBtn() {
+    return ButtonTheme(
+      minWidth: 100.0,
+      height: 50.0,
+      child: RaisedButton(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4)) , side: BorderSide(color: Colors.grey, width: 2)),
+        color: Colors.white,
+        child: new Text("Annan\nanledning", textAlign: TextAlign.center ,style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   //returns amount of high traffic ratings between specified hours (although cannot be an interval longer than 10 hours... :) )
   Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
     int noOfHighRatings = -1;
@@ -292,8 +373,9 @@ class _MapPageState extends State<MapPage> {
 
   Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
     int noOfLowRatings = -1;
+    var tempHoursList = fromHour < untilHour? hours.sublist(fromHour, untilHour) : hours.sublist(0, untilHour) + hours.sublist(fromHour, hours.length);
     await db.collection('trafficData').document(parkingAdress).collection('low').
-      where("hour", whereIn: hours.sublist(fromHour, untilHour)).getDocuments().then((value) {
+      where("hour", whereIn: tempHoursList).getDocuments().then((value) {
         noOfLowRatings = value.documents.length;
       });
     return noOfLowRatings;
@@ -341,7 +423,7 @@ class _MapPageState extends State<MapPage> {
       showDialog(
           context: context,
           builder: (_) => AlertDialog(
-              title: Text('Tack för feedbacken!'),
+              title: Text('Tack för din feedback!'),
           ),
       );
     } else {
@@ -359,8 +441,10 @@ class _MapPageState extends State<MapPage> {
       minWidth: 100.0,
       height: 50.0,
       child: RaisedButton(
+        elevation: 10,
         color: Colors.redAccent,
-        child: new Text("Hög", style: TextStyle(color: Colors.black)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
+        child: new Text("Hög", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           reportTraffic(true);
@@ -374,8 +458,10 @@ class _MapPageState extends State<MapPage> {
       minWidth: 100.0,
       height: 50.0,
       child: new RaisedButton(
-        color: Colors.green,
-        child: new Text("Låg", style: TextStyle(color: Colors.black)),
+        // highlightColor: Colors.green,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
+        color: Colors.greenAccent,
+         child: Text("Låg", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           reportTraffic(false);
@@ -389,7 +475,7 @@ class _MapPageState extends State<MapPage> {
       onPressed: () {
         Navigator.of(context).pop();
       },
-      child: Icon(Icons.close),
+      child: Icon(Icons.close, color: Colors.grey, size: 30),
     );
   }
 
@@ -398,28 +484,34 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          //shape:,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              new Text(
-                "Du har anlänt!", textAlign: TextAlign.center, style: 
-                TextStyle(fontWeight: FontWeight.bold),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)), 
+          side: BorderSide(color: Colors.black, width: 1),),
+          actions: <Widget>[
+            Column(children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  new Text(
+                    "  Du har anlänt vid din destination!", textAlign: TextAlign.center, style: 
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  showExitArrivedAtDestinationWindow(),
+                ],
               ),
-              showExitArrivedAtDestinationWindow(),
+              Text(
+                "Var snäll och svara om parkeringen\när högtrafikerad.\n", style: TextStyle(fontSize: 15),),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  showMuchTrafficBtn(),
+                  Text("        "),
+                  showNotMuchTrafficBtn(),
+                ],
+              ),
+              Text(""),
             ],
           ),
-          actions: <Widget>[
-            Text(
-              "Var snäll och svara om parkeringen är högtrafikerad.\n"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                showMuchTrafficBtn(),
-                showNotMuchTrafficBtn(),
-              ],
-            ),
-          ],
+          ]
         );
       },
     );
