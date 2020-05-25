@@ -74,7 +74,8 @@ class _FavouritesPageState extends State<FavouritesPage> {
                     children: <Widget>[
                       Text(parking['location'],
                           style: new TextStyle(fontSize: 14)),
-                      Icon(Icons.directions_car)
+                      //Icon(Icons.directions_car)
+                      getAppropriateIcon(parking),
                     ],
                   ),
                   Row(
@@ -86,6 +87,23 @@ class _FavouritesPageState extends State<FavouritesPage> {
                 ],
               ))),
     ));
+  }
+
+  Icon getAppropriateIcon(DocumentSnapshot parking) {
+    switch (parking['type']) {
+      case 'truck': {
+        return Icon(Icons.local_shipping);
+      }
+      case 'motorcycle': {
+        return Icon(Icons.motorcycle);
+      }
+      case 'accessible': {
+        return Icon(Icons.accessible);
+      }
+      default: {
+        return Icon(Icons.directions_car);
+      }
+    }
   }
 
   Future<void> showOnCardTapDialogue(DocumentSnapshot doc) async {

@@ -219,7 +219,8 @@ class _MapPageState extends State<MapPage> {
       await db.collection('userData').document(id).collection('favorites').add(
           {
             'location': currParking.properties.address,
-            'district': currParking.properties.cityDistrict
+            'district': currParking.properties.cityDistrict,
+            'type': currParking.properties.type
           }
       );
     }
