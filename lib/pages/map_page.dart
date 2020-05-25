@@ -107,7 +107,8 @@ class _MapPageState extends State<MapPage> {
             child: Stack(
               children: <Widget>[
                 showGoogleMaps(),
-                showFavoritesButton(),
+            showWindow(),
+            showFavoritesButton(),
                 showTopBar(),
                 showMyLocationButton()
                 ],
@@ -227,15 +228,20 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
-            onTap: () { _onMarkerTapped(parking.properties.address, parking);},
+          onTap: () {
+            _onMarkerTapped(parking.properties.address, parking);
+            _pinPillPosition = 0;
+          },
             markerId: MarkerId(parking.properties.address),
             position: LatLng(parking.geometry.coordinates[0][1],
                 parking.geometry.coordinates[0][0]),
-            infoWindow: InfoWindow(
+          /*infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
-              onTap: () { _onMarkerTapped(parking.properties.address, parking);},
-            )
+              onTap: () {
+                _onMarkerTapped(parking.properties.address, parking);
+                },
+            )*/
         );
         _markers[parking.properties.address] = marker;
       }
@@ -251,8 +257,58 @@ class _MapPageState extends State<MapPage> {
         zoom: 12,
       ),
       markers: _markers.values.toSet(),
+      onTap: (LatLng location) {
+        setState(() {
+          _pinPillPosition = -100;
+        });
+      },
     );
   }
+
+  double _pinPillPosition = -100;
+
+  Widget showWindow() {
+    return AnimatedPositioned(
+      bottom: _pinPillPosition,
+      right: 0,
+      left: 0,
+      duration: Duration(milliseconds: 50),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          margin: EdgeInsets.all(20),
+          height: 70,
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(50)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  blurRadius: 20,
+                  offset: Offset.zero,
+                  color: Colors.grey.withOpacity(0.5),
+                )
+              ]),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            /*children: <Widget>[
+              _buildAvatar(),
+              _buildLocationInfo(),
+              _buildMarkerType()
+            ],*/
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+
+
+
+
+
 
   Widget showMyLocationButton() {
     return Align(
