@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child:ListView(
           children: ListTile.divideTiles(
               context: context,
-              tiles: [ //TEMPORARY ITEMS
+              tiles: [
                 ListTile(
                   contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
                   title: Text('Kontoinställningar',
@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     )
                   ),
                   onTap: () {
-                    //Do something
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => showAccountSettings()));
                   },
                 ),
                 ListTile(
@@ -152,6 +152,62 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       child: Text('Spara'),
       color: Colors.orangeAccent
+    );
+  }
+
+  Widget showAccountSettings() {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kontoinställningar', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.orangeAccent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          color: Colors.white,
+          onPressed: () => {
+            Navigator.pop(context),
+          }
+        )
+      ),
+      body: Container(
+        child: ListView(
+          children: ListTile.divideTiles(
+            context: context,
+              tiles: [
+                ListTile(
+                  contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
+                  title: Text('Byt lösenord',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: SizeConfig.blockSizeVertical * 3.5
+                    ),
+                  ),
+                  onTap: () {
+                    //Popup for changing password
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 2.2, bottom: SizeConfig.blockSizeVertical * 2.2, left: SizeConfig.blockSizeHorizontal * 4, right: SizeConfig.blockSizeHorizontal * 4),
+                  title: Text('Ta bort konto',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: SizeConfig.blockSizeVertical * 3.5
+                    ),
+                  ),
+                  subtitle: Text('Denna funktionalitet är ej implementerad än, kontakta oss om du vill att ditt konto raderas.',
+                      style: TextStyle(
+                          fontSize: SizeConfig.blockSizeVertical * 2.2
+                      )
+                  ),
+                  onTap: () {
+                    //Not available yet
+                  },
+                ),
+                ListTile(
+                  //Empty ListTile to draw divider below the item above
+                ),
+              ]).toList(growable: false),
+        )
+      )
     );
   }
 
