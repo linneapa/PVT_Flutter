@@ -109,6 +109,7 @@ class _MapPageState extends State<MapPage> {
         bool changed = false;
         if (_myLocation != currentLocation) changed = true;
         _myLocation = currentLocation;
+        
         updatePinOnMap();
         if (changed && currentDestination != null) setPolylines();
       });
@@ -124,7 +125,7 @@ class _MapPageState extends State<MapPage> {
             child: Stack(
               children: <Widget>[
                 showGoogleMaps(),
-                showFavoritesButton(),
+                showFavoritesButton(), //TODO: remove
                 showTopBar(),
                 showMyLocationButton(),
                 showStopRouteButton(), 
@@ -221,7 +222,7 @@ class _MapPageState extends State<MapPage> {
 
   Widget showFavoritesButton() {
     return Align(
-      alignment: Alignment.bottomLeft,
+      alignment: Alignment.centerLeft,
       child: FlatButton(
           child: Icon(Icons.favorite_border, color: Colors.green),
           onPressed: () {
@@ -257,25 +258,27 @@ class _MapPageState extends State<MapPage> {
               snippet: parking.properties.address,
               onTap: () {
                 if(!currentlyNavigating) {
+                  ///TODO: Display infoWindow
+                  
+                  //TODO: and if "Välj parkering" button is pressed in infoWindow, the following function should be called 
                   startRoute(LatLng(parking.geometry.coordinates[0][1],
                     parking.geometry.coordinates[0][0]), parking.properties.address);
                 } else if(currentDestination.latitude.toStringAsFixed(6) == parking.geometry.coordinates[0][1].toStringAsFixed(6) && currentDestination.longitude.toStringAsFixed(6) == parking.geometry.coordinates[0][0].toStringAsFixed(6)) {
 
-                  //TODO: Display usual infoBox but with "Välj bort" instead of "Välj parkering"
-                  //and if "Välj bort" is pressed, the following two functions should be called 
-                 
+                  //TODO: Display infoWindow but with "Välj bort" instead of "Välj parkering"
+                  
+                  //TODO: and if "Välj bort" button is pressed in infoWindow, the following two functions should be called 
                   if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
                     showChooseAnotherParkingDialog();
                   stopCurrentRoute();
 
                 } else{
-                  //TODO: Display usual infoBox
-                  //and if "Välj parkering" is pressed, the following functions should be called 
-
+                  //TODO: Display infoWindow
+                  
+                  //TODO: and if "Välj parkering" button is pressed in infoWindow, the following functions should be called 
                   if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
                     showChooseAnotherParkingDialog();
                   stopCurrentRoute();
-                  //och sen startar rutten
                   startRoute(LatLng(parking.geometry.coordinates[0][1],
                     parking.geometry.coordinates[0][0]), parking.properties.address);
                 }
@@ -620,7 +623,7 @@ class _MapPageState extends State<MapPage> {
   Widget showStopRouteButton() {
     if (currentlyNavigating)
       return Align(
-        alignment: Alignment.centerLeft, //temporary placement
+        alignment: Alignment.bottomLeft,
         child: FloatingActionButton(
             child: Text("Stopp", style: TextStyle(color: Colors.white)),
             backgroundColor: Color.fromRGBO(255, 165, 0, 1.0),
