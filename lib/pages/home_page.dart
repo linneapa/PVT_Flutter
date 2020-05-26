@@ -18,7 +18,6 @@ class HomePage extends StatefulWidget {
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
-  final navigatorKey = GlobalKey<NavigatorState>();
 }
 
 class HomePageState extends State<HomePage> {
