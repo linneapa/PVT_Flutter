@@ -58,6 +58,7 @@ class _MapPageState extends State<MapPage> {
     zoom: 12,
   );
 
+  SizeConfig sizeConfig;
   Completer<GoogleMapController> _mapController = Completer();
   Location location = Location();
   LocationData _myLocation;
@@ -122,6 +123,8 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     _listenLocation();
     return Scaffold(
         resizeToAvoidBottomPadding: false,
@@ -288,8 +291,8 @@ class _MapPageState extends State<MapPage> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
-            margin: EdgeInsets.all(20),
-            height: 150,
+            margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
+            height: SizeConfig.blockSizeVertical * 25,
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(50)),
@@ -418,7 +421,7 @@ class _MapPageState extends State<MapPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           // insetPadding: EdgeInsets.all(60),
-          actionsPadding: EdgeInsets.all(10),
+          // actionsPadding: EdgeInsets.all(10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
