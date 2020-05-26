@@ -280,7 +280,7 @@ class _SignupPageState extends State<SignupPage> {
         // return object of type Dialog
         return AlertDialog(
           title: new Text("Villkor"),
-          content: new Text("CONTENT HERE "),
+          content: new Text("Genom att godkänna villkoren samtycker du till att vi på PVT-Parking sparar din angivna e-mail under tiden då projektet är aktivt."),
           actions: <Widget>[
             new FlatButton(
               child: new Text("Stäng"),

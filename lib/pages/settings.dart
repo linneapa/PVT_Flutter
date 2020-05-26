@@ -185,6 +185,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         fontSize: SizeConfig.blockSizeVertical * 3.5
                     ),
                   ),
+                  subtitle: Text('Denna funktionalitet är ej implementerad än, lösenord kan återställas genom \"Glömt ditt lösenord?\" vid inloggning.',
+                      style: TextStyle(
+                          fontSize: SizeConfig.blockSizeVertical * 2.2
+                      )
+                  ),
                   onTap: () {
                     createChangePasswordDialog(context);
                   },
