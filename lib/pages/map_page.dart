@@ -48,11 +48,12 @@ class _MapPageState extends State<MapPage> {
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
-  var currMarker;
+  static var currMarker;
   var currParking;
   var parkings;
   final db = Firestore.instance;
   bool duplicate = false;
+
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
