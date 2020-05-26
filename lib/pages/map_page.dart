@@ -32,6 +32,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+
   @override
   void setState(fn) {
     if (this.mounted) {
@@ -48,8 +49,8 @@ class _MapPageState extends State<MapPage> {
   var _distanceValue = 0.0;
   var _costValue = 0.0;
   var currMarker;
-  var parkings;
   var currParking;
+  var parkings;
   final db = Firestore.instance;
 
   static final CameraPosition initPosition = CameraPosition(
@@ -126,15 +127,16 @@ class _MapPageState extends State<MapPage> {
         resizeToAvoidBottomPadding: false,
         body: Container(
             child: Stack(
-          children: <Widget>[
-            showGoogleMaps(),
-            showWindow(),
-            //showFavoritesButton(),
-            showTopBar(),
-            showMyLocationButton(),
-            showStopRouteButton(),
-          ],
-        )));
+              children: <Widget>[
+                showGoogleMaps(),
+                showWindow(),
+                showTopBar(),
+                showMyLocationButton(),
+                showStopRouteButton(), 
+                ],
+          )
+        )
+    );
   }
 
   Widget showTopBar() {
@@ -228,16 +230,6 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  _onMarkerTapped(String address, var parking) {
-    if (_markers.containsKey(parking.properties.address)) {
-      final marker = _markers[parking.properties.address];
-      currMarker = marker;
-      currParking = parking;
-      print(currMarker.markerId.toString() + '');
-      print(parking.properties.cityDistrict);
-    }
-  }
-
   Future<void> _onMapCreated(GoogleMapController controller) async {
     parkings = await Services.fetchParkering(_globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
@@ -249,7 +241,7 @@ class _MapPageState extends State<MapPage> {
       for (final parking in parkings.features) {
         final marker = Marker(
           onTap: () {
-            _onMarkerTapped(parking.properties.address, parking);
+            _onMarkerTapped(parking);
             _pinPillPosition = 0;
           },
           markerId: MarkerId(parking.properties.address),
@@ -289,7 +281,7 @@ class _MapPageState extends State<MapPage> {
   // Animated info window
   Widget showWindow() {
     return AnimatedPositioned(
-      bottom: _pinPillPosition + 40,
+      bottom: 40,
       right: 0,
       left: 0,
       duration: Duration(milliseconds: 100),
@@ -400,6 +392,13 @@ class _MapPageState extends State<MapPage> {
         ),
       ],
     ));
+  }
+  _onMarkerTapped(var parking) {
+    if (_markers.containsKey(parking.properties.address)) {
+      final marker = _markers[parking.properties.address];
+      currMarker = marker;
+      currParking = parking;
+    }
   }
 
   void showChooseAnotherParkingDialog() {
