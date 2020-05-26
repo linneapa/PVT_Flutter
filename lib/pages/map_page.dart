@@ -224,11 +224,15 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
+    print(currParking.geometry.coordinates[0][0]);
+
     if (!duplicate) {
       await db.collection('userData').document(id).collection('favorites').add(
           {
             'location': currParking.properties.address,
-            'district': currParking.properties.cityDistrict
+            'district': currParking.properties.cityDistrict,
+            'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
+            'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
           }
       );
     }
