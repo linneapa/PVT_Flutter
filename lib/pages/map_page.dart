@@ -18,6 +18,7 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MapPage extends StatefulWidget {
   @override
@@ -32,6 +33,9 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+
 
   @override
   void setState(fn) {
@@ -89,6 +93,19 @@ class _MapPageState extends State<MapPage> {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
+
+    _firebaseMessaging.configure(
+      onMessage: (message) async { //executed if the app is in the foreground 
+        print(message["notification"]["title"]);
+
+      },
+      onResume: (message) async { //executed if the app is in the background and the user taps on the notification
+        //remember that needs to send some data with the notification as well, when onResume/onLaunch
+        setState(() {showArrivedAtDestinationDialog(); });
+        print("notification from background.");
+        print(message["data"]["title"]);
+      }
+    );
   }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
