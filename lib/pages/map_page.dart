@@ -129,8 +129,8 @@ class _MapPageState extends State<MapPage> {
             child: Stack(
               children: <Widget>[
                 showGoogleMaps(),
-                showWindow(),
                 showTopBar(),
+                showWindow(),
                 showMyLocationButton(),
                 showStopRouteButton(), 
                 ],
@@ -242,7 +242,6 @@ class _MapPageState extends State<MapPage> {
         final marker = Marker(
           onTap: () {
             _onMarkerTapped(parking);
-            _pinPillPosition = 0;
           },
           markerId: MarkerId(parking.properties.address),
           position: LatLng(parking.geometry.coordinates[0][1],
@@ -272,7 +271,7 @@ class _MapPageState extends State<MapPage> {
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
-          _pinPillPosition = -300;
+          currMarker = null;
         });
       },
     );
@@ -280,39 +279,42 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    return AnimatedPositioned(
-      bottom: 40,
-      right: 0,
-      left: 0,
-      duration: Duration(milliseconds: 100),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          margin: EdgeInsets.all(20),
-          height: 150,
-          decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(50)),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  blurRadius: 20,
-                  offset: Offset.zero,
-                  color: Colors.grey.withOpacity(0.5),
-                )
-              ]),
-          child: Column(
-            children: <Widget>[
-              _buildLocationInfo(),
-              _showFavBtnAndDirectionBtn(),
-            ],
+    if (currMarker != null) {
+      return AnimatedPositioned(
+        bottom: 40,
+        right: 0,
+        left: 0,
+        duration: Duration(milliseconds: 100),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            margin: EdgeInsets.all(20),
+            height: 150,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(50)),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    blurRadius: 20,
+                    offset: Offset.zero,
+                    color: Colors.grey.withOpacity(0.5),
+                  )
+                ]),
+            child: Column(
+              children: <Widget>[
+                _buildLocationInfo(),
+                _showFavBtnAndDirectionBtn(),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }else {
+      return Container();
+    }
   }
 
   Widget _buildLocationInfo() {
-    if (currMarker != null) {
       return Container(
           margin: EdgeInsets.only(top: 10),
           child: Column(
@@ -345,9 +347,6 @@ class _MapPageState extends State<MapPage> {
               ),
             ],
           ));
-    }else {
-      return Container();
-    }
   }
 
   Widget showChooseParkingBtn() {
@@ -393,6 +392,7 @@ class _MapPageState extends State<MapPage> {
       ],
     ));
   }
+
   _onMarkerTapped(var parking) {
     if (_markers.containsKey(parking.properties.address)) {
       final marker = _markers[parking.properties.address];
