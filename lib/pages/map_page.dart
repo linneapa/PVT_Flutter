@@ -52,6 +52,7 @@ class _MapPageState extends State<MapPage> {
   var currParking;
   var parkings;
   final db = Firestore.instance;
+  bool duplicate = false;
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -208,18 +209,34 @@ class _MapPageState extends State<MapPage> {
 
   addToFavorites() async {
     String id = widget.userId;
+    bool duplicate = false;
 
-    await db.collection('userData').document(id).collection('favorites').add({
-      'location': currParking.properties.address,
-      'district': currParking.properties.cityDistrict
-    });
+    QuerySnapshot snapshot = await Firestore.instance
+        .collection('userData')
+        .document(id)
+        .collection('favorites')
+        .getDocuments();
+
+    for (var v in snapshot.documents) {
+      if (v['location'] == currParking.properties.address) {
+        duplicate = true;
+      }
+    }
+
+    if (!duplicate) {
+      await db.collection('userData').document(id).collection('favorites').add(
+          {
+            'location': currParking.properties.address,
+            'district': currParking.properties.cityDistrict
+          }
+      );
+    }
 
     showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-            title: Text('Success'),
-            content:
-                Text(currParking.properties.address + ' added to favorites!')));
+        builder: (_) => new AlertDialog(
+            title: duplicate ? Text('Misslyckades') : Text("Success"),
+            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
   }
 
   Widget showFavoritesButton() {
