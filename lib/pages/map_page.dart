@@ -354,7 +354,7 @@ class _MapPageState extends State<MapPage> {
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
         onPressed: navigateMe,
-        child: Text('Välj Parkering',
+        child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
           side: BorderSide(
@@ -369,11 +369,22 @@ class _MapPageState extends State<MapPage> {
     if (!currentlyNavigating) {
       startRoute(LatLng(currParking.geometry.coordinates[0][1],
           currParking.geometry.coordinates[0][0]), currParking.properties.address);
-    } else if
-    (currentDestination.latitude.toStringAsFixed(6) ==
-        currParking.geometry.coordinates[0][1].toStringAsFixed(6) &&
-        currentDestination.longitude.toStringAsFixed(6) ==
-            currParking.geometry.coordinates[0][0].toStringAsFixed(6)) {}
+    } else if(isAlreadyNavigatingHere()) {
+      if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+        showChooseAnotherParkingDialog();
+      stopCurrentRoute();
+    } else {
+      if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+        showChooseAnotherParkingDialog();
+      stopCurrentRoute();
+      startRoute(LatLng(currParking.geometry.coordinates[0][1],
+          currParking.geometry.coordinates[0][0]), currParking.properties.address);
+
+    }
+  }
+
+  bool isAlreadyNavigatingHere() {
+    return (currentDestination != null && currentDestination.latitude.toStringAsFixed(6) == currParking.geometry.coordinates[0][1].toStringAsFixed(6) && currentDestination.longitude.toStringAsFixed(6) == currParking.geometry.coordinates[0][0].toStringAsFixed(6));
   }
 
   Widget _showFavBtnAndDirectionBtn() {
