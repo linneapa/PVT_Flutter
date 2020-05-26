@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'home_page.dart';
+
 
 import 'map_page.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
-  _FavouritesPageState createState() => _FavouritesPageState(value);
+  _FavouritesPageState createState() => _FavouritesPageState(value, this.parent);
 
   FavouritesPage(
-      {Key key, this.userId, this.auth, this.logoutCallback, this.value})
+      {Key key, this.userId, this.auth, this.logoutCallback, this.value, this.parent})
       : super(key: key);
 
   final String userId;
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String value;
+  final HomePageState parent;
 }
 
 class _FavouritesPageState extends State<FavouritesPage> {
   String value;
   final db = Firestore.instance;
+  HomePageState parent;
 
-  _FavouritesPageState(this.value);
+  _FavouritesPageState(this.value, this.parent);
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +116,8 @@ class _FavouritesPageState extends State<FavouritesPage> {
             FlatButton(
               child: Text('Visa på karta'),
               onPressed: () {
-               // showParkingOnMapPage();
+                Navigator.of(context).pop();
+                showParkingOnMapPage();
               },
             ),
             FlatButton(
@@ -156,17 +161,10 @@ class _FavouritesPageState extends State<FavouritesPage> {
         });
   }
 
-  void showParkingOnMapPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MapPage(
-          userId: widget.userId,
-          auth: widget.auth,
-          logoutCallback: widget.logoutCallback,
-        ),
-      ),
-    );
+  showParkingOnMapPage() {
+    this.parent.setState(() {
+      HomePageState.currentNavigationIndex = 1;
+    });
   }
 
   void deleteFavoriteParking(DocumentSnapshot doc) async {
