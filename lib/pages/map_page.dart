@@ -19,6 +19,7 @@ import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io' as platform;
 
 class MapPage extends StatefulWidget {
   @override
@@ -33,9 +34,6 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-
 
   @override
   void setState(fn) {
@@ -56,6 +54,8 @@ class _MapPageState extends State<MapPage> {
   var currParking;
   var parkings;
   final db = Firestore.instance;
+  final FirebaseMessaging _fcm = FirebaseMessaging();
+
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -94,18 +94,46 @@ class _MapPageState extends State<MapPage> {
     });
     setInitLocation();
 
-    _firebaseMessaging.configure(
+
+    _fcm.configure(
       onMessage: (message) async { //executed if the app is in the foreground 
         print(message["notification"]["title"]);
 
       },
       onResume: (message) async { //executed if the app is in the background and the user taps on the notification
         //remember that needs to send some data with the notification as well, when onResume/onLaunch
-        setState(() {showArrivedAtDestinationDialog(); });
+        // setState(() {showArrivedAtDestinationDialog(); });
         print("notification from background.");
         print(message["data"]["title"]);
       }
     );
+
+    _fcm.subscribeToTopic('testing');
+  }
+
+  //Individual Device Notifications
+    /// Get the token, save it to the database for current user
+  _saveDeviceToken() async {
+    // Get the current user
+    var uid = (await widget.auth.getCurrentUser()).uid;
+
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
+
+    // Save it to Firestore
+    if (fcmToken != null) {
+      var tokens = db
+          .collection('userData')
+          .document(uid)
+          .collection('tokens')
+          .document(fcmToken);
+
+      await tokens.setData({
+        'token': fcmToken,
+        'createdAt': FieldValue.serverTimestamp(), // optional
+    //    'platform': Platform.operatingSystem // optional
+      });
+    }
   }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
