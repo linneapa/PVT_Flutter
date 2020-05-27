@@ -314,7 +314,7 @@ class _MapPageState extends State<MapPage> {
           alignment: Alignment.bottomCenter,
           child: Container(
             margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
-            height: SizeConfig.blockSizeVertical * 25,
+            height: SizeConfig.blockSizeVertical * 18,
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(50)),
