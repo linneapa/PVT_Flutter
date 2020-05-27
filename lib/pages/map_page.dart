@@ -304,7 +304,7 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null) {
+    if (currMarker != null && currParking != null) {
       return AnimatedPositioned(
         bottom: 40,
         right: 0,
