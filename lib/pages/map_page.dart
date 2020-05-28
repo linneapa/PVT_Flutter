@@ -194,17 +194,20 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget showFilterButton() {
-    return IconButton(
-      icon: Icon(
-        MdiIcons.filterMenu,
-        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+    return Container(
+      color: const Color(0xF2F2F2).withOpacity(0.9),
+      child: IconButton(
+        icon: Icon(
+          MdiIcons.filterMenu,
+          color: Colors.grey
+        ),
+        onPressed: () {
+          createDialog(context);
+          showGoogleMaps();
+          // do something
+        },
+        //     ),
       ),
-      onPressed: () {
-        createDialog(context);
-        showGoogleMaps();
-        // do something
-      },
-      //     ),
     );
   }
 
