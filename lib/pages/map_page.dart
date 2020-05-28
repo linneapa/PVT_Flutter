@@ -20,6 +20,8 @@ import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
+import 'package:workmanager/workmanager.dart';
+import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
 
 class MapPage extends StatefulWidget {
   @override
@@ -111,30 +113,30 @@ class _MapPageState extends State<MapPage> {
     _fcm.subscribeToTopic('testing');
   }
 
-  //Individual Device Notifications
-    /// Get the token, save it to the database for current user
-  _saveDeviceToken() async {
-    // Get the current user
-    var uid = (await widget.auth.getCurrentUser()).uid;
+  // //Individual Device Notifications
+  //   /// Get the token, save it to the database for current user
+  // _saveDeviceToken() async {
+  //   // Get the current user
+  //   var uid = (await widget.auth.getCurrentUser()).uid;
 
-    // Get the token for this device
-    String fcmToken = await _fcm.getToken();
+  //   // Get the token for this device
+  //   String fcmToken = await _fcm.getToken();
 
-    // Save it to Firestore
-    if (fcmToken != null) {
-      var tokens = db
-          .collection('userData')
-          .document(uid)
-          .collection('tokens')
-          .document(fcmToken);
+  //   // Save it to Firestore
+  //   if (fcmToken != null) {
+  //     var tokens = db
+  //         .collection('userData')
+  //         .document(uid)
+  //         .collection('tokens')
+  //         .document(fcmToken);
 
-      await tokens.setData({
-        'token': fcmToken,
-        'createdAt': FieldValue.serverTimestamp(), // optional
-    //    'platform': Platform.operatingSystem // optional
-      });
-    }
-  }
+  //     await tokens.setData({
+  //       'token': fcmToken,
+  //       'createdAt': FieldValue.serverTimestamp(), // optional
+  //   //    'platform': Platform.operatingSystem // optional
+  //     });
+  //   }
+  // }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
@@ -684,8 +686,17 @@ class _MapPageState extends State<MapPage> {
   void startRoute(LatLng destination, String destinationAdress) {
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
-
     currentDestination = destination;
+
+    //TODO: här kan radera gamla instans av dokumentet från db
+     Workmanager.initialize(
+    CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
+    isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+  );
+                Workmanager.registerPeriodicTask("1", "simpleTask",     inputData: {
+    'lat': currentDestination.latitude,
+    'long': currentDestination.longitude,
+    },); //Android only (see below)
     setPolylines();
     currentlyNavigating = true;
     setState(() {});
