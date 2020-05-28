@@ -150,7 +150,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               "En länk för att återställa ditt lösenord har skickats till den angivna e-postadressen."),
           actions: <Widget>[
             new FlatButton(
-              child: new Text("Avfärda"),
+              child: new Text("Okej"),
               onPressed: () {
                 toggleFormMode();
                 Navigator.of(context).popUntil((route) => route.isFirst);

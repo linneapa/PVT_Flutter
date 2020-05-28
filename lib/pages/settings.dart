@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/SizeConfig.dart';
+import 'package:ezsgame/pages/forgotPassword.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key, this.auth, this.userId, this.logoutCallback})
@@ -53,7 +54,39 @@ class _SettingsPageState extends State<SettingsPage> {
                       style: TextStyle(
                           color: Colors.orangeAccent,
                           fontWeight: FontWeight.bold)),
-                  onPressed: signOut))
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: Container(
+                              padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 3),
+                              child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget> [
+                              Text('Vill du logga ut från appen?'),
+                              Row(children:<Widget>[Text('\n')]), //Only used for spacing, there's probably a better way
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget> [
+                                  FlatButton(
+                                    child: Text('Avbryt', style: TextStyle(color: Colors.orangeAccent)),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                  FlatButton(
+                                    child: Text('Logga ut', style: TextStyle(color: Colors.orangeAccent)),
+                                    onPressed: () => signOut()
+                                  )
+                                ]
+                              )
+                            ]
+                          ))
+                        );
+                      }
+                    );
+                  }
+              )
+          )
         ],
       ),
       body: Container(
@@ -191,17 +224,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   left: SizeConfig.blockSizeHorizontal * 4,
                   right: SizeConfig.blockSizeHorizontal * 4),
               title: Text(
-                'Byt lösenord',
+                'Återställ lösenord',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: SizeConfig.blockSizeVertical * 3.5),
               ),
               subtitle: Text(
-                  'Denna funktionalitet är ej implementerad än, lösenord kan återställas genom \"Glömt ditt lösenord?\" vid inloggning.',
+                  'Återställ ditt lösenord genom en länk du får via e-mail',
                   style:
                       TextStyle(fontSize: SizeConfig.blockSizeVertical * 2.2)),
               onTap: () {
-                createChangePasswordDialog(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ForgotPassword(
+                            auth: widget.auth, loginCallback: widget.logoutCallback)));
               },
             ),
             ListTile(
@@ -215,6 +252,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: SizeConfig.blockSizeVertical * 3.5),
+              ),
+              subtitle: Text(
+                'Raderar ditt konto med all historik och sparade favoriter'
               ),
               onTap: () {
                 showRemoveAccountConfirmation(context);
@@ -276,44 +316,4 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
-  //Not sure if this should be handled in-app or if it should be the same as password reset
-  createChangePasswordDialog(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-              content:
-                  Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            TextFormField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Nytt lösenord',
-              ),
-              onSaved: (String value) {
-                //Save new password
-              },
-            ),
-            TextFormField(
-                decoration:
-                    const InputDecoration(labelText: 'Bekräfta nytt lösenord')),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  showCancelButton(context),
-                  showSavePassButton(context),
-                ]),
-          ]));
-        });
-  }
-
-  Widget showSavePassButton(BuildContext context) {
-    return FlatButton(
-        onPressed: () => {
-              //Validate that both fields are filled and content is identical
-              //Save content in Firebase
-              Navigator.pop(context),
-            },
-        child: Text('Spara'),
-        color: Colors.orangeAccent);
-  }
 }
