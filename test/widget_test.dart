@@ -24,14 +24,21 @@ class MockAuth extends Mock implements Auth {
 
 void main() {
 
-  Widget buildTestableWidget(Widget widget) {
-    // https://docs.flutter.io/flutter/widgets/MediaQuery-class.html
-    return new MediaQuery(
-        data: new MediaQueryData(),
-        child: new MaterialApp(home: widget));
-  }
+//  Widget buildTestableWidget(Widget widget) {
+//    // https://docs.flutter.io/flutter/widgets/MediaQuery-class.html
+//    return new MediaQuery(
+//        data: new MediaQueryData(),
+//        child: new MaterialApp(home: widget));
+//  }
 
   testWidgets('empty email and password doesn\'t call sign in', (WidgetTester tester) async {
+
+    Widget buildTestableWidget(Widget widget) {
+      // https://docs.flutter.io/flutter/widgets/MediaQuery-class.html
+      return new MediaQuery(
+          data: new MediaQueryData(),
+          child: new MaterialApp(home: widget));
+    }
 
     // create a LoginPage
     LoginSignupPage loginPage = new LoginSignupPage();

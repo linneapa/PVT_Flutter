@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ezsgame/api/ParkingSpace.dart';
 import 'package:ezsgame/api/Services.dart';
 import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:ezsgame/firebase/authentication.dart';
-import 'package:http/io_client.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'IconInfo.dart';
@@ -20,6 +18,8 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'package:http/io_client.dart';
+import 'package:http/http.dart' as http;
 
 class MapPage extends StatefulWidget {
   @override
@@ -42,8 +42,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  Future<Parkering> futureParkering;
-  IOClient ioClient = IOClient();
+  bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
@@ -51,10 +50,11 @@ class _MapPageState extends State<MapPage> {
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
-  var currMarker;
-  var parkings;
+  static var currMarker;
   var currParking;
+  var parkings;
   final db = Firestore.instance;
+  bool duplicate = false;
 
 
   static final CameraPosition initPosition = CameraPosition(
@@ -62,6 +62,7 @@ class _MapPageState extends State<MapPage> {
     zoom: 12,
   );
 
+  SizeConfig sizeConfig;
   Completer<GoogleMapController> _mapController = Completer();
   Location location = Location();
   LocationData _myLocation;
@@ -73,10 +74,10 @@ class _MapPageState extends State<MapPage> {
   String _error;
   LatLng currentDestination;
   var currentDestinationMarker;
-  bool currentlyNavigating = false;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
   final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
+  double _pinPillPosition = -300; // Used in InfoWindow Animation
   // this will hold the generated polylines
   Set<Polyline> _polylines = {};
   // this will hold each polyline coordinate as Lat and Lng pairs
@@ -88,18 +89,20 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    futureParkering = Services.fetchParkering(ioClient, _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-    getBytesFromAsset('assets/direction-arrow.png',64).then((onValue) {
+    getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
   }
 
-  static Future<Uint8List> getBytesFromAsset(String path, int width) async{
+  static Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
-    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),targetWidth:width);
+    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
     FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ImageByteFormat.png)).buffer.asUint8List();
+    return (await fi.image.toByteData(format: ImageByteFormat.png))
+        .buffer
+        .asUint8List();
   }
 
   Future<void> _listenLocation() async {
@@ -115,7 +118,7 @@ class _MapPageState extends State<MapPage> {
         bool changed = false;
         if (_myLocation != currentLocation) changed = true;
         _myLocation = currentLocation;
-        
+
         updatePinOnMap();
         if (changed && currentDestination != null) setPolylines();
       });
@@ -124,6 +127,8 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    sizeConfig = SizeConfig();
+    sizeConfig.init(context);
     _listenLocation();
     return Scaffold(
         resizeToAvoidBottomPadding: false,
@@ -131,8 +136,8 @@ class _MapPageState extends State<MapPage> {
             child: Stack(
               children: <Widget>[
                 showGoogleMaps(),
-                showFavoritesButton(), //TODO: remove
                 showTopBar(),
+                showWindow(),
                 showMyLocationButton(),
                 showStopRouteButton(), 
                 ],
@@ -144,21 +149,26 @@ class _MapPageState extends State<MapPage> {
   Widget showTopBar() {
     return Align(
       alignment: Alignment.topCenter,
-      child: Column( children: <Widget> [
-        Container(height: 30), //empty container to move down the searchfield
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget> [
-            // Flexible(child: Container(height: 10,)),
-            Expanded(child: showSearchTextField()),
-            Flexible(child: showFilterButton()),
-          ],
-        ),
-      ],
+      child: Column(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.only(top: 50),
+          ), //empty container to move down the searchfield
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              // Flexible(child: Container(height: 10,)),
+              Expanded(
+                child: showSearchTextField(),
+                flex: 5,
+              ),
+              Flexible(child: showFilterButton(), flex: 1),
+            ],
+          ),
+        ],
       ),
     );
   }
-
 
   Widget showSearchTextField() {
     return SearchMapPlaceWidget(
@@ -171,25 +181,21 @@ class _MapPageState extends State<MapPage> {
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
-
           final geolocation = await place.geolocation;
 
           // Will animate the GoogleMap camera, taking us to the selected position with an appropriate zoom
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
-            controller.animateCamera(
-                CameraUpdate.newLatLng(geolocation.coordinates));
+            controller
+                .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
                 CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
           });
-
-        }
-    );
+        });
   }
 
   Widget showFilterButton() {
-
     return IconButton(
       icon: Icon(
         MdiIcons.filterMenu,
@@ -220,11 +226,15 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
+    print(currParking.geometry.coordinates[0][0]);
+
     if (!duplicate) {
       await db.collection('userData').document(id).collection('favorites').add(
           {
             'location': currParking.properties.address,
-            'district': currParking.properties.cityDistrict
+            'district': currParking.properties.cityDistrict,
+            'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
+            'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
           }
       );
     }
@@ -237,30 +247,19 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget showFavoritesButton() {
-    return Align(
-      alignment: Alignment.centerLeft,
+    return Container(
       child: FlatButton(
-          child: Icon(Icons.favorite_border, color: Colors.green),
+          child:
+              Icon(Icons.favorite_border, size: 60, color: Colors.orangeAccent),
           onPressed: () {
-            if(currMarker != null) addToFavorites();
+            if (currMarker != null) addToFavorites();
           }),
     );
   }
 
-  _onMarkerTapped(String marker, var parking) {
-    if (_markers.containsKey(parking.properties.address)) {
-      final marker = _markers[parking.properties.address];
-      currMarker = marker;
-      currParking = parking;
-      //print(currMarker.markerId.toString() + '');
-      print(parking.properties.cityDistrict);
-    }
-  }
-
-
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    final IOClient client = IOClient();
-    parkings = await Services.fetchParkering(client, _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    parkings = await Services.fetchParkering(_globalCarToggled,
+        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
 
@@ -268,41 +267,20 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
-            onTap: () { _onMarkerTapped(parking.properties.address, parking);},
-            markerId: MarkerId(parking.properties.address),
-            position: LatLng(parking.geometry.coordinates[0][1],
-                parking.geometry.coordinates[0][0]),
-            infoWindow: InfoWindow(
+          onTap: () {
+            _onMarkerTapped(parking);
+          },
+          markerId: MarkerId(parking.properties.address),
+          position: LatLng(parking.geometry.coordinates[0][1],
+              parking.geometry.coordinates[0][0]),
+          /*infoWindow: InfoWindow(
               title: parking.properties.cityDistrict,
               snippet: parking.properties.address,
               onTap: () {
-                if(!currentlyNavigating) {
-                  ///TODO: Display infoWindow
-                  
-                  //TODO: and if "Välj parkering" button is pressed in infoWindow, the following function should be called 
-                  startRoute(LatLng(parking.geometry.coordinates[0][1],
-                    parking.geometry.coordinates[0][0]), parking.properties.address);
-                } else if(currentDestination.latitude.toStringAsFixed(6) == parking.geometry.coordinates[0][1].toStringAsFixed(6) && currentDestination.longitude.toStringAsFixed(6) == parking.geometry.coordinates[0][0].toStringAsFixed(6)) {
-
-                  //TODO: Display infoWindow but with "Välj bort" instead of "Välj parkering"
-                  
-                  //TODO: and if "Välj bort" button is pressed in infoWindow, the following two functions should be called 
-                  if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
-                    showChooseAnotherParkingDialog();
-                  stopCurrentRoute();
-
-                } else{
-                  //TODO: Display infoWindow
-                  
-                  //TODO: and if "Välj parkering" button is pressed in infoWindow, the following functions should be called 
-                  if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
-                    showChooseAnotherParkingDialog();
-                  stopCurrentRoute();
-                  startRoute(LatLng(parking.geometry.coordinates[0][1],
-                    parking.geometry.coordinates[0][0]), parking.properties.address);
-                }
-              },
-            ));
+                _onMarkerTapped(parking.properties.address, parking);
+                },
+            )*/
+        );
         _markers[parking.properties.address] = marker;
       }
       updatePinOnMap();
@@ -318,7 +296,147 @@ class _MapPageState extends State<MapPage> {
         zoom: 12,
       ),
       markers: _markers.values.toSet(),
+      onTap: (LatLng location) {
+        setState(() {
+          currMarker = null;
+        });
+      },
     );
+  }
+
+  // Animated info window
+  Widget showWindow() {
+    if (currMarker != null && currParking != null) {
+      return AnimatedPositioned(
+        bottom: 40,
+        right: 0,
+        left: 0,
+        duration: Duration(milliseconds: 100),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
+            height: SizeConfig.blockSizeVertical * 25,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(50)),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    blurRadius: 20,
+                    offset: Offset.zero,
+                    color: Colors.grey.withOpacity(0.5),
+                  )
+                ]),
+            child: Column(
+              children: <Widget>[
+                _buildLocationInfo(),
+                _showFavBtnAndDirectionBtn(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }else {
+      return Container();
+    }
+  }
+
+  Widget _buildLocationInfo() {
+      return Container(
+          margin: EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                currParking.properties.address == null
+                    ? ' '
+                    : currParking.properties.address,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.cityDistrict == null
+                    ? 'Stadsdel '
+                    : 'Stadsdel: ' + currParking.properties.cityDistrict,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.otherInfo == null
+                    ? 'Info: '
+                    : 'Info: ' + currParking.properties.otherInfo,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                currParking.properties.maxHours == null
+                    ? 'Max antal timmar: '
+                    : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ));
+  }
+
+  Widget showChooseParkingBtn() {
+    return Container(
+      margin: EdgeInsets.only(left: 5, right: 10, top: 10),
+      child: FlatButton(
+        onPressed: navigateMe,
+        child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
+            style: TextStyle(color: Colors.orangeAccent)),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: Colors.orangeAccent, width: 1, style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(50),
+        ),
+      ),
+    );
+  }
+
+  navigateMe() {
+    if (!currentlyNavigating) {
+      startRoute(LatLng(currParking.geometry.coordinates[0][1],
+          currParking.geometry.coordinates[0][0]), currParking.properties.address);
+    } else if(isAlreadyNavigatingHere()) {
+      if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+        showChooseAnotherParkingDialog();
+      stopCurrentRoute();
+    } else {
+      if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude, currentDestination.latitude, currentDestination.longitude) < 150)
+        showChooseAnotherParkingDialog();
+      stopCurrentRoute();
+      startRoute(LatLng(currParking.geometry.coordinates[0][1],
+          currParking.geometry.coordinates[0][0]), currParking.properties.address);
+
+    }
+  }
+
+  bool isAlreadyNavigatingHere() {
+    return (currentDestination != null && currentDestination.latitude.toStringAsFixed(6) == currParking.geometry.coordinates[0][1].toStringAsFixed(6) && currentDestination.longitude.toStringAsFixed(6) == currParking.geometry.coordinates[0][0].toStringAsFixed(6));
+  }
+
+  Widget _showFavBtnAndDirectionBtn() {
+    return Container(
+        child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Container(
+          child: showChooseParkingBtn(),
+          alignment: Alignment.bottomLeft,
+        ),
+        Container(
+          child: showFavoritesButton(),
+          alignment: Alignment.bottomRight,
+        ),
+      ],
+    ));
+  }
+
+  _onMarkerTapped(var parking) {
+    if (_markers.containsKey(parking.properties.address)) {
+      final marker = _markers[parking.properties.address];
+      currMarker = marker;
+      currParking = parking;
+    }
   }
 
   void showChooseAnotherParkingDialog() {
@@ -326,16 +444,16 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          //insetPadding: EdgeInsets.all(60),
-          //actionsPadding: EdgeInsets.all(10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)), 
+          // insetPadding: EdgeInsets.all(60),
+          // actionsPadding: EdgeInsets.all(10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                   Text(
-                    "\n  Varför valde du bort denna  \nparkering?\n", textAlign: TextAlign.center, style: 
+                    "\n  Varför valde du bort denna  \nparkering?\n", textAlign: TextAlign.center, style:
                     TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                   ),
               Row(
@@ -408,7 +526,7 @@ class _MapPageState extends State<MapPage> {
 
   void reportTraffic(bool isTraffic) async {
     String id = widget.userId;
-    
+
     String location = currentDestinationMarker.markerId.toString();
     location = location.substring(location.indexOf(":") + 1);
     location = location.substring(0, location.indexOf("}"));
@@ -434,7 +552,7 @@ class _MapPageState extends State<MapPage> {
               if(value.documents.isNotEmpty)
                 leftFeedbackHereRecently = true;
             });
-        
+
     if(!leftFeedbackHereRecently) {
       await db.collection('trafficData').document(location).collection(isTraffic? 'high':'low').add(
         {
@@ -509,7 +627,7 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
             Column(children: <Widget>[
@@ -517,7 +635,7 @@ class _MapPageState extends State<MapPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   new Text(
-                    "  Du har anlänt vid din destination!", textAlign: TextAlign.center, style: 
+                    "  Du har anlänt vid din destination!", textAlign: TextAlign.center, style:
                     TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   showExitArrivedAtDestinationWindow(),
@@ -543,7 +661,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void startRoute(LatLng destination, String destinationAdress) {
-    if (_markers.containsKey(destinationAdress)) 
+    if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
 
     currentDestination = destination;
@@ -687,7 +805,8 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (context) {
         return ChangeNotifierProvider(
-          create: (context) => IconInfo(_globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
+          create: (context) => IconInfo(
+              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
           child: StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -745,7 +864,8 @@ class _MapPageState extends State<MapPage> {
           ),
         );
       },
-    ).then((val) { // retrieve and update the state of the icons
+    ).then((val) {
+      // retrieve and update the state of the icons
       IconInfo ic = val;
       if (ic != null) {
         _globalMotorcycleToggled = ic.motorcycleToggled;
@@ -868,8 +988,6 @@ class _MapPageState extends State<MapPage> {
       );
     });
   }
-
-
 }
 
 class CarIconButton extends StatelessWidget {
@@ -886,14 +1004,11 @@ class CarIconButton extends StatelessWidget {
           iconInfo.car = !iconInfo.carToggled;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue) 
-            iconInfo.truck = !truckValue;
+          if (truckValue) iconInfo.truck = !truckValue;
 
           bool motorcycleValue = iconInfo.motorcycleToggled;
-          if (motorcycleValue) 
-            iconInfo.motorcycle = !motorcycleValue;
-        }
-    );
+          if (motorcycleValue) iconInfo.motorcycle = !motorcycleValue;
+        });
   }
 }
 
@@ -911,12 +1026,13 @@ class TruckIconButton extends StatelessWidget {
           iconInfo.truck = !iconInfo.truckToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue) 
+          if (carValue)
             iconInfo.car = !carValue;
 
           bool motorcycleValue = iconInfo.truckToggled;
-          if (motorcycleValue) 
+          if (motorcycleValue)
             iconInfo.motorcycle = !motorcycleValue;
+
         }
     );
   }
@@ -936,13 +1052,10 @@ class MotorcycleIconButton extends StatelessWidget {
           iconInfo.motorcycle = !iconInfo.motorcycleToggled;
 
           bool carValue = iconInfo.carToggled;
-          if (carValue) 
-            iconInfo.car = !carValue;
+          if (carValue) iconInfo.car = !carValue;
 
           bool truckValue = iconInfo.truckToggled;
-          if (truckValue) 
-            iconInfo.truck = !truckValue;
-        }
-    );
+          if (truckValue) iconInfo.truck = !truckValue;
+        });
   }
 }

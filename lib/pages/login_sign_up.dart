@@ -51,7 +51,6 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
     return false;
   }
 
-  // kolla härifrån för test
   void validateAndSubmit() async {
     setState(() {
       _errorMessage = "";

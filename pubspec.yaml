@@ -66,6 +66,8 @@ flutter:
     - assets/google.png
     - assets/facebook.png
     - assets/direction-arrow.png
+  #    - assets/driver.png
+  #    - assets/pin.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
