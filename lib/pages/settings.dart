@@ -284,44 +284,4 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
-  //Not sure if this should be handled in-app or if it should be the same as password reset
-  createChangePasswordDialog(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-              content:
-                  Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            TextFormField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Nytt lösenord',
-              ),
-              onSaved: (String value) {
-                //Save new password
-              },
-            ),
-            TextFormField(
-                decoration:
-                    const InputDecoration(labelText: 'Bekräfta nytt lösenord')),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  showCancelButton(context),
-                  showSavePassButton(context),
-                ]),
-          ]));
-        });
-  }
-
-  Widget showSavePassButton(BuildContext context) {
-    return FlatButton(
-        onPressed: () => {
-              //Validate that both fields are filled and content is identical
-              //Save content in Firebase
-              Navigator.pop(context),
-            },
-        child: Text('Spara'),
-        color: Colors.orangeAccent);
-  }
 }
