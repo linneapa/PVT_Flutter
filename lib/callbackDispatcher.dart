@@ -8,9 +8,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 void callbackDispatcher() {
   Workmanager.executeTask((task, inputData) async {
+
+      print("\n\n888888888888888888888888888888888888888888888888888888888888888\n\n");
+
         Geolocator geolocator = Geolocator();
         double currDestLat = inputData['lat'];
         double currDestLong = inputData['long'];
+        String uid = inputData['uid'];
+        int counter = 0;
     
     // (await Firestore.instance
     //     .collection('userData')
@@ -26,43 +31,29 @@ void callbackDispatcher() {
 
 
     // _getCurrentLocation();
-    // while(counter++ < 5000) {
-    //   print(counter);
-    // }
-    if(distanceBetweenPoints(currentPosition.latitude, currentPosition.longitude, currDestLat, currDestLong) > 20) {
-        // currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);    
-      await Firestore.instance.collection("testing")
-        .document("testing")
+    while(counter++ < 5000) {
+      print(counter);
+    }
+    // if(distanceBetweenPoints(currentPosition.latitude, currentPosition.longitude, currDestLat, currDestLong) > 20) {
+    //     // currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);    
+      await Firestore.instance.collection("orders")
+        .document("hello")
         .setData({
-        'title': 'Mastering Flutter',
-        'description': 'Programming Guide for Dart'
-      });
+        'seller': uid,
+        'description': 'success :)'
+       });
 
+
+      //unsubscribe
               print("succedddded");
 
-    }
+    
 
     //skicka till db
     print("\n\n\n\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\n\n\n "); //simpleTask will be emitted here.
     return Future.value(true);
   });
 }
-
-  void sendData() async{
-      await Firestore.instance.collection("testing")
-      .document("testing")
-      .setData({
-        'title': 'Mastering Flutter',
-        'description': 'Programming Guide for Dart'
-      });
-  }
-
-  _getCurrentLocation() async{
-    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
-
-    currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
-
-  }
 
     //converts degrees to radians
   double degToRad(deg) {

@@ -109,34 +109,39 @@ class _MapPageState extends State<MapPage> {
         print(message["data"]["title"]);
       }
     );
-
-    _fcm.subscribeToTopic('testing');
+    //_fcm. borde gå att vid skapandet av profilen skapa ett dokument som subsrcibar på
+    // subscribeToTopic();
+    _saveDeviceToken();
   }
 
-  // //Individual Device Notifications
-  //   /// Get the token, save it to the database for current user
-  // _saveDeviceToken() async {
-  //   // Get the current user
-  //   var uid = (await widget.auth.getCurrentUser()).uid;
+  void subscribeToTopic() async{
+    _fcm.subscribeToTopic((await widget.auth.getCurrentUser()).uid);
+  }
 
-  //   // Get the token for this device
-  //   String fcmToken = await _fcm.getToken();
+  //Individual Device Notifications
+    /// Get the token, save it to the database for current user
+  _saveDeviceToken() async {
+    // Get the current user
+    var uid = (await widget.auth.getCurrentUser()).uid;
 
-  //   // Save it to Firestore
-  //   if (fcmToken != null) {
-  //     var tokens = db
-  //         .collection('userData')
-  //         .document(uid)
-  //         .collection('tokens')
-  //         .document(fcmToken);
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
 
-  //     await tokens.setData({
-  //       'token': fcmToken,
-  //       'createdAt': FieldValue.serverTimestamp(), // optional
-  //   //    'platform': Platform.operatingSystem // optional
-  //     });
-  //   }
-  // }
+    // Save it to Firestore
+    if (fcmToken != null) {
+      var tokens = db
+          .collection('userData')
+          .document(uid)
+          .collection('tokens')
+          .document(fcmToken);
+
+      await tokens.setData({
+        'token': fcmToken,
+        'createdAt': FieldValue.serverTimestamp(), // optional
+    //    'platform': Platform.operatingSystem // optional
+      });
+    }
+  }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
@@ -683,20 +688,27 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void startRoute(LatLng destination, String destinationAdress) {
+  void startRoute(LatLng destination, String destinationAdress) async{
+    String uid = (await widget.auth.getCurrentUser()).uid;
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
     currentDestination = destination;
+
+  print("\n\n1111111111111111111111\n\n");
 
     //TODO: här kan radera gamla instans av dokumentet från db
      Workmanager.initialize(
     CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
     isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
   );
+
                 Workmanager.registerPeriodicTask("1", "simpleTask",     inputData: {
     'lat': currentDestination.latitude,
     'long': currentDestination.longitude,
+    'uid': uid,
     },); //Android only (see below)
+      print("\n\2222222222222222222222\n\n");
+
     setPolylines();
     currentlyNavigating = true;
     setState(() {});
@@ -783,7 +795,13 @@ class _MapPageState extends State<MapPage> {
       child: FloatingActionButton(
           child: Icon(Icons.my_location, color: Colors.black),
           backgroundColor: Color.fromRGBO(160, 160, 160, 1.0),
-          onPressed: () {
+          onPressed: () async{
+                  await Firestore.instance.collection("orders")
+        .document("hello")
+        .setData({
+        'seller': (await widget.auth.getCurrentUser()).uid,
+        'description': 'success :)'
+      });
             showCurrentLocation(_controller);
           }),
     );
