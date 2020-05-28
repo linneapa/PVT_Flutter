@@ -18,6 +18,9 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'map_marker.dart';
+import 'package:fluster/fluster.dart';
+
 
 class MapPage extends StatefulWidget {
   @override
@@ -64,7 +67,9 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  final Map<String, Marker> _markers = {};
+  static final Map<String, MapMarker> _markers = {};            //changed
+  final List <Marker> googleMarkers = fluster.clusters([-180,-85,180,85],
+      18).map((cluster) => cluster.toMarker()).toList();
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -120,6 +125,27 @@ class _MapPageState extends State<MapPage> {
       });
     });
   }
+
+  static final Fluster<MapMarker> fluster = Fluster<MapMarker>(
+    minZoom: 1,           //Min zoom at which clusters will show
+    maxZoom: 18,          //Max zoom at which clusters will show
+    radius: 150,          //Cluster radius in pixels
+    extent: 2048,         //Tile extent, Used to calculate radius
+    nodeSize: 64,         //Size of KD-tree leaf node
+    points: _markers.values.toList(),     //List of MapMarker objects
+    createCluster: (
+      BaseCluster cluster,
+        double lng,
+        double lat,
+    ) => MapMarker(
+          id: cluster.id.toString(),
+          position: LatLng(lat,lng),
+          isCluster: cluster.isCluster,
+          clusterId: cluster.id,
+          pointsSize: cluster.pointsSize,
+          childMarkerId: cluster.childMarkerId,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -242,11 +268,11 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
-        final marker = Marker(
+        final marker = MapMarker(
           onTap: () {
             _onMarkerTapped(parking);
           },
-          markerId: MarkerId(parking.properties.address),
+          id: parking.properties.address,
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
           /*infoWindow: InfoWindow(
@@ -271,7 +297,7 @@ class _MapPageState extends State<MapPage> {
         target: const LatLng(59.3293, 18.0686),
         zoom: 12,
       ),
-      markers: _markers.values.toSet(),
+      markers: googleMarkers.toSet(),
       onTap: (LatLng location) {
         setState(() {
           currMarker = null;
@@ -768,11 +794,11 @@ class _MapPageState extends State<MapPage> {
   }
 
   void updatePinOnMap() async {
-    _markers['PhoneLocationMarker'] = Marker(
+    googleMarkers.add(Marker(
         markerId: MarkerId('PhoneLocationMarker'),
         position: LatLng(_myLocation.latitude, _myLocation.longitude),
         //rotation: _myLocation.heading,                                  //acting funny
-        icon: arrowIcon);
+        icon: arrowIcon));
   }
 
   createDialog(BuildContext context) {
