@@ -813,14 +813,19 @@ class _MapPageState extends State<MapPage> {
               return AlertDialog(
                 content: Container(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text("Filter"),
-                          showSwitchButton(),
+                          Text("Filter",
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            ),
+                          )
                         ],
                       ),
                       Row(
@@ -830,36 +835,17 @@ class _MapPageState extends State<MapPage> {
                           MotorcycleIconButton()
                         ],
                       ),
-                      Column(
+
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          Text("Avstånd från destination:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Kort"),
-                                Expanded(child: showDistanceSlider()),
-                                Text("Långt"),
-                              ]),
-                          Text("Prisklass:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Låg"),
-                                Expanded(child: showCostSlider()),
-                                Text("Hög"),
-                              ]),
+                          showHandicapIconButton(),
+                          showCloseButton(context),
                         ],
-                      ),
-                      showHandicapIconButton(),
+                      )
                     ],
                   ),
                 ),
-                actions: <Widget>[
-                  showCancelButton(context),
-                  showOkButton(context),
-                ],
               );
             },
           ),
@@ -873,78 +859,6 @@ class _MapPageState extends State<MapPage> {
         _globalTruckToggled = ic.truckToggled;
         _globalCarToggled = ic.carToggled;
       }
-    });
-  }
-
-  Widget showSwitchButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: Switch(
-          value: _filterSwitched,
-          onChanged: (value) {
-            setState(() {
-              _filterSwitched = value;
-            });
-          },
-          activeTrackColor: Colors.orangeAccent,
-          activeColor: Colors.orange,
-        ),
-      );
-    });
-  }
-
-  Widget showDistanceSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return SliderTheme(
-        data: SliderThemeData(
-          thumbColor: Colors.orangeAccent,
-          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-          inactiveTickMarkColor: Colors.black,
-          activeTickMarkColor: Colors.black,
-          activeTrackColor: Colors.orangeAccent,
-          inactiveTrackColor: Colors.grey,
-        ),
-        child: Slider(
-          min: 0,
-          max: 100,
-          value: _distanceValue,
-          divisions: 2,
-          onChanged: (value) {
-            setState(() {
-              _distanceValue = value;
-            });
-          },
-        ),
-      );
-    });
-  }
-
-  Widget showCostSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Center(
-        child: SliderTheme(
-          data: SliderThemeData(
-            thumbColor: Colors.orangeAccent,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-            inactiveTickMarkColor: Colors.black,
-            activeTickMarkColor: Colors.black,
-            activeTrackColor: Colors.orangeAccent,
-            inactiveTrackColor: Colors.grey,
-          ),
-          child: Slider(
-            min: 0,
-            max: 100,
-            value: _costValue,
-            divisions: 2,
-            onChanged: (value) {
-              setState(() {
-                _costValue = value;
-              });
-            },
-          ),
-        ),
-      );
     });
   }
 
@@ -964,28 +878,16 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Widget showOkButton(BuildContext context) {
+  Widget showCloseButton(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
+      return OutlineButton(
+        borderSide: BorderSide(color: Colors.grey, width: 2),
         onPressed: () => {
           _onMapCreated(_controller),
           Navigator.pop(context, iconInfo),
         },
-        child: Text("Klar"),
-      );
-    });
-  }
-
-  Widget showCancelButton(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
-    return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
-        onPressed: () => {
-          Navigator.pop(context, iconInfo),
-          _onMapCreated(_controller),
-        },
-        child: Text("Avbryt"),
+        child: Text("Stäng", style: TextStyle(fontSize: 17)),
       );
     });
   }
