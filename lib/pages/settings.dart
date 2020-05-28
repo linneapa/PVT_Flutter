@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/SizeConfig.dart';
+import 'package:ezsgame/pages/forgotPassword.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key, this.auth, this.userId, this.logoutCallback})
@@ -191,17 +192,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   left: SizeConfig.blockSizeHorizontal * 4,
                   right: SizeConfig.blockSizeHorizontal * 4),
               title: Text(
-                'Byt lösenord',
+                'Återställ lösenord',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: SizeConfig.blockSizeVertical * 3.5),
               ),
               subtitle: Text(
-                  'Denna funktionalitet är ej implementerad än, lösenord kan återställas genom \"Glömt ditt lösenord?\" vid inloggning.',
+                  'Återställ ditt lösenord genom en länk du får via e-mail',
                   style:
                       TextStyle(fontSize: SizeConfig.blockSizeVertical * 2.2)),
               onTap: () {
-                createChangePasswordDialog(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ForgotPassword(
+                            auth: widget.auth, loginCallback: widget.logoutCallback)));
               },
             ),
             ListTile(
@@ -215,6 +220,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: SizeConfig.blockSizeVertical * 3.5),
+              ),
+              subtitle: Text(
+                'Raderar ditt konto med all historik och sparade favoriter'
               ),
               onTap: () {
                 showRemoveAccountConfirmation(context);
