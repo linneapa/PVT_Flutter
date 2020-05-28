@@ -261,7 +261,7 @@ class _SignupPageState extends State<SignupPage> {
               "En länk för att verifiera ditt konto har skickats till den angivna e-postadressen."),
           actions: <Widget>[
             new FlatButton(
-              child: new Text("Avfärda"),
+              child: new Text("Okej"),
               onPressed: () {
                 toggleFormMode();
                 Navigator.of(context).popUntil((route) => route.isFirst);
