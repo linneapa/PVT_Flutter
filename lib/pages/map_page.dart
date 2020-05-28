@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/api/Services.dart';
-import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -49,14 +48,12 @@ class _MapPageState extends State<MapPage> {
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
-  bool _filterSwitched = false;
-  var _distanceValue = 0.0;
-  var _costValue = 0.0;
-  var currMarker;
+  static var currMarker;
   var currParking;
   var parkings;
   final db = Firestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
+  bool duplicate = false;
 
 
   static final CameraPosition initPosition = CameraPosition(
@@ -257,34 +254,58 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget showFilterButton() {
-    return IconButton(
-      icon: Icon(
-        MdiIcons.filterMenu,
-        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+    return Container(
+      color: const Color(0xF2F2F2).withOpacity(0.9),
+      child: IconButton(
+        icon: Icon(
+          MdiIcons.filterMenu,
+          color: Colors.grey
+        ),
+        onPressed: () {
+          createDialog(context);
+          showGoogleMaps();
+          // do something
+        },
+        //     ),
       ),
-      onPressed: () {
-        createDialog(context);
-        showGoogleMaps();
-        // do something
-      },
-      //     ),
     );
   }
 
   addToFavorites() async {
     String id = widget.userId;
+    bool duplicate = false;
 
-    await db.collection('userData').document(id).collection('favorites').add({
-      'location': currParking.properties.address,
-      'district': currParking.properties.cityDistrict
-    });
+    QuerySnapshot snapshot = await Firestore.instance
+        .collection('userData')
+        .document(id)
+        .collection('favorites')
+        .getDocuments();
+
+    for (var v in snapshot.documents) {
+      if (v['location'] == currParking.properties.address) {
+        duplicate = true;
+      }
+    }
+
+    print(currParking.geometry.coordinates[0][0]);
+
+    if (!duplicate) {
+      await db.collection('userData').document(id).collection('favorites').add(
+          {
+            'location': currParking.properties.address,
+            'district': currParking.properties.cityDistrict,
+            'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
+            'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+          }
+      );
+    }
 
     showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-            title: Text('Success'),
-            content:
-                Text(currParking.properties.address + ' added to favorites!')));
+        builder: (_) => new AlertDialog(
+            title: duplicate ? Text('Misslyckades') : Text("Success"),
+            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+
   }
 
   Widget showFavoritesButton() {
@@ -347,7 +368,7 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null) {
+    if (currMarker != null && currParking != null) {
       return AnimatedPositioned(
         bottom: 40,
         right: 0,
@@ -873,14 +894,19 @@ class _MapPageState extends State<MapPage> {
               return AlertDialog(
                 content: Container(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text("Filter"),
-                          showSwitchButton(),
+                          Text("Filter",
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            ),
+                          )
                         ],
                       ),
                       Row(
@@ -890,36 +916,17 @@ class _MapPageState extends State<MapPage> {
                           MotorcycleIconButton()
                         ],
                       ),
-                      Column(
+
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          Text("Avstånd från destination:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Kort"),
-                                Expanded(child: showDistanceSlider()),
-                                Text("Långt"),
-                              ]),
-                          Text("Prisklass:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Låg"),
-                                Expanded(child: showCostSlider()),
-                                Text("Hög"),
-                              ]),
+                          showHandicapIconButton(),
+                          showCloseButton(context),
                         ],
-                      ),
-                      showHandicapIconButton(),
+                      )
                     ],
                   ),
                 ),
-                actions: <Widget>[
-                  showCancelButton(context),
-                  showOkButton(context),
-                ],
               );
             },
           ),
@@ -933,78 +940,6 @@ class _MapPageState extends State<MapPage> {
         _globalTruckToggled = ic.truckToggled;
         _globalCarToggled = ic.carToggled;
       }
-    });
-  }
-
-  Widget showSwitchButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: Switch(
-          value: _filterSwitched,
-          onChanged: (value) {
-            setState(() {
-              _filterSwitched = value;
-            });
-          },
-          activeTrackColor: Colors.orangeAccent,
-          activeColor: Colors.orange,
-        ),
-      );
-    });
-  }
-
-  Widget showDistanceSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return SliderTheme(
-        data: SliderThemeData(
-          thumbColor: Colors.orangeAccent,
-          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-          inactiveTickMarkColor: Colors.black,
-          activeTickMarkColor: Colors.black,
-          activeTrackColor: Colors.orangeAccent,
-          inactiveTrackColor: Colors.grey,
-        ),
-        child: Slider(
-          min: 0,
-          max: 100,
-          value: _distanceValue,
-          divisions: 2,
-          onChanged: (value) {
-            setState(() {
-              _distanceValue = value;
-            });
-          },
-        ),
-      );
-    });
-  }
-
-  Widget showCostSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Center(
-        child: SliderTheme(
-          data: SliderThemeData(
-            thumbColor: Colors.orangeAccent,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-            inactiveTickMarkColor: Colors.black,
-            activeTickMarkColor: Colors.black,
-            activeTrackColor: Colors.orangeAccent,
-            inactiveTrackColor: Colors.grey,
-          ),
-          child: Slider(
-            min: 0,
-            max: 100,
-            value: _costValue,
-            divisions: 2,
-            onChanged: (value) {
-              setState(() {
-                _costValue = value;
-              });
-            },
-          ),
-        ),
-      );
     });
   }
 
@@ -1024,28 +959,16 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Widget showOkButton(BuildContext context) {
+  Widget showCloseButton(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
+      return OutlineButton(
+        borderSide: BorderSide(color: Colors.grey, width: 2),
         onPressed: () => {
           _onMapCreated(_controller),
           Navigator.pop(context, iconInfo),
         },
-        child: Text("Klar"),
-      );
-    });
-  }
-
-  Widget showCancelButton(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
-    return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
-        onPressed: () => {
-          Navigator.pop(context, iconInfo),
-          _onMapCreated(_controller),
-        },
-        child: Text("Avbryt"),
+        child: Text("Stäng", style: TextStyle(fontSize: 17)),
       );
     });
   }

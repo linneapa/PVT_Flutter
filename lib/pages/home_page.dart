@@ -10,7 +10,7 @@ import 'package:flutter/widgets.dart';
 
 class HomePage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 
   HomePage({Key key, this.auth, this.userId, this.logoutCallback})
       : super(key: key);
@@ -18,23 +18,24 @@ class HomePage extends StatefulWidget {
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
-  final navigatorKey = GlobalKey<NavigatorState>();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
 
-  int _currentNavigationIndex = 1;
+  static int currentNavigationIndex = 1;
 
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
       auth: widget.auth,
-      logoutCallback: widget.logoutCallback,),
+      logoutCallback: widget.logoutCallback,
+      parent: this),
     MapPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
     SettingsPage(
+      userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
   ];
@@ -45,9 +46,9 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: tabs[_currentNavigationIndex],
+      body: tabs[currentNavigationIndex],
       bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentNavigationIndex,
+          currentIndex: currentNavigationIndex,
           type: BottomNavigationBarType.fixed,
           selectedItemColor: Colors.orangeAccent,
           unselectedItemColor: Colors.grey,
@@ -68,7 +69,8 @@ class _HomePageState extends State<HomePage> {
           ],
           onTap: (index) {
             setState(() {
-              _currentNavigationIndex = index;
+              currentNavigationIndex = index;
+              print(_tabs().toString());
             });
           }
       ),
