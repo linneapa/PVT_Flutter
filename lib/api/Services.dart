@@ -32,3 +32,35 @@ class Services {
     }
   }
 }
+
+
+// for testing
+class ParkingPost {
+  dynamic data;
+  ParkingPost.fromJson(this.data);
+}
+// for testing
+Future<ParkingPost> fetchParkingPost(http.Client client, bool car, bool lastbil, bool motorcyckel, bool handicaped) async {
+
+  String url;
+  if (car) {
+    url = 'https://jsonplaceholder.typicode.com/posts/1';
+  } else if(lastbil) {
+    url = 'https://jsonplaceholder.typicode.com/posts/1';
+  } else if (motorcyckel){
+    url = 'https://jsonplaceholder.typicode.com/posts/1';
+  } else if (handicaped){
+    url = 'https://jsonplaceholder.typicode.com/posts/1';
+  } else {
+    return null;
+    //throw Exception('No vehicle');
+  }
+  final response = await client.get(url);
+  if (response.statusCode == 200) {
+    // If the call to the server was successful, parse the JSON.
+    return ParkingPost.fromJson(json.decode(response.body));
+  } else {
+    // If that call was not successful, throw an error.
+    throw Exception('Failed to load post');
+  }
+}
