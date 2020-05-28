@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/api/Services.dart';
-import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -45,9 +44,6 @@ class _MapPageState extends State<MapPage> {
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
-  bool _filterSwitched = false;
-  var _distanceValue = 0.0;
-  var _costValue = 0.0;
   static var currMarker;
   var currParking;
   var parkings;
@@ -245,6 +241,7 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => new AlertDialog(
             title: duplicate ? Text('Misslyckades') : Text("Success"),
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+
   }
 
   Widget showFavoritesButton() {
