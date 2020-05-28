@@ -9,52 +9,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 void callbackDispatcher() {
   Workmanager.executeTask((task, inputData) async {
 
-      print("\n\n888888888888888888888888888888888888888888888888888888888888888\n\n");
-
-        Geolocator geolocator = Geolocator();
-        double currDestLat = inputData['lat'];
-        double currDestLong = inputData['long'];
+        //Geolocator geolocator = Geolocator();
+        //double currDestLat = inputData['lat'];
+        //double currDestLong = inputData['long'];
         String uid = inputData['uid'];
-        int counter = 0;
-    
-    // (await Firestore.instance
-    //     .collection('userData')
-    //     .document()
-    //     .collection('desintation').document("destination").get()).data["destination"];
+       // int counter = 0;
 
-        Position currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);
-        print("\n\n\n\n\n\n\n$currentPosition");
-        print(currentPosition.latitude);
-        print(currDestLat);
-        print(currDestLong);
-                print("\n\n\n\n\n\n\n");
+        //Position currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);
 
+        // if(distanceBetweenPoints(currentPosition.latitude, currentPosition.longitude, currDestLat, currDestLong) > 20) {
+        //      currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);
 
-    // _getCurrentLocation();
-    while(counter++ < 5000) {
-      print(counter);
-    }
-    // if(distanceBetweenPoints(currentPosition.latitude, currentPosition.longitude, currDestLat, currDestLong) > 20) {
-    //     // currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);    
-      await Firestore.instance.collection("orders")
-        .document("hello")
+    //while(counter++ < 5000) {
+    //  print(counter);
+    //}
+
+      await Firestore.instance.collection("pushNotifications")
+        .document(uid)
         .setData({
-        'seller': uid,
-        'description': 'success :)'
+        'user': uid,
        });
 
-
-      //unsubscribe
-              print("succedddded");
-
-    
-
-    //skicka till db
-    print("\n\n\n\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\nooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n\n\n\n "); //simpleTask will be emitted here.
     return Future.value(true);
   });
 }
 
+/*
     //converts degrees to radians
   double degToRad(deg) {
     return deg * (Math.pi / 180);
@@ -75,3 +55,5 @@ void callbackDispatcher() {
     double d = R * c; // Distance in meters
     return d;
   }
+
+ */

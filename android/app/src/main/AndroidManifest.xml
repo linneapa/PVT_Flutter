@@ -34,7 +34,9 @@
 
                 <meta-data android:name="com.facebook.sdk.ApplicationId" 
             android:value="@string/facebook_app_id"/>
-    
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="default_notification_channel_id"/>
         <activity android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="@string/app_name" />

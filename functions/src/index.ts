@@ -8,21 +8,25 @@ const db = admin.firestore();
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 
+//gets the userId from orderId
 export const sendToDevice = functions.firestore
-  .document('orders/{orderId}')
+  .document('pushNotifications/{uid}')
   .onCreate(async snapshot => {
 
 
-    const order = snapshot.data();
+    const currentNotification = snapshot.data();
 
+    //gets the token of the device of the user
     const querySnapshot = await db
       .collection('userData')
-      .doc(order!.seller)
+      .doc(currentNotification!.user)
       .collection('tokens')
       .get();
 
+    //the name of the device(s) belonging to the user
     const tokens = querySnapshot.docs.map(snap => snap.id);
 
+    //construct push notification
     const payload: admin.messaging.MessagingPayload = {
       notification: {
         title: 'Du anlände vid din destination!',
@@ -31,5 +35,6 @@ export const sendToDevice = functions.firestore
       }
     };
 
+    //sends the push notification(s) to the users device(s)
     return fcm.sendToDevice(tokens, payload);
   });

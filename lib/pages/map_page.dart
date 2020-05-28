@@ -102,24 +102,37 @@ class _MapPageState extends State<MapPage> {
         print(message["notification"]["title"]);
 
       },
+
+
+      /*TODO: so these two below are causing problems. These pieces of code should be executed when the user taps the notification
+              but they aren't. According to the internet (good source), this is because the notifications (being sent from index.ts)
+              doesn't contain data 'FLUTTER_NOTIFICATION_CLICK', but they do, or that the channel name isn't specified in the Manifest, but it is.
+              I do think it has something to do with the channels though because it works when I send a notification from the firebase console
+      **/
       onResume: (message) async { //executed if the app is in the background and the user taps on the notification
         //remember that needs to send some data with the notification as well, when onResume/onLaunch
-        // setState(() {showArrivedAtDestinationDialog(); });
+         setState(() {showArrivedAtDestinationDialog(); });
+         /*TODO: (after the problem above is solved) should open the above dialog but we will need to have saved which parking it regarded
+                Maybe can save it if the user exits the feedback dialog until they give the feedback and just not have currentlyNavigating set to true?
+
+          */
+         Workmanager.cancelAll();
+         print("notification from background.");
+        print(message["data"]["title"]);
+      },
+      onLaunch: (message) async { //executed if the app is terminated and the user taps on the notification
+        setState(() {showArrivedAtDestinationDialog(); });
+        Workmanager.cancelAll();
         print("notification from background.");
         print(message["data"]["title"]);
-      }
+      },
     );
-    //_fcm. borde gå att vid skapandet av profilen skapa ett dokument som subsrcibar på
-    // subscribeToTopic();
+
     _saveDeviceToken();
   }
 
-  void subscribeToTopic() async{
-    _fcm.subscribeToTopic((await widget.auth.getCurrentUser()).uid);
-  }
-
   //Individual Device Notifications
-    /// Get the token, save it to the database for current user
+    // Get the token, save it to the database for current user so push notifications can be sent to the device
   _saveDeviceToken() async {
     // Get the current user
     var uid = (await widget.auth.getCurrentUser()).uid;
@@ -644,6 +657,7 @@ class _MapPageState extends State<MapPage> {
   Widget showExitArrivedAtDestinationWindow() {
     return FlatButton(
       onPressed: () {
+        startBackgroundExecution(); //men då måste spara addressen
         Navigator.of(context).pop();
       },
       child: Icon(Icons.close, color: Colors.grey, size: 30),
@@ -688,27 +702,30 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void startRoute(LatLng destination, String destinationAdress) async{
+  void startBackgroundExecution() async {
     String uid = (await widget.auth.getCurrentUser()).uid;
+
+    //cleaning up ev. old document
+    await db.collection('pushNotifications').document(uid).delete();
+
+    Workmanager.initialize(
+        CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
+        isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+    );
+
+    //using the time to get a unique name, otherwise the tasks starts acting funny
+    Workmanager.registerOneOffTask(DateTime.now().toIso8601String(), "simpleTask",     inputData: {
+     // 'lat': currentDestination.latitude,
+     // 'long': currentDestination.longitude,
+      'uid': uid,
+    }, initialDelay: Duration(minutes: 20));
+  }
+
+  void startRoute(LatLng destination, String destinationAdress) async{
+    Workmanager.cancelAll(); //to avoid situations where users get lots of push notifications
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
     currentDestination = destination;
-
-  print("\n\n1111111111111111111111\n\n");
-
-    //TODO: här kan radera gamla instans av dokumentet från db
-     Workmanager.initialize(
-    CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
-    isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
-  );
-
-                Workmanager.registerPeriodicTask("1", "simpleTask",     inputData: {
-    'lat': currentDestination.latitude,
-    'long': currentDestination.longitude,
-    'uid': uid,
-    },); //Android only (see below)
-      print("\n\2222222222222222222222\n\n");
-
     setPolylines();
     currentlyNavigating = true;
     setState(() {});
@@ -795,13 +812,7 @@ class _MapPageState extends State<MapPage> {
       child: FloatingActionButton(
           child: Icon(Icons.my_location, color: Colors.black),
           backgroundColor: Color.fromRGBO(160, 160, 160, 1.0),
-          onPressed: () async{
-                  await Firestore.instance.collection("orders")
-        .document("hello")
-        .setData({
-        'seller': (await widget.auth.getCurrentUser()).uid,
-        'description': 'success :)'
-      });
+          onPressed: () {
             showCurrentLocation(_controller);
           }),
     );
