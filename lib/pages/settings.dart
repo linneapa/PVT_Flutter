@@ -54,7 +54,39 @@ class _SettingsPageState extends State<SettingsPage> {
                       style: TextStyle(
                           color: Colors.orangeAccent,
                           fontWeight: FontWeight.bold)),
-                  onPressed: signOut))
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: Container(
+                              padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 3),
+                              child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget> [
+                              Text('Vill du logga ut från appen?'),
+                              Row(children:<Widget>[Text('\n')]), //Only used for spacing, there's probably a better way
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget> [
+                                  FlatButton(
+                                    child: Text('Avbryt', style: TextStyle(color: Colors.orangeAccent)),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                  FlatButton(
+                                    child: Text('Logga ut', style: TextStyle(color: Colors.orangeAccent)),
+                                    onPressed: () => signOut()
+                                  )
+                                ]
+                              )
+                            ]
+                          ))
+                        );
+                      }
+                    );
+                  }
+              )
+          )
         ],
       ),
       body: Container(
