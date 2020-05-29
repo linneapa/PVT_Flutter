@@ -33,7 +33,6 @@ class _FavouritesPageState extends State<FavouritesPage> {
   @override
   void initState() {
     super.initState();
-    HomePageState.start = null;
     HomePageState.initPosition = CameraPosition(
       target: LatLng(59.3293, 18.0686),
       zoom: 12,

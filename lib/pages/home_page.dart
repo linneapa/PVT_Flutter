@@ -45,7 +45,7 @@ class HomePageState extends State<HomePage> {
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
-      doc: doc,),
+      doc: doc,
       initPosition: initPosition,
       ),
     SettingsPage(
