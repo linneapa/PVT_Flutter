@@ -26,15 +26,15 @@ import 'package:ezsgame/api/ParkingSpace.dart';
 
 class MapPage extends StatefulWidget {
   @override
-  _MapPageState createState() => _MapPageState(this.marker);
+  _MapPageState createState() => _MapPageState(this.doc);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.doc})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
-  final Marker marker;
+  final DocumentSnapshot doc;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -46,9 +46,8 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  var currMarker;
-
-  _MapPageState(this.currMarker);
+  DocumentSnapshot doc;
+  _MapPageState(this.doc);
 
   bool currentlyNavigating = false;
   bool handicapToggled = false;
@@ -56,6 +55,7 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
+  var currMarker;
 
   Map<String, Feature> parkMark = Map();
   var singlePark;
@@ -100,8 +100,11 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    setInitLocation();
-
+    if (currMarker == null){
+      setInitLocation();
+    }else{
+      initLocation = LatLng(_myLocation.latitude, _myLocation.longitude);
+    }
 
     _fcm.configure(
       onMessage: (message) async { //executed if the app is in the foreground
@@ -381,7 +384,6 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
-        print('yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy');
         final marker = Marker(
           onTap: () {
             _onMarkerTapped(parking);
@@ -390,7 +392,6 @@ class _MapPageState extends State<MapPage> {
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
         );
-        print('xxxxxxxxxxxxxxxxxxx');
         _markers[parking.properties.address] = marker;
         parkMark[parking.properties.address] = parking;
       }
@@ -417,7 +418,17 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null) {
+    if (currParking == null && doc != null){
+      //String name = currMarker.toString().split(":")[2].split("}")[0].trim();
+      if (parkMark.containsKey(doc['location'])){
+        setState(() {
+          currParking = parkMark[doc['location']];
+        });
+      }else{
+        upDateParking();
+      }
+    }
+    if (currMarker != null && currParking != null) {
       return AnimatedPositioned(
         bottom: 40,
         right: 0,
@@ -440,10 +451,7 @@ class _MapPageState extends State<MapPage> {
                 ]),
             child: Column(
               children: <Widget>[
-                 currParking != null
-                     ? _buildLocationInfo()
-                     : _buildSimpleLocationInfo()
-                ,
+                _buildLocationInfo(),
                 _showFavBtnAndDirectionBtn(),
               ],
             ),
@@ -464,25 +472,25 @@ class _MapPageState extends State<MapPage> {
             children: <Widget>[
               Text(
                 currParking.properties.address == null
-                    ? ' '
+                    ? '\r'
                     : currParking.properties.address,
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.cityDistrict == null
-                    ? 'Stadsdel '
+                    ? '\r'
                     : 'Stadsdel: ' + currParking.properties.cityDistrict,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.otherInfo == null
-                    ? 'Info: '
+                    ? '\r'
                     : 'Info: ' + currParking.properties.otherInfo,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.maxHours == null
-                    ? 'Max antal timmar: '
+                    ? '\r'
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
@@ -490,49 +498,28 @@ class _MapPageState extends State<MapPage> {
           ));
   }
 
-  Widget _buildSimpleLocationInfo() {
-    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
-    if (parkMark.containsKey(name)){
-      currParking = parkMark[name];
-    }else{
-      //upDateParkings(currMarker, name);
-      print(name);
-    }
-    return _buildLocationInfo();
-    return Container(
-        margin: EdgeInsets.only(top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(
-              currMarker.toString().split(":")[2].split("}")[0],
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ));
-  }
+  Future<Parkering> upDateParking() async {
+    singlePark = await Services.fetchParkering(doc, _globalCarToggled,
+        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
 
-//  Future<void> upDateParkings(Marker marker, String name) async {
-//    singlePark = await Services.fetchParkering(marker, _globalCarToggled,
-//        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-//
-//    for (final parking in singlePark.features) {
-//      if (parking.properties.address == name){
-//        final marker = Marker(
-//          onTap: () {
-//            _onMarkerTapped(parking);
-//          },
-//          markerId: MarkerId(parking.properties.address),
-//          position: LatLng(parking.geometry.coordinates[0][1],
-//              parking.geometry.coordinates[0][0]),
-//        );
-//        _markers[parking.properties.address] = marker;
-//        parkMark[parking.properties.address] = parking;
-//      }
-//    }
-//    updatePinOnMap();
-//  }
+    for (final parking in singlePark.features) {
+      if (parking.properties.address == doc['location']){
+        setState((){
+          final marker = Marker(
+            onTap: () {_onMarkerTapped(parking);},
+            markerId: MarkerId(parking.properties.address),
+            position: LatLng(parking.geometry.coordinates[0][1],
+                  parking.geometry.coordinates[0][0]),
+            );
+          currMarker = marker;
+          currParking = parking;
+          _markers[parking.properties.address] = marker;
+          parkMark[parking.properties.address] = parking;
+          });
+        }
+      }
+
+  }
 
   Widget showChooseParkingBtn() {
     return Container(

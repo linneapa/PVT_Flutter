@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/foundation.dart';
@@ -25,7 +26,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
 
   static int currentNavigationIndex = 1;
-  static Marker start;
+  static DocumentSnapshot doc;
 
   List<Widget> _tabs() => [
     FavouritesPage(
@@ -37,7 +38,7 @@ class HomePageState extends State<HomePage> {
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
-      marker:start,),
+      doc: doc,),
     SettingsPage(
       userId: widget.userId,
       auth: widget.auth,
