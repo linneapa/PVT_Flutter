@@ -18,6 +18,7 @@ import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
 import 'map_marker.dart';
+import 'map_helper.dart';
 import 'package:fluster/fluster.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
@@ -82,15 +83,22 @@ class _MapPageState extends State<MapPage> {
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
 
-  static final Map<String, MapMarker> _markers = {};            //changed
-  final List <Marker> googleMarkers = fluster.clusters([-180,-85,180,85],
-      18).map((cluster) => cluster.toMarker()).toList();
+
+  final Map<String,Marker> _markers = Map();
+  Fluster<MapMarker> _clusterManager;
+  double _currentZoom = 15;
+
+  final String _markerImageUrl = 'https://img.icons8.com/office/80/000000/marker.png'; //Temp standard marker
+  final Color _clusterColor = Colors.blue;    //Color of cluster circle
+  final Color _clusterTextColor = Colors.white;   //Color of cluster text
+
 
   BitmapDescriptor arrowIcon;
+  BitmapDescriptor carIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
-  var currentDestinationMarker;
+  Marker currentDestinationMarker;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
   final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
@@ -108,6 +116,9 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/car.png',64).then((onValue) {
+      carIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
 
@@ -171,7 +182,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  static Future<Uint8List> getBytesFromAsset(String path, int width) async {
+  static Future<Uint8List> getBytesFromAsset(String path, int width) async {      //Used to transform png file to usable format for GoogleMaps icons
     ByteData data = await rootBundle.load(path);
     Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
         targetWidth: width);
@@ -200,27 +211,6 @@ class _MapPageState extends State<MapPage> {
       });
     });
   }
-
-  static final Fluster<MapMarker> fluster = Fluster<MapMarker>(
-    minZoom: 1,           //Min zoom at which clusters will show
-    maxZoom: 18,          //Max zoom at which clusters will show
-    radius: 150,          //Cluster radius in pixels
-    extent: 2048,         //Tile extent, Used to calculate radius
-    nodeSize: 64,         //Size of KD-tree leaf node
-    points: _markers.values.toList(),     //List of MapMarker objects
-    createCluster: (
-      BaseCluster cluster,
-        double lng,
-        double lat,
-    ) => MapMarker(
-          id: cluster.id.toString(),
-          position: LatLng(lat,lng),
-          isCluster: cluster.isCluster,
-          clusterId: cluster.id,
-          pointsSize: cluster.pointsSize,
-          childMarkerId: cluster.childMarkerId,
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -408,33 +398,35 @@ class _MapPageState extends State<MapPage> {
     _controller = controller;
     _mapController.complete(controller);
 
-    setState(() {
-      _markers.clear();
-      for (final parking in parkings.features) {
-        final marker = MapMarker(
-          onTap: () {
-            _onMarkerTapped(parking);
-          },
-          id: parking.properties.address,
-          position: LatLng(parking.geometry.coordinates[0][1],
-              parking.geometry.coordinates[0][0]),
-        );
-        _markers[parking.properties.address] = marker;
-        parkMark[parking.properties.address] = parking;
-      }
-      updatePinOnMap();
-    });
+//    setState(() {
+//      _markersOld.clear();
+//      for (final parking in parkings.features) {
+//        final marker = MapMarker(
+//          onTap: () {
+//            _onMarkerTapped(parking);
+//          },
+//          id: parking.properties.address,
+//          position: LatLng(parking.geometry.coordinates[0][1],
+//              parking.geometry.coordinates[0][0]),
+//        );
+//        _markersOld[parking.properties.address] = marker;
+//        parkMark[parking.properties.address] = parking;
+//      }
+//      updatePinOnMap();
+//    });
+    _initMarkers();
   }
 
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
+      onCameraMove: (position) => _updateMarkers(position.zoom),
       polylines: _polylines,
       initialCameraPosition: CameraPosition(
         target: const LatLng(59.3293, 18.0686),
         zoom: 12,
       ),
-      markers: googleMarkers.toSet(),
+      markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
           currMarker = null;
@@ -977,17 +969,63 @@ class _MapPageState extends State<MapPage> {
     initLocation = await getCurrentLocation();
   }
 
+  void _initMarkers() async {
+    final List<MapMarker> markers = [];
+    final BitmapDescriptor markerImage = carIcon;   //TODO: change marker image
+
+    for (final parking in parkings.features) {
+        final marker = MapMarker(
+          onTap: () {
+            _onMarkerTapped(parking);
+          },
+          id: parking.properties.address,
+          position: LatLng(parking.geometry.coordinates[0][1],
+              parking.geometry.coordinates[0][0]),
+          icon: markerImage,
+        );
+        markers.add(marker);
+        parkMark[parking.properties.address] = parking;
+      }
+
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 19,);
+
+    await _updateMarkers();
+  }
+
+  Future<void> _updateMarkers([double updatedZoom]) async {
+    if(_clusterManager == null || updatedZoom == _currentZoom) return;
+
+    if(updatedZoom != null){
+      _currentZoom = updatedZoom;
+    }
+
+    final updatedMarkers = await MapHelper.getClusterMarkers(
+      _clusterManager,
+      _currentZoom,
+      _clusterColor,
+      _clusterTextColor,
+      80,
+    );
+    _markers.clear();
+    updatePinOnMap();
+    for(var v in updatedMarkers){
+      _markers[v.markerId.toString()] = v;
+    }
+
+  }
+
   Future<LatLng> getCurrentLocation() async {
     _myLocation = await location.getLocation();
     return LatLng(_myLocation.latitude, _myLocation.longitude);
   }
 
   void updatePinOnMap() async {
-    googleMarkers.add(Marker(
+
+    _markers['PhoneLocationMarker'] = Marker(
         markerId: MarkerId('PhoneLocationMarker'),
         position: LatLng(_myLocation.latitude, _myLocation.longitude),
         //rotation: _myLocation.heading,                                  //acting funny
-        icon: arrowIcon));
+        icon: arrowIcon);
   }
 
   createDialog(BuildContext context) {
