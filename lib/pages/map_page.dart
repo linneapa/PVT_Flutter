@@ -28,13 +28,14 @@ class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState(this.marker);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker, this.initPosition})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
   final Marker marker;
+  CameraPosition initPosition;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -63,11 +64,6 @@ class _MapPageState extends State<MapPage> {
   final FirebaseMessaging _fcm = FirebaseMessaging();
   bool duplicate = false;
 
-
-  static final CameraPosition initPosition = CameraPosition(
-    target: LatLng(59.3293, 18.0686),
-    zoom: 12,
-  );
 
   SizeConfig sizeConfig;
   Completer<GoogleMapController> _mapController = Completer();
@@ -99,7 +95,7 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    setInitLocation();
+    //setInitLocation();
 
 
     _fcm.configure(
@@ -399,10 +395,7 @@ class _MapPageState extends State<MapPage> {
     return GoogleMap(
       onMapCreated: _onMapCreated,
       polylines: _polylines,
-      initialCameraPosition: CameraPosition(
-        target: const LatLng(59.3293, 18.0686),
-        zoom: 12,
-      ),
+      initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
