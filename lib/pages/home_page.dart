@@ -2,9 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'settings.dart';
 import 'favorites.dart';
 import 'map_page.dart';
+import 'history.dart';
 import 'package:flutter/widgets.dart';
 
 
@@ -23,21 +25,28 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
 
   static int currentNavigationIndex = 1;
+  static Marker start;
 
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
-      parent: this),
+      parent: this,),
     MapPage(
       userId: widget.userId,
       auth: widget.auth,
-      logoutCallback: widget.logoutCallback,),
+      logoutCallback: widget.logoutCallback,
+      marker:start,),
     SettingsPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this),
   ];
 
   @override
@@ -66,11 +75,14 @@ class HomePageState extends State<HomePage> {
                 icon: Icon(Icons.settings),
                 title: Text('Inställningar')
             ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                title: Text('Historik')
+            ),
           ],
           onTap: (index) {
             setState(() {
               currentNavigationIndex = index;
-              print(_tabs().toString());
             });
           }
       ),

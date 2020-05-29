@@ -17,6 +17,10 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io' as platform;
+import 'package:workmanager/workmanager.dart';
+import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
 
 class MapPage extends StatefulWidget {
   @override
@@ -48,6 +52,7 @@ class _MapPageState extends State<MapPage> {
   var currParking;
   var parkings;
   final db = Firestore.instance;
+  final FirebaseMessaging _fcm = FirebaseMessaging();
   bool duplicate = false;
 
 
@@ -87,6 +92,65 @@ class _MapPageState extends State<MapPage> {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
+
+
+    _fcm.configure(
+      onMessage: (message) async { //executed if the app is in the foreground 
+        print(message["notification"]["title"]);
+
+      },
+
+
+      /*TODO: so these two below are causing problems. These pieces of code should be executed when the user taps the notification
+              but they aren't. According to the internet (good source), this is because the notifications (being sent from index.ts)
+              doesn't contain data 'FLUTTER_NOTIFICATION_CLICK', but they do, or that the channel name isn't specified in the Manifest, but it is.
+              I do think it has something to do with the channels though because it works when I send a notification from the firebase console
+      **/
+      onResume: (message) async { //executed if the app is in the background and the user taps on the notification
+        //remember that needs to send some data with the notification as well, when onResume/onLaunch
+         setState(() {showArrivedAtDestinationDialog(); });
+         /*TODO: (after the problem above is solved) should open the above dialog but we will need to have saved which parking it regarded
+                Maybe can save it if the user exits the feedback dialog until they give the feedback and just not have currentlyNavigating set to true?
+
+          */
+         Workmanager.cancelAll();
+         print("notification from background.");
+        print(message["data"]["title"]);
+      },
+      onLaunch: (message) async { //executed if the app is terminated and the user taps on the notification
+        setState(() {showArrivedAtDestinationDialog(); });
+        Workmanager.cancelAll();
+        print("notification from background.");
+        print(message["data"]["title"]);
+      },
+    );
+
+    _saveDeviceToken();
+  }
+
+  //Individual Device Notifications
+    // Get the token, save it to the database for current user so push notifications can be sent to the device
+  _saveDeviceToken() async {
+    // Get the current user
+    var uid = (await widget.auth.getCurrentUser()).uid;
+
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
+
+    // Save it to Firestore
+    if (fcmToken != null) {
+      var tokens = db
+          .collection('userData')
+          .document(uid)
+          .collection('tokens')
+          .document(fcmToken);
+
+      await tokens.setData({
+        'token': fcmToken,
+        'createdAt': FieldValue.serverTimestamp(), // optional
+    //    'platform': Platform.operatingSystem // optional
+      });
+    }
   }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
@@ -614,6 +678,7 @@ class _MapPageState extends State<MapPage> {
   Widget showExitArrivedAtDestinationWindow() {
     return FlatButton(
       onPressed: () {
+        startBackgroundExecution(); //men då måste spara addressen
         Navigator.of(context).pop();
       },
       child: Icon(Icons.close, color: Colors.grey, size: 30),
@@ -658,10 +723,29 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void startRoute(LatLng destination, String destinationAdress) {
+  void startBackgroundExecution() async {
+    String uid = (await widget.auth.getCurrentUser()).uid;
+
+    //cleaning up ev. old document
+    await db.collection('pushNotifications').document(uid).delete();
+
+    Workmanager.initialize(
+        CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
+        isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+    );
+
+    //using the time to get a unique name, otherwise the tasks starts acting funny
+    Workmanager.registerOneOffTask(DateTime.now().toIso8601String(), "simpleTask",     inputData: {
+     // 'lat': currentDestination.latitude,
+     // 'long': currentDestination.longitude,
+      'uid': uid,
+    }, initialDelay: Duration(minutes: 20));
+  }
+
+  void startRoute(LatLng destination, String destinationAdress) async{
+    Workmanager.cancelAll(); //to avoid situations where users get lots of push notifications
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
-
     currentDestination = destination;
     setPolylines();
     currentlyNavigating = true;
