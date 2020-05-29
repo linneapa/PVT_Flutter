@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
-
-
 import 'map_page.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
-  _FavouritesPageState createState() => _FavouritesPageState(value, this.parent);
+  _FavouritesPageState createState() => _FavouritesPageState(value, this.parent, this.map);
 
   FavouritesPage(
-      {Key key, this.userId, this.auth, this.logoutCallback, this.value, this.parent})
+      {Key key, this.userId, this.auth, this.logoutCallback, this.value, this.parent, this.map})
       : super(key: key);
 
   final String userId;
@@ -19,14 +19,16 @@ class FavouritesPage extends StatefulWidget {
   final VoidCallback logoutCallback;
   final String value;
   final HomePageState parent;
+  final MapPage map;
 }
 
 class _FavouritesPageState extends State<FavouritesPage> {
   String value;
   final db = Firestore.instance;
   HomePageState parent;
+  MapPage map;
 
-  _FavouritesPageState(this.value, this.parent);
+  _FavouritesPageState(this.value, this.parent, this.map);
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +119,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
               child: Text('Visa på karta'),
               onPressed: () {
                 Navigator.of(context).pop();
-                showParkingOnMapPage();
+                showParkingOnMapPage(doc);
               },
             ),
             FlatButton(
@@ -161,10 +163,21 @@ class _FavouritesPageState extends State<FavouritesPage> {
         });
   }
 
-  showParkingOnMapPage() {
+  showParkingOnMapPage(DocumentSnapshot doc) {
+
     this.parent.setState(() {
       HomePageState.currentNavigationIndex = 1;
+      final marker = Marker(
+          markerId: MarkerId(doc['location']),
+          position: LatLng(doc['coordinatesX'], doc['coordinatesY']));
+//      MapPageState.markers.clear();
+//      MapPageState.markers[doc['location']] = marker;
+      HomePageState.start = marker;
+      print(doc['coordinatesX']);
+      print(doc['coordinatesY']);
     });
+
+
   }
 
   void deleteFavoriteParking(DocumentSnapshot doc) async {

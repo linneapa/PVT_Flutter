@@ -21,17 +21,20 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
 import 'package:workmanager/workmanager.dart';
 import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
+import 'package:ezsgame/api/ParkingSpace.dart';
+
 
 class MapPage extends StatefulWidget {
   @override
-  _MapPageState createState() => _MapPageState();
+  _MapPageState createState() => _MapPageState(this.marker);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
+  final Marker marker;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -43,13 +46,21 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  var currMarker;
+
+  _MapPageState(this.currMarker);
+
   bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
-  static var currMarker;
   var currParking;
+  bool _filterSwitched = false;
+  var _distanceValue = 0.0;
+  var _costValue = 0.0;
+
+  Map<String, Feature> parkMark = Map();
   var parkings;
   final db = Firestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
@@ -67,7 +78,7 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  final Map<String, Marker> _markers = {};
+  static Map<String, Marker> _markers = {};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -95,7 +106,7 @@ class _MapPageState extends State<MapPage> {
 
 
     _fcm.configure(
-      onMessage: (message) async { //executed if the app is in the foreground 
+      onMessage: (message) async { //executed if the app is in the foreground
         print(message["notification"]["title"]);
 
       },
@@ -294,8 +305,8 @@ class _MapPageState extends State<MapPage> {
           {
             'location': currParking.properties.address,
             'district': currParking.properties.cityDistrict,
-            'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
-            'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+            'coordinatesX': currParking.geometry.coordinates[0][1],
+            'coordinatesY': currParking.geometry.coordinates[0][0],
           }
       );
     }
@@ -342,8 +353,8 @@ class _MapPageState extends State<MapPage> {
      {
        'location': currParking.properties.address,
        'district': currParking.properties.cityDistrict,
-       'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
-       'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+       'coordinatesX': currParking.geometry.coordinates[0][1],
+       'coordinatesY': currParking.geometry.coordinates[0][0],
        'timestamp': getFormattedTimeInfoString(),
      }
    );
@@ -364,7 +375,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled,
+    parkings = await Services.fetchParkering(null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
@@ -380,7 +391,8 @@ class _MapPageState extends State<MapPage> {
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
         );
-        _markers[parking.properties.address] = marker;
+        markers[parking.properties.address] = marker;
+        parkMark[parking.properties.address] = parking;
       }
       updatePinOnMap();
     });
@@ -405,7 +417,7 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null && currParking != null) {
+    if (currMarker != null) {
       return AnimatedPositioned(
         bottom: 40,
         right: 0,
@@ -428,7 +440,10 @@ class _MapPageState extends State<MapPage> {
                 ]),
             child: Column(
               children: <Widget>[
-                _buildLocationInfo(),
+                 currParking != null
+                     ? _buildLocationInfo()
+                     : _buildSimpleLocationInfo()
+                ,
                 _showFavBtnAndDirectionBtn(),
               ],
             ),
@@ -474,6 +489,35 @@ class _MapPageState extends State<MapPage> {
             ],
           ));
   }
+
+  Widget _buildSimpleLocationInfo() {
+    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
+    if (parkMark.containsKey(name)){
+      currParking = parkMark[name];
+      return _buildLocationInfo();
+    }else{
+//      parkings = await Services.fetchParkering(null, _globalCarToggled,
+//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      print(name);
+      print(markers.keys);
+
+    }
+    return Container(
+        margin: EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              currMarker.toString().split(":")[2].split("}")[0],
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ));
+  }
+//
+//  Future<void> (Marker marker) async
+
 
   Widget showChooseParkingBtn() {
     return Container(
