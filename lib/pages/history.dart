@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
-import 'map_page.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
-class FavouritesPage extends StatefulWidget {
+class HistoryPage extends StatefulWidget {
   @override
-  _FavouritesPageState createState() => _FavouritesPageState(value, this.parent, this.map);
+  _HistoryPageState createState() => _HistoryPageState(value, this.parent);
 
-  FavouritesPage(
-      {Key key, this.userId, this.auth, this.logoutCallback, this.value, this.parent, this.map})
+  HistoryPage(
+      {Key key, this.userId, this.auth, this.logoutCallback, this.value, this.parent})
       : super(key: key);
 
   final String userId;
@@ -19,55 +16,48 @@ class FavouritesPage extends StatefulWidget {
   final VoidCallback logoutCallback;
   final String value;
   final HomePageState parent;
-  final MapPage map;
 }
 
-class _FavouritesPageState extends State<FavouritesPage> {
+class _HistoryPageState extends State<HistoryPage> {
   String value;
   final db = Firestore.instance;
   HomePageState parent;
-  MapPage map;
 
-  _FavouritesPageState(this.value, this.parent, this.map);
+  _HistoryPageState(this.value, this.parent);
 
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: TextField(
-          obscureText: false,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Hitta ny favoritparkering..',
-          ),
+        title: Text('Senast valda destinationer'
         ),
       ),
       body: Container(
         child: StreamBuilder(
-            stream: getUserFavoriteParkings(context),
+            stream: getUserHistoryParkings(context),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (!snapshot.hasData) return const Text("Loading..");
               return new ListView.builder(
                   itemCount: snapshot.data.documents.length,
                   itemBuilder: (BuildContext context, int index) =>
-                      buildFavoriteCard(
+                      buildHistoryCard(
                           context, snapshot.data.documents[index]));
             }),
       ),
     );
   }
 
-  Stream<QuerySnapshot> getUserFavoriteParkings(BuildContext context) async* {
+  Stream<QuerySnapshot> getUserHistoryParkings(BuildContext context) async* {
     String uId = widget.userId;
     yield* Firestore.instance
         .collection('userData')
         .document(uId)
-        .collection('favorites')
+        .collection('history')
         .snapshots();
   }
-
-  Widget buildFavoriteCard(BuildContext context, DocumentSnapshot parking) {
+  //TODO: sort cards by timestamp
+  Widget buildHistoryCard(BuildContext context, DocumentSnapshot parking) {
     return new Container(
         child: new GestureDetector(
       onTap: () => showOnCardTapDialogue(parking),
@@ -86,9 +76,15 @@ class _FavouritesPageState extends State<FavouritesPage> {
                   Row(
                     children: <Widget>[
                       Text(parking['district'],
-                          style: new TextStyle(fontSize: 10)),
+                          style: new TextStyle(fontSize: 12)),
                     ],
-                  )
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Text('Användes senast: ' + parking['timestamp'],
+                          style: new TextStyle(fontSize: 12)),
+                    ],
+                  ),
                 ],
               ))),
     ));
@@ -119,7 +115,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
               child: Text('Visa på karta'),
               onPressed: () {
                 Navigator.of(context).pop();
-                showParkingOnMapPage(doc);
+                showParkingOnMapPage();
               },
             ),
             FlatButton(
@@ -141,12 +137,12 @@ class _FavouritesPageState extends State<FavouritesPage> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text(''),
-            content: Text("Är du säker på att du vill ta bort " + doc['location'] + " från dina favoriter?"),
+            content: Text("Är du säker på att du vill ta bort " + doc['location'] + " från din historik?"),
             actions: [
               FlatButton(
                 child: Text('Ja'),
                 onPressed: () {
-                  deleteFavoriteParking(doc);
+                  deleteHistoryParking(doc);
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },
@@ -163,30 +159,19 @@ class _FavouritesPageState extends State<FavouritesPage> {
         });
   }
 
-  showParkingOnMapPage(DocumentSnapshot doc) {
-
+  showParkingOnMapPage() {
     this.parent.setState(() {
       HomePageState.currentNavigationIndex = 1;
-      final marker = Marker(
-          markerId: MarkerId(doc['location']),
-          position: LatLng(doc['coordinatesX'], doc['coordinatesY']));
-//      MapPageState.markers.clear();
-//      MapPageState.markers[doc['location']] = marker;
-      HomePageState.start = marker;
-      print(doc['coordinatesX']);
-      print(doc['coordinatesY']);
     });
-
-
   }
 
-  void deleteFavoriteParking(DocumentSnapshot doc) async {
+  void deleteHistoryParking(DocumentSnapshot doc) async {
     String uId = widget.userId;
     try {
       db
           .collection('userData')
           .document(uId)
-          .collection('favorites')
+          .collection('history')
           .document(doc.documentID)
           .delete();
     } catch (e) {

@@ -2,15 +2,17 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'settings.dart';
 import 'favorites.dart';
 import 'map_page.dart';
+import 'history.dart';
 import 'package:flutter/widgets.dart';
 
 
 class HomePage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 
   HomePage({Key key, this.auth, this.userId, this.logoutCallback})
       : super(key: key);
@@ -18,25 +20,33 @@ class HomePage extends StatefulWidget {
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
-  final navigatorKey = GlobalKey<NavigatorState>();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
 
-  int _currentNavigationIndex = 1;
+  static int currentNavigationIndex = 1;
+  static Marker start;
 
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
       auth: widget.auth,
-      logoutCallback: widget.logoutCallback,),
+      logoutCallback: widget.logoutCallback,
+      parent: this,),
     MapPage(
       userId: widget.userId,
       auth: widget.auth,
-      logoutCallback: widget.logoutCallback,),
+      logoutCallback: widget.logoutCallback,
+      marker:start,),
     SettingsPage(
+      userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this),
   ];
 
   @override
@@ -45,9 +55,9 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: tabs[_currentNavigationIndex],
+      body: tabs[currentNavigationIndex],
       bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentNavigationIndex,
+          currentIndex: currentNavigationIndex,
           type: BottomNavigationBarType.fixed,
           selectedItemColor: Colors.orangeAccent,
           unselectedItemColor: Colors.grey,
@@ -65,10 +75,14 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(Icons.settings),
                 title: Text('Inställningar')
             ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                title: Text('Historik')
+            ),
           ],
           onTap: (index) {
             setState(() {
-              _currentNavigationIndex = index;
+              currentNavigationIndex = index;
             });
           }
       ),

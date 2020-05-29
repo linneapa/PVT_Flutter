@@ -128,7 +128,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget showInputField(String inputField) {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.2, bottom: SizeConfig.blockSizeVertical * 1.5),
       child: TextFormField(
           maxLines: 1,
           keyboardType: TextInputType.emailAddress,
@@ -261,7 +261,7 @@ class _SignupPageState extends State<SignupPage> {
               "En länk för att verifiera ditt konto har skickats till den angivna e-postadressen."),
           actions: <Widget>[
             new FlatButton(
-              child: new Text("Avfärda"),
+              child: new Text("Okej"),
               onPressed: () {
                 toggleFormMode();
                 Navigator.of(context).popUntil((route) => route.isFirst);

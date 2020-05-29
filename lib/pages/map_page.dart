@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/api/Services.dart';
-import 'package:ezsgame/firebase/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,18 +19,25 @@ import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
 import 'map_marker.dart';
 import 'package:fluster/fluster.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io' as platform;
+import 'package:workmanager/workmanager.dart';
+import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
+import 'package:ezsgame/api/ParkingSpace.dart';
+
 
 
 class MapPage extends StatefulWidget {
   @override
-  _MapPageState createState() => _MapPageState();
+  _MapPageState createState() => _MapPageState(this.marker);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
+  final Marker marker;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -43,18 +49,26 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  var currMarker;
+
+  _MapPageState(this.currMarker);
+
   bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
+  var currParking;
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
-  var currMarker;
-  var currParking;
+
+  Map<String, Feature> parkMark = Map();
   var parkings;
   final db = Firestore.instance;
+  final FirebaseMessaging _fcm = FirebaseMessaging();
+  bool duplicate = false;
+
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -67,9 +81,11 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
+
   static final Map<String, MapMarker> _markers = {};            //changed
   final List <Marker> googleMarkers = fluster.clusters([-180,-85,180,85],
       18).map((cluster) => cluster.toMarker()).toList();
+
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -94,6 +110,65 @@ class _MapPageState extends State<MapPage> {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
     setInitLocation();
+
+
+    _fcm.configure(
+      onMessage: (message) async { //executed if the app is in the foreground
+        print(message["notification"]["title"]);
+
+      },
+
+
+      /*TODO: so these two below are causing problems. These pieces of code should be executed when the user taps the notification
+              but they aren't. According to the internet (good source), this is because the notifications (being sent from index.ts)
+              doesn't contain data 'FLUTTER_NOTIFICATION_CLICK', but they do, or that the channel name isn't specified in the Manifest, but it is.
+              I do think it has something to do with the channels though because it works when I send a notification from the firebase console
+      **/
+      onResume: (message) async { //executed if the app is in the background and the user taps on the notification
+        //remember that needs to send some data with the notification as well, when onResume/onLaunch
+         setState(() {showArrivedAtDestinationDialog(); });
+         /*TODO: (after the problem above is solved) should open the above dialog but we will need to have saved which parking it regarded
+                Maybe can save it if the user exits the feedback dialog until they give the feedback and just not have currentlyNavigating set to true?
+
+          */
+         Workmanager.cancelAll();
+         print("notification from background.");
+        print(message["data"]["title"]);
+      },
+      onLaunch: (message) async { //executed if the app is terminated and the user taps on the notification
+        setState(() {showArrivedAtDestinationDialog(); });
+        Workmanager.cancelAll();
+        print("notification from background.");
+        print(message["data"]["title"]);
+      },
+    );
+
+    _saveDeviceToken();
+  }
+
+  //Individual Device Notifications
+    // Get the token, save it to the database for current user so push notifications can be sent to the device
+  _saveDeviceToken() async {
+    // Get the current user
+    var uid = (await widget.auth.getCurrentUser()).uid;
+
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
+
+    // Save it to Firestore
+    if (fcmToken != null) {
+      var tokens = db
+          .collection('userData')
+          .document(uid)
+          .collection('tokens')
+          .document(fcmToken);
+
+      await tokens.setData({
+        'token': fcmToken,
+        'createdAt': FieldValue.serverTimestamp(), // optional
+    //    'platform': Platform.operatingSystem // optional
+      });
+    }
   }
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
@@ -218,34 +293,102 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget showFilterButton() {
-    return IconButton(
-      icon: Icon(
-        MdiIcons.filterMenu,
-        color: _filterSwitched ? Colors.orangeAccent : Colors.grey,
+    return Container(
+      color: const Color(0xF2F2F2).withOpacity(0.9),
+      child: IconButton(
+        icon: Icon(
+          MdiIcons.filterMenu,
+          color: Colors.grey
+        ),
+        onPressed: () {
+          createDialog(context);
+          showGoogleMaps();
+          // do something
+        },
+        //     ),
       ),
-      onPressed: () {
-        createDialog(context);
-        showGoogleMaps();
-        // do something
-      },
-      //     ),
     );
   }
 
   addToFavorites() async {
     String id = widget.userId;
+    bool duplicate = false;
 
-    await db.collection('userData').document(id).collection('favorites').add({
-      'location': currParking.properties.address,
-      'district': currParking.properties.cityDistrict
-    });
+    QuerySnapshot snapshot = await Firestore.instance
+        .collection('userData')
+        .document(id)
+        .collection('favorites')
+        .getDocuments();
+
+    for (var v in snapshot.documents) {
+      if (v['location'] == currParking.properties.address) {
+        duplicate = true;
+      }
+    }
+
+    print(currParking.geometry.coordinates[0][0]);
+
+    if (!duplicate) {
+      await db.collection('userData').document(id).collection('favorites').add(
+          {
+            'location': currParking.properties.address,
+            'district': currParking.properties.cityDistrict,
+            'coordinatesX': currParking.geometry.coordinates[0][1],
+            'coordinatesY': currParking.geometry.coordinates[0][0],
+          }
+      );
+    }
 
     showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-            title: Text('Success'),
-            content:
-                Text(currParking.properties.address + ' added to favorites!')));
+        builder: (_) => new AlertDialog(
+            title: duplicate ? Text('Misslyckades') : Text("Success"),
+            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+  }
+
+  String getFormattedTimeInfoString() {
+    String timeInfo = DateTime.now().toString();
+
+    String timeInfoDate = timeInfo.substring(0, timeInfo.indexOf(' '));
+    String timeInfoClock = timeInfo.substring(timeInfo.indexOf(' ') + 1, timeInfo.lastIndexOf(':'));
+    String completeTimeInfo = timeInfoDate + ', kl ' + timeInfoClock;
+
+    return completeTimeInfo;
+  }
+
+  addToHistory() async {
+    String id = widget.userId;
+    bool duplicate = false;
+
+   QuerySnapshot snapshot = await Firestore.instance
+       .collection('userData')
+       .document(id)
+       .collection('history')
+       .getDocuments();
+
+   for(var v in snapshot.documents){
+     if(v['location'] == currParking.properties.address) {
+       db.collection('userData')
+           .document(id)
+           .collection('history')
+           .document(v.documentID)
+           .delete();
+       duplicate = true;
+     }
+   }
+
+   await db.collection('userData').document(id).collection('history').add(
+     {
+       'location': currParking.properties.address,
+       'district': currParking.properties.cityDistrict,
+       'coordinatesX': currParking.geometry.coordinates[0][1],
+       'coordinatesY': currParking.geometry.coordinates[0][0],
+       'timestamp': getFormattedTimeInfoString(),
+     }
+   );
+   if(snapshot.documents.length <= 9 && !duplicate){
+     //TODO: remove oldest document
+   }
   }
 
   Widget showFavoritesButton() {
@@ -260,7 +403,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled,
+    parkings = await Services.fetchParkering(null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
@@ -275,15 +418,9 @@ class _MapPageState extends State<MapPage> {
           id: parking.properties.address,
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
-          /*infoWindow: InfoWindow(
-              title: parking.properties.cityDistrict,
-              snippet: parking.properties.address,
-              onTap: () {
-                _onMarkerTapped(parking.properties.address, parking);
-                },
-            )*/
         );
         _markers[parking.properties.address] = marker;
+        parkMark[parking.properties.address] = parking;
       }
       updatePinOnMap();
     });
@@ -331,7 +468,10 @@ class _MapPageState extends State<MapPage> {
                 ]),
             child: Column(
               children: <Widget>[
-                _buildLocationInfo(),
+                 currParking != null
+                     ? _buildLocationInfo()
+                     : _buildSimpleLocationInfo()
+                ,
                 _showFavBtnAndDirectionBtn(),
               ],
             ),
@@ -378,11 +518,42 @@ class _MapPageState extends State<MapPage> {
           ));
   }
 
+  Widget _buildSimpleLocationInfo() {
+    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
+    if (parkMark.containsKey(name)){
+      currParking = parkMark[name];
+      return _buildLocationInfo();
+    }else{
+//      parkings = await Services.fetchParkering(null, _globalCarToggled,
+//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      print(name);
+
+    }
+    return Container(
+        margin: EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              currMarker.toString().split(":")[2].split("}")[0],
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ));
+  }
+//
+//  Future<void> (Marker marker) async
+
+
   Widget showChooseParkingBtn() {
     return Container(
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
-        onPressed: navigateMe,
+        onPressed: () {
+          addToHistory();
+          navigateMe();
+        },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
@@ -446,8 +617,6 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          // insetPadding: EdgeInsets.all(60),
-          // actionsPadding: EdgeInsets.all(10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
@@ -618,6 +787,7 @@ class _MapPageState extends State<MapPage> {
   Widget showExitArrivedAtDestinationWindow() {
     return FlatButton(
       onPressed: () {
+        startBackgroundExecution(); //men då måste spara addressen
         Navigator.of(context).pop();
       },
       child: Icon(Icons.close, color: Colors.grey, size: 30),
@@ -662,10 +832,29 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void startRoute(LatLng destination, String destinationAdress) {
+  void startBackgroundExecution() async {
+    String uid = (await widget.auth.getCurrentUser()).uid;
+
+    //cleaning up ev. old document
+    await db.collection('pushNotifications').document(uid).delete();
+
+    Workmanager.initialize(
+        CallbackDispatcher.callbackDispatcher, // The top level function, aka callbackDispatcher
+        isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+    );
+
+    //using the time to get a unique name, otherwise the tasks starts acting funny
+    Workmanager.registerOneOffTask(DateTime.now().toIso8601String(), "simpleTask",     inputData: {
+     // 'lat': currentDestination.latitude,
+     // 'long': currentDestination.longitude,
+      'uid': uid,
+    }, initialDelay: Duration(minutes: 20));
+  }
+
+  void startRoute(LatLng destination, String destinationAdress) async{
+    Workmanager.cancelAll(); //to avoid situations where users get lots of push notifications
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
-
     currentDestination = destination;
     setPolylines();
     currentlyNavigating = true;
@@ -814,14 +1003,19 @@ class _MapPageState extends State<MapPage> {
               return AlertDialog(
                 content: Container(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text("Filter"),
-                          showSwitchButton(),
+                          Text("Filter",
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            ),
+                          )
                         ],
                       ),
                       Row(
@@ -831,36 +1025,17 @@ class _MapPageState extends State<MapPage> {
                           MotorcycleIconButton()
                         ],
                       ),
-                      Column(
+
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          Text("Avstånd från destination:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Kort"),
-                                Expanded(child: showDistanceSlider()),
-                                Text("Långt"),
-                              ]),
-                          Text("Prisklass:"),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Låg"),
-                                Expanded(child: showCostSlider()),
-                                Text("Hög"),
-                              ]),
+                          showHandicapIconButton(),
+                          showCloseButton(context),
                         ],
-                      ),
-                      showHandicapIconButton(),
+                      )
                     ],
                   ),
                 ),
-                actions: <Widget>[
-                  showCancelButton(context),
-                  showOkButton(context),
-                ],
               );
             },
           ),
@@ -874,78 +1049,6 @@ class _MapPageState extends State<MapPage> {
         _globalTruckToggled = ic.truckToggled;
         _globalCarToggled = ic.carToggled;
       }
-    });
-  }
-
-  Widget showSwitchButton() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: Switch(
-          value: _filterSwitched,
-          onChanged: (value) {
-            setState(() {
-              _filterSwitched = value;
-            });
-          },
-          activeTrackColor: Colors.orangeAccent,
-          activeColor: Colors.orange,
-        ),
-      );
-    });
-  }
-
-  Widget showDistanceSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return SliderTheme(
-        data: SliderThemeData(
-          thumbColor: Colors.orangeAccent,
-          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-          inactiveTickMarkColor: Colors.black,
-          activeTickMarkColor: Colors.black,
-          activeTrackColor: Colors.orangeAccent,
-          inactiveTrackColor: Colors.grey,
-        ),
-        child: Slider(
-          min: 0,
-          max: 100,
-          value: _distanceValue,
-          divisions: 2,
-          onChanged: (value) {
-            setState(() {
-              _distanceValue = value;
-            });
-          },
-        ),
-      );
-    });
-  }
-
-  Widget showCostSlider() {
-    return StatefulBuilder(builder: (context, setState) {
-      return Center(
-        child: SliderTheme(
-          data: SliderThemeData(
-            thumbColor: Colors.orangeAccent,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-            inactiveTickMarkColor: Colors.black,
-            activeTickMarkColor: Colors.black,
-            activeTrackColor: Colors.orangeAccent,
-            inactiveTrackColor: Colors.grey,
-          ),
-          child: Slider(
-            min: 0,
-            max: 100,
-            value: _costValue,
-            divisions: 2,
-            onChanged: (value) {
-              setState(() {
-                _costValue = value;
-              });
-            },
-          ),
-        ),
-      );
     });
   }
 
@@ -965,28 +1068,16 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Widget showOkButton(BuildContext context) {
+  Widget showCloseButton(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
+      return OutlineButton(
+        borderSide: BorderSide(color: Colors.grey, width: 2),
         onPressed: () => {
           _onMapCreated(_controller),
           Navigator.pop(context, iconInfo),
         },
-        child: Text("Klar"),
-      );
-    });
-  }
-
-  Widget showCancelButton(BuildContext context) {
-    var iconInfo = Provider.of<IconInfo>(context);
-    return StatefulBuilder(builder: (context, setState) {
-      return FlatButton(
-        onPressed: () => {
-          Navigator.pop(context, iconInfo),
-          _onMapCreated(_controller),
-        },
-        child: Text("Avbryt"),
+        child: Text("Stäng", style: TextStyle(fontSize: 17)),
       );
     });
   }
