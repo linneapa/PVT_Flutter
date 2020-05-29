@@ -50,7 +50,6 @@ class _MapPageState extends State<MapPage> {
   final db = Firestore.instance;
   bool duplicate = false;
 
-  BitmapDescriptor _markerIcon;
 
   static final CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -84,16 +83,11 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _setArrowIcon();
-    setInitLocation();
-  }
-
-  void _setArrowIcon() async {
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
+    setInitLocation();
   }
-
 
   static Future<Uint8List> getBytesFromAsset(String path, int width) async {
     ByteData data = await rootBundle.load(path);
@@ -270,22 +264,20 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
-        // TODO: for different vehicle type markers on the map, following logical can be (maybe)
-
-        /*if (parking.properties.vfPlatsTyp == "motorcykel") {
-          _markerIcon = "assets/mc-icon.png"; // doesnt exist currently
-        } else if (parking.properties.vfPlatsTyp == "buss") {
-          _markerIcon = "assets/buss-icon.png" // also doesnt exist.
-        } else if ()*/
-
         final marker = Marker(
-          // icon: _markerIcon,
           onTap: () {
             _onMarkerTapped(parking);
           },
           markerId: MarkerId(parking.properties.address),
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
+          /*infoWindow: InfoWindow(
+              title: parking.properties.cityDistrict,
+              snippet: parking.properties.address,
+              onTap: () {
+                _onMarkerTapped(parking.properties.address, parking);
+                },
+            )*/
         );
         _markers[parking.properties.address] = marker;
       }
@@ -322,7 +314,7 @@ class _MapPageState extends State<MapPage> {
           alignment: Alignment.bottomCenter,
           child: Container(
             margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
-            height: SizeConfig.blockSizeVertical * 18,
+            height: SizeConfig.blockSizeVertical * 25,
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(50)),
