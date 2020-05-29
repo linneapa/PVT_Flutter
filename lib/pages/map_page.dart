@@ -305,6 +305,42 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => new AlertDialog(
             title: duplicate ? Text('Misslyckades') : Text("Success"),
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+  }
+
+  addToHistory() async {
+    String id = widget.userId;
+    bool duplicate = false;
+
+    QuerySnapshot snapshot = await Firestore.instance
+        .collection('userData')
+        .document(id)
+        .collection('history')
+        .getDocuments();
+
+    for(var v in snapshot.documents){
+      if(v['location'] == currParking.properties.address) {
+        db.collection('userData')
+            .document(id)
+            .collection('history')
+            .document(v.documentID)
+            .delete();
+        duplicate = true;
+      }
+    }
+
+    await db.collection('userData').document(id).collection('history').add(
+      {
+        'location': currParking.properties.address,
+        'district': currParking.properties.cityDistrict,
+        'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
+        'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+        'timestamp': DateTime.now().toString(),
+      }
+    );
+    if(snapshot.documents.length <= 9 && !duplicate){
+      //TODO: remove oldest document
+    }
+
 
   }
 
@@ -335,13 +371,6 @@ class _MapPageState extends State<MapPage> {
           markerId: MarkerId(parking.properties.address),
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
-          /*infoWindow: InfoWindow(
-              title: parking.properties.cityDistrict,
-              snippet: parking.properties.address,
-              onTap: () {
-                _onMarkerTapped(parking.properties.address, parking);
-                },
-            )*/
         );
         _markers[parking.properties.address] = marker;
       }
@@ -442,7 +471,10 @@ class _MapPageState extends State<MapPage> {
     return Container(
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
-        onPressed: navigateMe,
+        onPressed: () {
+          addToHistory();
+          navigateMe();
+        },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
@@ -506,8 +538,6 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          // insetPadding: EdgeInsets.all(60),
-          // actionsPadding: EdgeInsets.all(10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[

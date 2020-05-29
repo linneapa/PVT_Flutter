@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'settings.dart';
 import 'favorites.dart';
 import 'map_page.dart';
+import 'history.dart';
 import 'package:flutter/widgets.dart';
 
 
@@ -38,6 +39,11 @@ class HomePageState extends State<HomePage> {
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this),
   ];
 
   @override
@@ -65,6 +71,10 @@ class HomePageState extends State<HomePage> {
             BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 title: Text('Inställningar')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                title: Text('Historik')
             ),
           ],
           onTap: (index) {
