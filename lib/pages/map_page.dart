@@ -391,7 +391,7 @@ class _MapPageState extends State<MapPage> {
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
         );
-        markers[parking.properties.address] = marker;
+        _markers[parking.properties.address] = marker;
         parkMark[parking.properties.address] = parking;
       }
       updatePinOnMap();
@@ -499,7 +499,6 @@ class _MapPageState extends State<MapPage> {
 //      parkings = await Services.fetchParkering(null, _globalCarToggled,
 //          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       print(name);
-      print(markers.keys);
 
     }
     return Container(
