@@ -56,11 +56,9 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
-  bool _filterSwitched = false;
-  var _distanceValue = 0.0;
-  var _costValue = 0.0;
 
   Map<String, Feature> parkMark = Map();
+  var singlePark;
   var parkings;
   final db = Firestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
@@ -383,6 +381,7 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _markers.clear();
       for (final parking in parkings.features) {
+        print('yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy');
         final marker = Marker(
           onTap: () {
             _onMarkerTapped(parking);
@@ -391,6 +390,7 @@ class _MapPageState extends State<MapPage> {
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
         );
+        print('xxxxxxxxxxxxxxxxxxx');
         _markers[parking.properties.address] = marker;
         parkMark[parking.properties.address] = parking;
       }
@@ -494,13 +494,11 @@ class _MapPageState extends State<MapPage> {
     String name = currMarker.toString().split(":")[2].split("}")[0].trim();
     if (parkMark.containsKey(name)){
       currParking = parkMark[name];
-      return _buildLocationInfo();
     }else{
-//      parkings = await Services.fetchParkering(null, _globalCarToggled,
-//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      //upDateParkings(currMarker, name);
       print(name);
-
     }
+    return _buildLocationInfo();
     return Container(
         margin: EdgeInsets.only(top: 10),
         child: Column(
@@ -514,9 +512,27 @@ class _MapPageState extends State<MapPage> {
           ],
         ));
   }
-//
-//  Future<void> (Marker marker) async
 
+//  Future<void> upDateParkings(Marker marker, String name) async {
+//    singlePark = await Services.fetchParkering(marker, _globalCarToggled,
+//        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+//
+//    for (final parking in singlePark.features) {
+//      if (parking.properties.address == name){
+//        final marker = Marker(
+//          onTap: () {
+//            _onMarkerTapped(parking);
+//          },
+//          markerId: MarkerId(parking.properties.address),
+//          position: LatLng(parking.geometry.coordinates[0][1],
+//              parking.geometry.coordinates[0][0]),
+//        );
+//        _markers[parking.properties.address] = marker;
+//        parkMark[parking.properties.address] = parking;
+//      }
+//    }
+//    updatePinOnMap();
+//  }
 
   Widget showChooseParkingBtn() {
     return Container(
