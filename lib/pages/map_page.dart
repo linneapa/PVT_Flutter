@@ -28,13 +28,14 @@ class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState(this.doc);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.doc})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.doc, this.initPosition})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
   final DocumentSnapshot doc;
+  CameraPosition initPosition;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -65,11 +66,6 @@ class _MapPageState extends State<MapPage> {
   bool duplicate = false;
 
 
-  static final CameraPosition initPosition = CameraPosition(
-    target: LatLng(59.3293, 18.0686),
-    zoom: 12,
-  );
-
   SizeConfig sizeConfig;
   Completer<GoogleMapController> _mapController = Completer();
   Location location = Location();
@@ -78,7 +74,6 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<LocationData> _locationSubscription;
   static Map<String, Marker> _markers = {};
   BitmapDescriptor arrowIcon;
-  BitmapDescriptor currentIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
@@ -101,14 +96,8 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
-//    getBytesFromAsset('assets/current.png', 64).then((onValue) {
-//      currentIcon = BitmapDescriptor.fromBytes(onValue);
-//    });
-    if (currMarker == null){
-      setInitLocation();
-    }else{
-      initLocation = LatLng(_myLocation.latitude, _myLocation.longitude);
-    }
+    //setInitLocation();
+
 
     _fcm.configure(
       onMessage: (message) async { //executed if the app is in the foreground
@@ -407,10 +396,7 @@ class _MapPageState extends State<MapPage> {
     return GoogleMap(
       onMapCreated: _onMapCreated,
       polylines: _polylines,
-      initialCameraPosition: CameraPosition(
-        target: const LatLng(59.3293, 18.0686),
-        zoom: 12,
-      ),
+      initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {

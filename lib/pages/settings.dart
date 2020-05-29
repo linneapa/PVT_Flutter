@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ezsgame/pages/home_page.dart';
 import 'package:ezsgame/pages/login_sign_up.dart';
 import 'package:ezsgame/pages/root_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,9 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:ezsgame/pages/SizeConfig.dart';
 import 'package:ezsgame/pages/forgotPassword.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key key, this.auth, this.userId, this.logoutCallback})
+  SettingsPage({Key key, this.auth, this.userId, this.logoutCallback, this.parent})
       : super(key: key);
 
   @override
@@ -17,11 +19,23 @@ class SettingsPage extends StatefulWidget {
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
+  final HomePageState parent;
 }
 
 class _SettingsPageState extends State<SettingsPage> {
   SizeConfig sizeConfig;
   final db = Firestore.instance;
+  HomePageState parent;
+
+  @override
+  void initState() {
+    super.initState();
+    HomePageState.start = null;
+    HomePageState.initPosition = CameraPosition(
+      target: LatLng(59.3293, 18.0686),
+      zoom: 12,
+    );
+  }
 
   signOut() async {
     try {

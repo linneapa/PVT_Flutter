@@ -28,26 +28,38 @@ class HomePageState extends State<HomePage> {
   static int currentNavigationIndex = 1;
   static DocumentSnapshot doc;
 
+  static CameraPosition initPosition = CameraPosition(
+    target: LatLng(59.3293, 18.0686),
+    zoom: 12,
+  );
+
+
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
-      parent: this,),
+      parent: this,
+    ),
     MapPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       doc: doc,),
+      initPosition: initPosition,
+      ),
     SettingsPage(
       userId: widget.userId,
       auth: widget.auth,
-      logoutCallback: widget.logoutCallback,),
+      logoutCallback: widget.logoutCallback,
+      parent: this,
+    ),
     HistoryPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
-      parent: this),
+      parent: this,
+  ),
   ];
 
   @override

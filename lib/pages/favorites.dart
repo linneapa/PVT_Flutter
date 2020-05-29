@@ -30,6 +30,16 @@ class _FavouritesPageState extends State<FavouritesPage> {
 
   _FavouritesPageState(this.value, this.parent, this.map);
 
+  @override
+  void initState() {
+    super.initState();
+    HomePageState.start = null;
+    HomePageState.initPosition = CameraPosition(
+      target: LatLng(59.3293, 18.0686),
+      zoom: 12,
+    );
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
@@ -176,7 +186,6 @@ class _FavouritesPageState extends State<FavouritesPage> {
 //      print(doc['coordinatesX']);
 //      print(doc['coordinatesY']);
     });
-
 
   }
 
