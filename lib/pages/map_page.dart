@@ -778,7 +778,7 @@ class _MapPageState extends State<MapPage> {
         startBackgroundExecution(); //men då måste spara addressen
         Navigator.of(context).pop();
       },
-      child: Icon(Icons.close, color: Colors.grey, size: 30),
+      child: Icon(Icons.close, color: Colors.black54, size: 30),
     );
   }
 
@@ -789,32 +789,32 @@ class _MapPageState extends State<MapPage> {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
-          actions: <Widget>[
-            Column(children: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget> [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  new Text(
-                    "  Du har anlänt vid din destination!", textAlign: TextAlign.center, style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  showExitArrivedAtDestinationWindow(),
-                ],
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget> [
+                  showExitArrivedAtDestinationWindow()
+                ]
               ),
               Text(
-                "Var snäll och svara om parkeringen\när högtrafikerad.\n", style: TextStyle(fontSize: 15),),
+                "Du har anlänt vid din destination!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              Text(
+                "Var snäll och svara om parkeringen är högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+              ),
+              Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   showMuchTrafficBtn(),
-                  Text("        "),
+                  //Text("              "),
                   showNotMuchTrafficBtn(),
                 ],
               ),
-              Text(""),
-            ],
+            ]
           ),
-          ]
         );
       },
     );
