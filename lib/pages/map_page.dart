@@ -307,41 +307,49 @@ class _MapPageState extends State<MapPage> {
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
   }
 
+  String getFormattedTimeInfoString() {
+    String timeInfo = DateTime.now().toString();
+
+    String timeInfoDate = timeInfo.substring(0, timeInfo.indexOf(' '));
+    String timeInfoClock = timeInfo.substring(timeInfo.indexOf(' ') + 1, timeInfo.lastIndexOf(':'));
+    String completeTimeInfo = timeInfoDate + ', kl ' + timeInfoClock;
+
+    return completeTimeInfo;
+  }
+
   addToHistory() async {
     String id = widget.userId;
     bool duplicate = false;
 
-    QuerySnapshot snapshot = await Firestore.instance
-        .collection('userData')
-        .document(id)
-        .collection('history')
-        .getDocuments();
+   QuerySnapshot snapshot = await Firestore.instance
+       .collection('userData')
+       .document(id)
+       .collection('history')
+       .getDocuments();
 
-    for(var v in snapshot.documents){
-      if(v['location'] == currParking.properties.address) {
-        db.collection('userData')
-            .document(id)
-            .collection('history')
-            .document(v.documentID)
-            .delete();
-        duplicate = true;
-      }
-    }
+   for(var v in snapshot.documents){
+     if(v['location'] == currParking.properties.address) {
+       db.collection('userData')
+           .document(id)
+           .collection('history')
+           .document(v.documentID)
+           .delete();
+       duplicate = true;
+     }
+   }
 
-    await db.collection('userData').document(id).collection('history').add(
-      {
-        'location': currParking.properties.address,
-        'district': currParking.properties.cityDistrict,
-        'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
-        'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
-        'timestamp': DateTime.now().toString(),
-      }
-    );
-    if(snapshot.documents.length <= 9 && !duplicate){
-      //TODO: remove oldest document
-    }
-
-
+   await db.collection('userData').document(id).collection('history').add(
+     {
+       'location': currParking.properties.address,
+       'district': currParking.properties.cityDistrict,
+       'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
+       'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+       'timestamp': getFormattedTimeInfoString(),
+     }
+   );
+   if(snapshot.documents.length <= 9 && !duplicate){
+     //TODO: remove oldest document
+   }
   }
 
   Widget showFavoritesButton() {
