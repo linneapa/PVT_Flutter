@@ -78,6 +78,7 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<LocationData> _locationSubscription;
   static Map<String, Marker> _markers = {};
   BitmapDescriptor arrowIcon;
+  BitmapDescriptor currentIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
@@ -100,6 +101,9 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
+//    getBytesFromAsset('assets/current.png', 64).then((onValue) {
+//      currentIcon = BitmapDescriptor.fromBytes(onValue);
+//    });
     if (currMarker == null){
       setInitLocation();
     }else{
@@ -421,9 +425,7 @@ class _MapPageState extends State<MapPage> {
     if (currParking == null && doc != null){
       //String name = currMarker.toString().split(":")[2].split("}")[0].trim();
       if (parkMark.containsKey(doc['location'])){
-        setState(() {
-          currParking = parkMark[doc['location']];
-        });
+        updateCurrentMarker(parkMark[doc['location']]);
       }else{
         upDateParking();
       }
@@ -498,28 +500,30 @@ class _MapPageState extends State<MapPage> {
           ));
   }
 
-  Future<Parkering> upDateParking() async {
+  Future<void> upDateParking() async {
     singlePark = await Services.fetchParkering(doc, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
 
     for (final parking in singlePark.features) {
       if (parking.properties.address == doc['location']){
-        setState((){
-          final marker = Marker(
-            onTap: () {_onMarkerTapped(parking);},
-            markerId: MarkerId(parking.properties.address),
-            position: LatLng(parking.geometry.coordinates[0][1],
-                  parking.geometry.coordinates[0][0]),
-            );
-          currMarker = marker;
-          currParking = parking;
-          _markers[parking.properties.address] = marker;
-          parkMark[parking.properties.address] = parking;
-          });
+        updateCurrentMarker(parking);
+//        setState((){
+//          final marker = Marker(
+//            onTap: () {_onMarkerTapped(parking);},
+//            icon: BitmapDescriptor.fromAsset('assets/current.png'),
+//            markerId: MarkerId(parking.properties.address),
+//            position: LatLng(parking.geometry.coordinates[0][1],
+//                  parking.geometry.coordinates[0][0]),
+//            );
+//          currMarker = marker;
+//          currParking = parking;
+//          _markers[parking.properties.address] = marker;
+//          parkMark[parking.properties.address] = parking;
+//          });
         }
       }
-
   }
+
 
   Widget showChooseParkingBtn() {
     return Container(
@@ -581,10 +585,39 @@ class _MapPageState extends State<MapPage> {
 
   _onMarkerTapped(var parking) {
     if (_markers.containsKey(parking.properties.address)) {
-      final marker = _markers[parking.properties.address];
+     updateCurrentMarker(parking);
+    }
+  }
+
+  updateCurrentMarker(var parking){
+    Marker oldMarker;
+    String oldAddress;
+
+    setState(() {
+      if (currParking != null) {
+        oldAddress = currParking.properties.address;
+        oldMarker = Marker(
+          onTap: () {
+            _onMarkerTapped(parking);
+          },
+          icon: BitmapDescriptor.defaultMarker,
+          markerId: MarkerId(oldAddress),
+          position: LatLng(currParking.geometry.coordinates[0][1],
+              currParking.geometry.coordinates[0][0]),
+        );
+        _markers[oldAddress] = oldMarker;
+      }
+      final marker = Marker(
+        onTap: () {_onMarkerTapped(parking);},
+        icon: BitmapDescriptor.defaultMarkerWithHue(240),
+        markerId: MarkerId(parking.properties.address),
+        position: LatLng(parking.geometry.coordinates[0][1],
+            parking.geometry.coordinates[0][0]),
+      );
       currMarker = marker;
       currParking = parking;
-    }
+      _markers[parking.properties.address] = marker;
+    });
   }
 
   void showChooseAnotherParkingDialog() {
