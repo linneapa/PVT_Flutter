@@ -18,20 +18,24 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'package:ezsgame/api/ParkingSpace.dart';
+
 
 class MapPage extends StatefulWidget {
-  @override
-  _MapPageState createState() => _MapPageState();
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback})
+  @override
+  MapPageState createState() => MapPageState(this.marker);
+
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
+  final Marker marker;
 }
 
-class _MapPageState extends State<MapPage> {
+class MapPageState extends State<MapPage> {
 
   @override
   void setState(fn) {
@@ -39,6 +43,11 @@ class _MapPageState extends State<MapPage> {
       super.setState(fn);
     }
   }
+
+  var currMarker;
+  var currParking;
+
+  MapPageState(this.currMarker);
 
   bool currentlyNavigating = false;
   bool handicapToggled = false;
@@ -48,8 +57,8 @@ class _MapPageState extends State<MapPage> {
   bool _filterSwitched = false;
   var _distanceValue = 0.0;
   var _costValue = 0.0;
-  static var currMarker;
-  var currParking;
+
+  Map<String, Feature> parkMark = Map();
   var parkings;
   final db = Firestore.instance;
   bool duplicate = false;
@@ -66,7 +75,7 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  final Map<String, Marker> _markers = {};
+  static Map<String, Marker> markers = {};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -103,25 +112,6 @@ class _MapPageState extends State<MapPage> {
         .asUint8List();
   }
 
-  Future<void> _listenLocation() async {
-    _locationSubscription =
-        location.onLocationChanged.handleError((dynamic err) {
-      setState(() {
-        _error = err.code;
-      });
-      _locationSubscription.cancel();
-    }).listen((LocationData currentLocation) {
-      setState(() {
-        // Check if the route needs to be updated
-        bool changed = false;
-        if (_myLocation != currentLocation) changed = true;
-        _myLocation = currentLocation;
-
-        updatePinOnMap();
-        if (changed && currentDestination != null) setPolylines();
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +133,27 @@ class _MapPageState extends State<MapPage> {
         )
     );
   }
+
+  Future<void> _listenLocation() async {
+    _locationSubscription =
+        location.onLocationChanged.handleError((dynamic err) {
+          setState(() {
+            _error = err.code;
+          });
+          _locationSubscription.cancel();
+        }).listen((LocationData currentLocation) {
+          setState(() {
+            // Check if the route needs to be updated
+            bool changed = false;
+            if (_myLocation != currentLocation) changed = true;
+            _myLocation = currentLocation;
+
+            updatePinOnMap();
+            if (changed && currentDestination != null) setPolylines();
+          });
+        });
+  }
+
 
   Widget showTopBar() {
     return Align(
@@ -228,7 +239,9 @@ class _MapPageState extends State<MapPage> {
       await db.collection('userData').document(id).collection('favorites').add(
           {
             'location': currParking.properties.address,
-            'district': currParking.properties.cityDistrict
+            'district': currParking.properties.cityDistrict,
+            'coordinatesX': currParking.geometry.coordinates[0][1],
+            'coordinatesY': currParking.geometry.coordinates[0][0],
           }
       );
     }
@@ -252,13 +265,13 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled,
+    parkings = await Services.fetchParkering(null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
 
     setState(() {
-      _markers.clear();
+      markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
           onTap: () {
@@ -275,7 +288,8 @@ class _MapPageState extends State<MapPage> {
                 },
             )*/
         );
-        _markers[parking.properties.address] = marker;
+        markers[parking.properties.address] = marker;
+        parkMark[parking.properties.address] = parking;
       }
       updatePinOnMap();
     });
@@ -289,7 +303,7 @@ class _MapPageState extends State<MapPage> {
         target: const LatLng(59.3293, 18.0686),
         zoom: 12,
       ),
-      markers: _markers.values.toSet(),
+      markers: markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
           currMarker = null;
@@ -323,7 +337,10 @@ class _MapPageState extends State<MapPage> {
                 ]),
             child: Column(
               children: <Widget>[
-                _buildLocationInfo(),
+                 currParking != null
+                     ? _buildLocationInfo()
+                     : _buildSimpleLocationInfo()
+                ,
                 _showFavBtnAndDirectionBtn(),
               ],
             ),
@@ -370,6 +387,35 @@ class _MapPageState extends State<MapPage> {
           ));
   }
 
+  Widget _buildSimpleLocationInfo() {
+    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
+    if (parkMark.containsKey(name)){
+      currParking = parkMark[name];
+      return _buildLocationInfo();
+    }else{
+//      parkings = await Services.fetchParkering(null, _globalCarToggled,
+//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      print(name);
+      print(markers.keys);
+
+    }
+    return Container(
+        margin: EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              currMarker.toString().split(":")[2].split("}")[0],
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ));
+  }
+//
+//  Future<void> (Marker marker) async
+
+
   Widget showChooseParkingBtn() {
     return Container(
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
@@ -385,6 +431,7 @@ class _MapPageState extends State<MapPage> {
       ),
     );
   }
+
 
   navigateMe() {
     if (!currentlyNavigating) {
@@ -426,8 +473,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   _onMarkerTapped(var parking) {
-    if (_markers.containsKey(parking.properties.address)) {
-      final marker = _markers[parking.properties.address];
+    if (markers.containsKey(parking.properties.address)) {
+      final marker = markers[parking.properties.address];
       currMarker = marker;
       currParking = parking;
     }
@@ -655,8 +702,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   void startRoute(LatLng destination, String destinationAdress) {
-    if (_markers.containsKey(destinationAdress))
-      currentDestinationMarker = _markers[destinationAdress];
+    if (markers.containsKey(destinationAdress))
+      currentDestinationMarker = markers[destinationAdress];
 
     currentDestination = destination;
     setPolylines();
@@ -786,7 +833,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void updatePinOnMap() async {
-    _markers['PhoneLocationMarker'] = Marker(
+    markers['PhoneLocationMarker'] = Marker(
         markerId: MarkerId('PhoneLocationMarker'),
         position: LatLng(_myLocation.latitude, _myLocation.longitude),
         //rotation: _myLocation.heading,                                  //acting funny
