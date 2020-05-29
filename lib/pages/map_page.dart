@@ -56,9 +56,6 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
-  bool _filterSwitched = false;
-  var _distanceValue = 0.0;
-  var _costValue = 0.0;
 
   Map<String, Feature> parkMark = Map();
   var parkings;
