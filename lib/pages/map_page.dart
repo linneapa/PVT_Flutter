@@ -78,6 +78,7 @@ class _MapPageState extends State<MapPage> {
   BitmapDescriptor handicapIcon;
   BitmapDescriptor motorcycleIcon;
   BitmapDescriptor truckIcon;
+  BitmapDescriptor currentIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
@@ -395,25 +396,23 @@ class _MapPageState extends State<MapPage> {
       //_mapController.complete(controller);
 
       setState(() {
-        BitmapDescriptor _icon;
         BitmapDescriptor _selectedIcon;
         if(_globalCarToggled){
-          _icon = carIcon;
+          currentIcon = carIcon;
           print("car toggled");
         }else if(_globalTruckToggled){
-          _icon = truckIcon;
+          currentIcon = truckIcon;
           print("truck toggled");
         }else if(_globalMotorcycleToggled){
-          _icon = motorcycleIcon;
+          currentIcon = motorcycleIcon;
           print("cycle toggled");
         }
         for (final parking in parkings.features) {
           if (parking.properties.address != null) {
             print(parking.properties.address);
-            _selectedIcon = _icon;
             if(handicapToggled){
               if(parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
-                _selectedIcon = handicapIcon;
+                currentIcon = handicapIcon;
                 print("handicap toggled");
               }
             }
@@ -424,7 +423,7 @@ class _MapPageState extends State<MapPage> {
               markerId: MarkerId(parking.properties.address),
               position: LatLng(parking.geometry.coordinates[0][1],
                   parking.geometry.coordinates[0][0]),
-              icon: _selectedIcon,
+              icon: currentIcon,
             );
             _markers[parking.properties.address] = marker;
             parkMark[parking.properties.address] = parking;
@@ -607,7 +606,7 @@ class _MapPageState extends State<MapPage> {
           onTap: () {
             updateCurrentMarker(thisParking);
           },
-          icon: BitmapDescriptor.defaultMarker,
+          icon: currentIcon,
           markerId: MarkerId(oldAddress),
           position: LatLng(thisParking.geometry.coordinates[0][1],
               thisParking.geometry.coordinates[0][0]),
