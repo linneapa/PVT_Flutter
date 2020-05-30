@@ -381,7 +381,7 @@ class _MapPageState extends State<MapPage> {
           print(parking.properties.address);
           final marker = Marker(
             onTap: () {
-              _onMarkerTapped(parking);
+              updateCurrentMarker(parking);
             },
             markerId: MarkerId(parking.properties.address),
             position: LatLng(parking.geometry.coordinates[0][1],
@@ -495,15 +495,11 @@ class _MapPageState extends State<MapPage> {
     print(singlePark);
     for (final parking in singlePark.features) {
       print(parking.properties.address);
-      if (parking.properties.address == doc['location']){
-        print('correct' + parking.properties.address);
+      if (parking.properties.address == doc['location']) {
         updateCurrentMarker(parking);
-        }else{
-        print('not correct' + parking.properties.address);
-        }
       }
+    }
   }
-
 
   Widget showChooseParkingBtn() {
     return Container(
@@ -562,32 +558,26 @@ class _MapPageState extends State<MapPage> {
     ));
   }
 
-  _onMarkerTapped(var parking) {
-    if (_markers.containsKey(parking.properties.address)) {
-     updateCurrentMarker(parking);
-    }
-  }
-
   updateCurrentMarker(var parking){
-    Marker oldMarker;
-    String oldAddress;
-
     setState(() {
       if (currParking != null) {
-        oldAddress = currParking.properties.address;
-        oldMarker = Marker(
+        var thisParking = currParking;
+        String oldAddress = thisParking.properties.address;
+        Marker oldMarker = Marker(
           onTap: () {
-            _onMarkerTapped(parking);
+            updateCurrentMarker(thisParking);
           },
           icon: BitmapDescriptor.defaultMarker,
           markerId: MarkerId(oldAddress),
-          position: LatLng(currParking.geometry.coordinates[0][1],
-              currParking.geometry.coordinates[0][0]),
+          position: LatLng(thisParking.geometry.coordinates[0][1],
+              thisParking.geometry.coordinates[0][0]),
         );
         _markers[oldAddress] = oldMarker;
       }
       final marker = Marker(
-        onTap: () {_onMarkerTapped(parking);},
+        onTap: () {
+          updateCurrentMarker(parking);
+        },
         icon: BitmapDescriptor.defaultMarkerWithHue(240),
         markerId: MarkerId(parking.properties.address),
         position: LatLng(parking.geometry.coordinates[0][1],
