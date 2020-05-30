@@ -96,6 +96,16 @@ class _MapPageState extends State<MapPage> {
   // which generates every polyline between start and finish
   PolylinePoints polylinePoints = PolylinePoints();
 
+  BitmapDescriptor parkingMarkerIcon;
+
+  _setParkingMarkerIcon() {
+    BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(size: Size(48, 48)), 'assets/carpin.png')
+        .then((onValue) {
+      parkingMarkerIcon = onValue;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +114,7 @@ class _MapPageState extends State<MapPage> {
     });
     setInitLocation();
 
+    _setParkingMarkerIcon();
 
     _fcm.configure(
       onMessage: (message) async { //executed if the app is in the foreground
@@ -384,6 +395,7 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
+          icon: parkingMarkerIcon,
           onTap: () {
             _onMarkerTapped(parking);
           },
