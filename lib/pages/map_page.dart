@@ -80,6 +80,10 @@ class _MapPageState extends State<MapPage> {
   BitmapDescriptor motorcycleIcon;
   BitmapDescriptor truckIcon;
   BitmapDescriptor currentIcon;
+  BitmapDescriptor carSelectedIcon;
+  BitmapDescriptor motorcycleSelectedIcon;
+  BitmapDescriptor truckSelectedIcon;
+  BitmapDescriptor handicapSelectedIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
@@ -113,6 +117,18 @@ class _MapPageState extends State<MapPage> {
     });
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/carOnMapSelected.png', 64).then((onValue) {
+      carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+      motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+      truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+      handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
     //setInitLocation();
 
