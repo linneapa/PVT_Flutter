@@ -98,6 +98,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
   }
 
   Future<void> showOnCardTapDialogue(DocumentSnapshot doc) async {
+
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -107,7 +108,10 @@ class _FavouritesPageState extends State<FavouritesPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text(doc['location']),
+                Text(doc['location'], style: TextStyle(fontSize: 16)),
+                Text('Stadsdel: ' + doc['district'], style: TextStyle(fontSize: 14)),
+                Text('Övrig info: ' + doc['info'], style: TextStyle(fontSize: 14)),
+                Text('Max timmar: ' + doc['maxTimmar'], style: TextStyle(fontSize: 14)),
               ],
             ),
           ),
