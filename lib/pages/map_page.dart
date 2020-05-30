@@ -540,7 +540,7 @@ class _MapPageState extends State<MapPage> {
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
-              Text('Snitt aktivitet: $currentParkingActivity',
+              Text('Snittaktivitet: $currentParkingActivity',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
@@ -560,22 +560,24 @@ class _MapPageState extends State<MapPage> {
     double percentageHighRatings = (noOfHighRatings/totalNoOfRatings);
 
     if(percentageHighRatings < (1/3))
-      currentParkingActivity = "Låg aktivitet";
+      currentParkingActivity = "Låg";
     else if(percentageHighRatings < (2/3))
-      currentParkingActivity = "Medium aktivitet";
+      currentParkingActivity = "Medelhög";
     else
-      currentParkingActivity = "Hög aktivitet";
+      currentParkingActivity = "Hög";
   }
 
   Widget _buildSimpleLocationInfo() {
     String name = currMarker.toString().split(":")[2].split("}")[0].trim();
-    if (parkMark.containsKey(name)){
+    if (parkMark.containsKey(name)) {
       currParking = parkMark[name];
       return _buildLocationInfo();
-    }else{
+    } else {
 //      parkings = await Services.fetchParkering(null, _globalCarToggled,
 //          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       print(name);
+    }
+  }
   Future<void> upDateParking() async {
     singlePark = await Services.fetchParkering(doc, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
