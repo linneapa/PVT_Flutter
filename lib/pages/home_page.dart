@@ -47,18 +47,18 @@ class HomePageState extends State<HomePage> {
       marker:start,
       initPosition: initPosition,
       ),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this,
+    ),
     SettingsPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       parent: this,
     ),
-    HistoryPage(
-      userId: widget.userId,
-      auth: widget.auth,
-      logoutCallback: widget.logoutCallback,
-      parent: this,
-  ),
   ];
 
   @override
@@ -84,12 +84,12 @@ class HomePageState extends State<HomePage> {
                 title: Text('Karta')
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                title: Text('Inställningar')
-            ),
-            BottomNavigationBarItem(
                 icon: Icon(Icons.history),
                 title: Text('Historik')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                title: Text('Inställningar')
             ),
           ],
           onTap: (index) {
