@@ -74,6 +74,10 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<LocationData> _locationSubscription;
   static Map<String, Marker> _markers = {};
   BitmapDescriptor arrowIcon;
+  BitmapDescriptor carIcon;
+  BitmapDescriptor handicapIcon;
+  BitmapDescriptor motorcycleIcon;
+  BitmapDescriptor truckIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
   LatLng currentDestination;
@@ -95,6 +99,18 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/carAvailableNotFavorite.png', 64).then((onValue) {
+      carIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/handicapAvailableNotFavorite.png', 64).then((onValue) {
+      handicapIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/motorcycleAvailableNotFavorite.png', 64).then((onValue) {
+      motorcycleIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+      truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
     //setInitLocation();
 
@@ -306,9 +322,14 @@ class _MapPageState extends State<MapPage> {
 
     showDialog(
         context: context,
-        builder: (_) => new AlertDialog(
-            title: duplicate ? Text('Misslyckades') : Text("Success"),
-            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+        builder: (context) {
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.of(context).pop(true);
+          });
+          return AlertDialog(
+              title: duplicate ? Text('Misslyckades') : Text("Success"),
+              content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!'));
+        });
   }
 
   String getFormattedTimeInfoString() {
@@ -368,17 +389,34 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-      print(_globalCarToggled);
-      print(_globalTruckToggled);
       parkings = await Services.fetchParkering(null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       _controller = controller;
       //_mapController.complete(controller);
 
       setState(() {
+        BitmapDescriptor _icon;
+        BitmapDescriptor _selectedIcon;
+        if(_globalCarToggled){
+          _icon = carIcon;
+          print("car toggled");
+        }else if(_globalTruckToggled){
+          _icon = truckIcon;
+          print("truck toggled");
+        }else if(_globalMotorcycleToggled){
+          _icon = motorcycleIcon;
+          print("cycle toggled");
+        }
         for (final parking in parkings.features) {
           if (parking.properties.address != null) {
             print(parking.properties.address);
+            _selectedIcon = _icon;
+            if(handicapToggled){
+              if(parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
+                _selectedIcon = handicapIcon;
+                print("handicap toggled");
+              }
+            }
             final marker = Marker(
               onTap: () {
                 updateCurrentMarker(parking);
@@ -386,6 +424,7 @@ class _MapPageState extends State<MapPage> {
               markerId: MarkerId(parking.properties.address),
               position: LatLng(parking.geometry.coordinates[0][1],
                   parking.geometry.coordinates[0][0]),
+              icon: _selectedIcon,
             );
             _markers[parking.properties.address] = marker;
             parkMark[parking.properties.address] = parking;
@@ -1042,9 +1081,7 @@ class _MapPageState extends State<MapPage> {
             Icons.accessible,
             color: handicapToggled ? Colors.orangeAccent : Colors.grey,
           ),
-          onPressed: () => setState((){
-            handicapToggled = !handicapToggled;
-          }),
+          onPressed: () => setState(() => handicapToggled = !handicapToggled),
         ),
       );
     });
