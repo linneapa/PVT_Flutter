@@ -29,6 +29,7 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   void initState() {
     super.initState();
+    HomePageState.doc = null;
     HomePageState.initPosition = CameraPosition(
       target: LatLng(59.3293, 18.0686),
       zoom: 12,
@@ -172,7 +173,7 @@ class _HistoryPageState extends State<HistoryPage> {
   showParkingOnMapPage(DocumentSnapshot doc) {
 
     this.parent.setState(() {
-      HomePageState.currentNavigationIndex = 1;
+      HomePageState.currentNavigationIndex = 2;
       HomePageState.doc = doc;
       HomePageState.initPosition = CameraPosition(
           target: LatLng(doc['coordinatesX'], doc['coordinatesY']),

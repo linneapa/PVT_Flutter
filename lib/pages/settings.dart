@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/pages/home_page.dart';
-import 'package:ezsgame/pages/login_sign_up.dart';
-import 'package:ezsgame/pages/root_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';

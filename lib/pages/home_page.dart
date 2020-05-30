@@ -25,7 +25,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
 
-  static int currentNavigationIndex = 1;
+  static int currentNavigationIndex = 2;
   static DocumentSnapshot doc;
   static CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
@@ -40,18 +40,18 @@ class HomePageState extends State<HomePage> {
       logoutCallback: widget.logoutCallback,
       parent: this,
     ),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this,
+    ),
     MapPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       doc: doc,
       initPosition: initPosition,
-      ),
-    HistoryPage(
-      userId: widget.userId,
-      auth: widget.auth,
-      logoutCallback: widget.logoutCallback,
-      parent: this,
     ),
     SettingsPage(
       userId: widget.userId,
@@ -80,12 +80,12 @@ class HomePageState extends State<HomePage> {
                 title: Text('Favoriter')
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.map),
-                title: Text('Karta')
-            ),
-            BottomNavigationBarItem(
                 icon: Icon(Icons.history),
                 title: Text('Historik')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.map),
+                title: Text('Karta')
             ),
             BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
