@@ -30,6 +30,8 @@ class _SignupPageState extends State<SignupPage> {
   bool _termsAndConditionsAgreement = false, _signUpBtnHasBeenPressed = false;
 
   String _errorMessage;
+  bool showPassword = false;
+  bool showConfirmationPassword = false;
 
   Widget build(BuildContext context) {
     sizeConfig = SizeConfig();
@@ -133,8 +135,9 @@ class _SignupPageState extends State<SignupPage> {
           maxLines: 1,
           keyboardType: TextInputType.emailAddress,
           autofocus: false,
-          obscureText: inputField.toLowerCase().contains("lösenord"),
+          obscureText: (inputField == ("Lösenord") && !showPassword )||(inputField == ("Bekräfta lösenord") && !showConfirmationPassword ),
           decoration: new InputDecoration(
+            suffixIcon: inputField.toLowerCase().contains("lösenord")?showPasswordVisibility(inputField) : null,
             hintText: '$inputField',
             border: OutlineInputBorder(),
           ),
@@ -151,6 +154,18 @@ class _SignupPageState extends State<SignupPage> {
                 break; //TODO: catch error
             }
           }),
+    );
+  }
+
+  IconButton showPasswordVisibility(String inputField) {
+    return IconButton(
+      icon: (inputField == ("Lösenord") && !showPassword )||(inputField == ("Bekräfta lösenord") && !showConfirmationPassword ) ?Icon(Icons.visibility): Icon(Icons.visibility_off),
+      onPressed: () {
+        if (inputField == ("Lösenord"))
+          showPassword = !showPassword;
+        else
+          showConfirmationPassword = !showConfirmationPassword;
+      },
     );
   }
 
