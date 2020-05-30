@@ -167,7 +167,7 @@ class _SignupPageState extends State<SignupPage> {
       case "Bekräfta e-postadress":
         return valueOfInputField.isEmpty
             ? "*Obligatoriskt fält"
-            : (valueOfInputField != _email
+            : (valueOfInputField.trim() != _email
                 ? "E-postadressen stämmer ej med ovan"
                 : null);
       case "Bekräfta lösenord":
