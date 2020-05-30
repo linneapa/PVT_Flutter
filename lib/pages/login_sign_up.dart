@@ -40,6 +40,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   bool _isLoginForm;
   bool _isLoading;
+  bool showPassword = false;
 
   // Check if form is valid before perform login or signup
   bool validateAndSave() {
@@ -213,16 +214,26 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 3, bottom: SizeConfig.blockSizeVertical * 2, left: 15, right: 15),
       child: new TextFormField(
         maxLines: 1,
-        obscureText: true,
+        obscureText: !showPassword,
         autofocus: false,
         decoration: new InputDecoration(
           hintText: 'Lösenord',
           border: OutlineInputBorder(),
+          suffixIcon: showPasswordVisibility(),
         ),
         key: Key('password'),
         validator: LoginFieldValidator.validate,
         onSaved: (value) => _password = value.trim(),
       ),
+    );
+  }
+
+  IconButton showPasswordVisibility() {
+    return IconButton(
+      icon: !showPassword ? Icon(Icons.visibility): Icon(Icons.visibility_off),
+      onPressed: () {
+          showPassword = !showPassword;
+      },
     );
   }
 

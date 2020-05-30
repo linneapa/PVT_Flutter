@@ -28,13 +28,14 @@ class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState(this.marker);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker, this.initPosition})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
   final Marker marker;
+  CameraPosition initPosition;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -56,9 +57,6 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
-  bool _filterSwitched = false;
-  var _distanceValue = 0.0;
-  var _costValue = 0.0;
 
   Map<String, Feature> parkMark = Map();
   var parkings;
@@ -66,11 +64,6 @@ class _MapPageState extends State<MapPage> {
   final FirebaseMessaging _fcm = FirebaseMessaging();
   bool duplicate = false;
 
-
-  static final CameraPosition initPosition = CameraPosition(
-    target: LatLng(59.3293, 18.0686),
-    zoom: 12,
-  );
 
   SizeConfig sizeConfig;
   Completer<GoogleMapController> _mapController = Completer();
@@ -96,25 +89,14 @@ class _MapPageState extends State<MapPage> {
   // which generates every polyline between start and finish
   PolylinePoints polylinePoints = PolylinePoints();
 
-  BitmapDescriptor parkingMarkerIcon;
-
-  _setParkingMarkerIcon() {
-    BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(size: Size(48, 48)), 'assets/carpin.png')
-        .then((onValue) {
-      parkingMarkerIcon = onValue;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    setInitLocation();
+    //setInitLocation();
 
-    _setParkingMarkerIcon();
 
     _fcm.configure(
       onMessage: (message) async { //executed if the app is in the foreground
@@ -327,9 +309,6 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => new AlertDialog(
             title: duplicate ? Text('Misslyckades') : Text("Success"),
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
-
-    currMarker = null;
-
   }
 
   String getFormattedTimeInfoString() {
@@ -398,7 +377,6 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       for (final parking in parkings.features) {
         final marker = Marker(
-          icon: parkingMarkerIcon,
           onTap: () {
             _onMarkerTapped(parking);
           },
@@ -417,10 +395,7 @@ class _MapPageState extends State<MapPage> {
     return GoogleMap(
       onMapCreated: _onMapCreated,
       polylines: _polylines,
-      initialCameraPosition: CameraPosition(
-        target: const LatLng(59.3293, 18.0686),
-        zoom: 12,
-      ),
+      initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
         setState(() {
@@ -540,7 +515,6 @@ class _MapPageState extends State<MapPage> {
         onPressed: () {
           addToHistory();
           navigateMe();
-          currMarker = null;
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),

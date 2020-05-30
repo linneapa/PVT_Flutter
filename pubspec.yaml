@@ -70,6 +70,10 @@ flutter:
     - assets/google.png
     - assets/facebook.png
     - assets/direction-arrow.png
+    - assets/truckAvailableNotFavorite.png
+    - assets/motorcycleAvailableNotFavorite.png
+    - assets/handicapAvailableNotFavorite.png
+    - assets/carAvailableNotFavorite.png
   #    - assets/driver.png
   #    - assets/pin.png
     - assets/carpin.png
