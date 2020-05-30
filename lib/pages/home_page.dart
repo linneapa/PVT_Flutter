@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/foundation.dart';
@@ -24,9 +25,8 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
 
-  static int currentNavigationIndex = 1;
-  static Marker start;
-
+  static int currentNavigationIndex = 2;
+  static DocumentSnapshot doc;
   static CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
     zoom: 12,
@@ -40,18 +40,18 @@ class HomePageState extends State<HomePage> {
       logoutCallback: widget.logoutCallback,
       parent: this,
     ),
-    MapPage(
-      userId: widget.userId,
-      auth: widget.auth,
-      logoutCallback: widget.logoutCallback,
-      marker:start,
-      initPosition: initPosition,
-      ),
     HistoryPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       parent: this,
+    ),
+    MapPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      doc: doc,
+      initPosition: initPosition,
     ),
     SettingsPage(
       userId: widget.userId,
@@ -80,12 +80,12 @@ class HomePageState extends State<HomePage> {
                 title: Text('Favoriter')
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.map),
-                title: Text('Karta')
-            ),
-            BottomNavigationBarItem(
                 icon: Icon(Icons.history),
                 title: Text('Historik')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.map),
+                title: Text('Karta')
             ),
             BottomNavigationBarItem(
                 icon: Icon(Icons.settings),

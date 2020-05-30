@@ -76,6 +76,7 @@ flutter:
     - assets/carAvailableNotFavorite.png
   #    - assets/driver.png
   #    - assets/pin.png
+    - assets/carpin.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

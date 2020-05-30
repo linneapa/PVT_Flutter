@@ -1,9 +1,7 @@
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:ezsgame/pages/login_sign_up.dart';
-import 'package:ezsgame/pages/map_page.dart';
 import 'home_page.dart';
-import 'map_page.dart';
 
 enum AuthStatus {
   NOT_DETERMINED,
