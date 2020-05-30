@@ -309,15 +309,20 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    print(currParking.geometry.coordinates[0][0]);
+
+    String district = currParking.properties.cityDistrict == null ? 'saknas' : currParking.properties.cityDistrict;
+    String info = currParking.properties.otherInfo == null ? 'saknas' : currParking.properties.otherInfo;
+    String maxTimmar = currParking.properties.maxHours == null ? 'saknas' : currParking.properties.maxHours.toString();
 
     if (!duplicate) {
       await db.collection('userData').document(id).collection('favorites').add(
           {
             'location': currParking.properties.address,
-            'district': currParking.properties.cityDistrict,
+            'district': district,
             'coordinatesX': currParking.geometry.coordinates[0][1],
             'coordinatesY': currParking.geometry.coordinates[0][0],
+            'info': info,
+            'maxTimmar': maxTimmar
           }
       );
     }
@@ -365,13 +370,19 @@ class _MapPageState extends State<MapPage> {
      }
    }
 
+    String district = currParking.properties.cityDistrict == null ? 'saknas' : currParking.properties.cityDistrict;
+    String info = currParking.properties.otherInfo == null ? 'saknas' : currParking.properties.otherInfo;
+    String maxTimmar = currParking.properties.maxHours == null ? 'saknas' : currParking.properties.maxHours.toString();
+
    await db.collection('userData').document(id).collection('history').add(
      {
        'location': currParking.properties.address,
-       'district': currParking.properties.cityDistrict,
+       'district': district,
        'coordinatesX': currParking.geometry.coordinates[0][1],
        'coordinatesY': currParking.geometry.coordinates[0][0],
        'timestamp': getFormattedTimeInfoString(),
+       'info': info,
+       'maxTimmar': maxTimmar
      }
    );
    if(snapshot.documents.length <= 9 && !duplicate){

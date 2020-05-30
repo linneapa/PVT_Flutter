@@ -102,6 +102,25 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> showOnCardTapDialogue(DocumentSnapshot doc) async {
+
+    String location = doc['location'];
+    String district = doc['district'];
+    String info = doc['info'];
+    String maxTimmar = doc['maxTimmar'];
+
+    if (district == 'null') {
+      district = 'saknas';
+    }
+
+    if (info == 'null') {
+      info = 'saknas';
+    }
+
+    if (maxTimmar == 'null') {
+      maxTimmar = 'saknas';
+    }
+
+
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -111,8 +130,11 @@ class _HistoryPageState extends State<HistoryPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text(doc['location']),
-              ],
+                Text(location, style: TextStyle(fontSize: 16)),
+                Text('Stadsdel: ' + district, style: TextStyle(fontSize: 14)),
+                Text('Övrig info: ' + info, style: TextStyle(fontSize: 14)),
+                Text('Max timmar: ' + maxTimmar, style: TextStyle(fontSize: 14)),
+              ]
             ),
           ),
           actions: <Widget>[
