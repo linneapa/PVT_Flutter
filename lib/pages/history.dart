@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'home_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -24,6 +25,16 @@ class _HistoryPageState extends State<HistoryPage> {
   HomePageState parent;
 
   _HistoryPageState(this.value, this.parent);
+
+  @override
+  void initState() {
+    super.initState();
+    HomePageState.start = null;
+    HomePageState.initPosition = CameraPosition(
+      target: LatLng(59.3293, 18.0686),
+      zoom: 12,
+    );
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,7 +126,7 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Text('Visa på karta'),
               onPressed: () {
                 Navigator.of(context).pop();
-                showParkingOnMapPage();
+                showParkingOnMapPage(doc);
               },
             ),
             FlatButton(
@@ -159,9 +170,22 @@ class _HistoryPageState extends State<HistoryPage> {
         });
   }
 
-  showParkingOnMapPage() {
+  showParkingOnMapPage(DocumentSnapshot doc) {
+
     this.parent.setState(() {
       HomePageState.currentNavigationIndex = 1;
+      final marker = Marker(
+          markerId: MarkerId(doc['location']),
+          position: LatLng(doc['coordinatesX'], doc['coordinatesY']));
+//      MapPageState.markers.clear();
+//      MapPageState.markers[doc['location']] = marker;
+      HomePageState.start = marker;
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(doc['coordinatesX'], doc['coordinatesY']),
+        zoom: 12,
+      );
+      //print(doc['coordinatesX']);
+      //print(doc['coordinatesY']);
     });
   }
 

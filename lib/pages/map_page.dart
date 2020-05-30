@@ -21,17 +21,20 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
 import 'package:workmanager/workmanager.dart';
 import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
+import 'package:ezsgame/api/ParkingSpace.dart';
+
 
 class MapPage extends StatefulWidget {
   @override
-  _MapPageState createState() => _MapPageState();
+  _MapPageState createState() => _MapPageState(this.marker);
 
-  MapPage({Key key, this.auth, this.userId, this.logoutCallback})
+  MapPage({Key key, this.auth, this.userId, this.logoutCallback, this.marker})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback logoutCallback;
   final String userId;
+  final Marker marker;
 }
 
 class _MapPageState extends State<MapPage> {
@@ -43,13 +46,21 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  var currMarker;
+
+  _MapPageState(this.currMarker);
+
   bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
-  static var currMarker;
   var currParking;
+  bool _filterSwitched = false;
+  var _distanceValue = 0.0;
+  var _costValue = 0.0;
+
+  Map<String, Feature> parkMark = Map();
   var parkings;
   final db = Firestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
@@ -67,7 +78,7 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  final Map<String, Marker> _markers = {};
+  static Map<String, Marker> _markers = {};
   BitmapDescriptor arrowIcon;
   LatLng initLocation = LatLng(59.3293, 18.0686);
   String _error;
@@ -95,7 +106,7 @@ class _MapPageState extends State<MapPage> {
 
 
     _fcm.configure(
-      onMessage: (message) async { //executed if the app is in the foreground 
+      onMessage: (message) async { //executed if the app is in the foreground
         print(message["notification"]["title"]);
 
       },
@@ -294,8 +305,8 @@ class _MapPageState extends State<MapPage> {
           {
             'location': currParking.properties.address,
             'district': currParking.properties.cityDistrict,
-            'coordinatesX': currParking.geometry.coordinates[0][1].toString(),
-            'coordinatesY': currParking.geometry.coordinates[0][0].toString(),
+            'coordinatesX': currParking.geometry.coordinates[0][1],
+            'coordinatesY': currParking.geometry.coordinates[0][0],
           }
       );
     }
@@ -305,7 +316,51 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => new AlertDialog(
             title: duplicate ? Text('Misslyckades') : Text("Success"),
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+  }
 
+  String getFormattedTimeInfoString() {
+    String timeInfo = DateTime.now().toString();
+
+    String timeInfoDate = timeInfo.substring(0, timeInfo.indexOf(' '));
+    String timeInfoClock = timeInfo.substring(timeInfo.indexOf(' ') + 1, timeInfo.lastIndexOf(':'));
+    String completeTimeInfo = timeInfoDate + ', kl ' + timeInfoClock;
+
+    return completeTimeInfo;
+  }
+
+  addToHistory() async {
+    String id = widget.userId;
+    bool duplicate = false;
+
+   QuerySnapshot snapshot = await Firestore.instance
+       .collection('userData')
+       .document(id)
+       .collection('history')
+       .getDocuments();
+
+   for(var v in snapshot.documents){
+     if(v['location'] == currParking.properties.address) {
+       db.collection('userData')
+           .document(id)
+           .collection('history')
+           .document(v.documentID)
+           .delete();
+       duplicate = true;
+     }
+   }
+
+   await db.collection('userData').document(id).collection('history').add(
+     {
+       'location': currParking.properties.address,
+       'district': currParking.properties.cityDistrict,
+       'coordinatesX': currParking.geometry.coordinates[0][1],
+       'coordinatesY': currParking.geometry.coordinates[0][0],
+       'timestamp': getFormattedTimeInfoString(),
+     }
+   );
+   if(snapshot.documents.length <= 9 && !duplicate){
+     //TODO: remove oldest document
+   }
   }
 
   Widget showFavoritesButton() {
@@ -320,7 +375,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(_globalCarToggled,
+    parkings = await Services.fetchParkering(null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
@@ -335,15 +390,9 @@ class _MapPageState extends State<MapPage> {
           markerId: MarkerId(parking.properties.address),
           position: LatLng(parking.geometry.coordinates[0][1],
               parking.geometry.coordinates[0][0]),
-          /*infoWindow: InfoWindow(
-              title: parking.properties.cityDistrict,
-              snippet: parking.properties.address,
-              onTap: () {
-                _onMarkerTapped(parking.properties.address, parking);
-                },
-            )*/
         );
         _markers[parking.properties.address] = marker;
+        parkMark[parking.properties.address] = parking;
       }
       updatePinOnMap();
     });
@@ -368,7 +417,7 @@ class _MapPageState extends State<MapPage> {
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null && currParking != null) {
+    if (currMarker != null) {
       return AnimatedPositioned(
         bottom: 40,
         right: 0,
@@ -391,7 +440,10 @@ class _MapPageState extends State<MapPage> {
                 ]),
             child: Column(
               children: <Widget>[
-                _buildLocationInfo(),
+                 currParking != null
+                     ? _buildLocationInfo()
+                     : _buildSimpleLocationInfo()
+                ,
                 _showFavBtnAndDirectionBtn(),
               ],
             ),
@@ -438,11 +490,42 @@ class _MapPageState extends State<MapPage> {
           ));
   }
 
+  Widget _buildSimpleLocationInfo() {
+    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
+    if (parkMark.containsKey(name)){
+      currParking = parkMark[name];
+      return _buildLocationInfo();
+    }else{
+//      parkings = await Services.fetchParkering(null, _globalCarToggled,
+//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      print(name);
+
+    }
+    return Container(
+        margin: EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              currMarker.toString().split(":")[2].split("}")[0],
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ));
+  }
+//
+//  Future<void> (Marker marker) async
+
+
   Widget showChooseParkingBtn() {
     return Container(
       margin: EdgeInsets.only(left: 5, right: 10, top: 10),
       child: FlatButton(
-        onPressed: navigateMe,
+        onPressed: () {
+          addToHistory();
+          navigateMe();
+        },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
         shape: RoundedRectangleBorder(
@@ -506,8 +589,6 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          // insetPadding: EdgeInsets.all(60),
-          // actionsPadding: EdgeInsets.all(10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
           actions: <Widget>[
@@ -681,7 +762,7 @@ class _MapPageState extends State<MapPage> {
         startBackgroundExecution(); //men då måste spara addressen
         Navigator.of(context).pop();
       },
-      child: Icon(Icons.close, color: Colors.grey, size: 30),
+      child: Icon(Icons.close, color: Colors.black54, size: 30),
     );
   }
 
@@ -692,32 +773,32 @@ class _MapPageState extends State<MapPage> {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
           side: BorderSide(color: Colors.black, width: 1),),
-          actions: <Widget>[
-            Column(children: <Widget>[
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget> [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  new Text(
-                    "  Du har anlänt vid din destination!", textAlign: TextAlign.center, style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  showExitArrivedAtDestinationWindow(),
-                ],
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget> [
+                  showExitArrivedAtDestinationWindow()
+                ]
               ),
               Text(
-                "Var snäll och svara om parkeringen\när högtrafikerad.\n", style: TextStyle(fontSize: 15),),
+                "Du har anlänt vid din destination!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              Text(
+                "Var snäll och svara om parkeringen är högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+              ),
+              Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   showMuchTrafficBtn(),
-                  Text("        "),
+                  //Text("              "),
                   showNotMuchTrafficBtn(),
                 ],
               ),
-              Text(""),
-            ],
+            ]
           ),
-          ]
         );
       },
     );
