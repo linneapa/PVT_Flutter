@@ -309,6 +309,8 @@ class _MapPageState extends State<MapPage> {
         builder: (_) => new AlertDialog(
             title: duplicate ? Text('Misslyckades') : Text("Success"),
             content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+
+    currMarker = null;
   }
 
   String getFormattedTimeInfoString() {
@@ -515,6 +517,7 @@ class _MapPageState extends State<MapPage> {
         onPressed: () {
           addToHistory();
           navigateMe();
+          currMarker = null;
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
