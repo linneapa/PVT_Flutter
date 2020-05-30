@@ -306,9 +306,14 @@ class _MapPageState extends State<MapPage> {
 
     showDialog(
         context: context,
-        builder: (_) => new AlertDialog(
-            title: duplicate ? Text('Misslyckades') : Text("Success"),
-            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
+        builder: (context) {
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.of(context).pop(true);
+          });
+          return AlertDialog(
+              title: duplicate ? Text('Misslyckades') : Text("Success"),
+              content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!'));
+        });
   }
 
   String getFormattedTimeInfoString() {
