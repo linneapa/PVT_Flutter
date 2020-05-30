@@ -57,6 +57,7 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
+  String currentParkingActivity;
 
   Map<String, Feature> parkMark = Map();
   var parkings;
@@ -488,6 +489,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildLocationInfo() {
+    getParkingActivity(currParking.properties.address);
       return Container(
           margin: EdgeInsets.only(top: 10),
           child: Column(
@@ -518,8 +520,31 @@ class _MapPageState extends State<MapPage> {
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
+              Text('Snitt aktivitet: $currentParkingActivity',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             ],
           ));
+  }
+
+  void getParkingActivity(String parking) async{
+    int noOfHighRatings = await getAmountOfHighTrafficRatingsForParking(parking);
+    int noOfLowRatings = await getAmountOfLowTrafficRatingsForParking(parking);
+    int totalNoOfRatings = noOfHighRatings+noOfLowRatings;
+
+    if(totalNoOfRatings <= 0) {
+      currentParkingActivity = "Data saknas";
+      return;
+    }
+
+    double percentageHighRatings = (noOfHighRatings/totalNoOfRatings);
+
+    if(percentageHighRatings < (1/3))
+      currentParkingActivity = "Låg aktivitet";
+    else if(percentageHighRatings < (2/3))
+      currentParkingActivity = "Medium aktivitet";
+    else
+      currentParkingActivity = "Hög aktivitet";
   }
 
   Widget _buildSimpleLocationInfo() {
@@ -678,8 +703,26 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  //returns amount of high traffic ratings between specified hours (although cannot be an interval longer than 10 hours... :) )
-  Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
+  Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAdress) async {
+    int noOfHighRatings = -1;
+    await db.collection('trafficData').document(parkingAdress).collection('high').
+      getDocuments().then((value) {
+        noOfHighRatings = value.documents.length;
+      });
+    return noOfHighRatings;
+  }
+
+  Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAdress) async {
+    int noOfLowRatings = -1;
+    await db.collection('trafficData').document(parkingAdress).collection('low').
+      getDocuments().then((value) {
+        noOfLowRatings = value.documents.length;
+      });
+    return noOfLowRatings;
+  }
+
+  //returns amount of high traffic ratings between specified hours (although cannot be an interval longer than 10 hours... :) ) (and yes, it has an incredibly long name)
+  Future<int> getAmountOfHighTrafficRatingsForParkingDuringCertainHours(String parkingAdress, int fromHour, int untilHour) async {
     int noOfHighRatings = -1;
     var tempHoursList = fromHour < untilHour? hours.sublist(fromHour, untilHour) : hours.sublist(0, untilHour) + hours.sublist(fromHour, hours.length);
     await db.collection('trafficData').document(parkingAdress).collection('high').
@@ -687,16 +730,6 @@ class _MapPageState extends State<MapPage> {
         noOfHighRatings = value.documents.length;
       });
     return noOfHighRatings;
-  }
-
-  Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAdress, int fromHour, int untilHour) async {
-    int noOfLowRatings = -1;
-    var tempHoursList = fromHour < untilHour? hours.sublist(fromHour, untilHour) : hours.sublist(0, untilHour) + hours.sublist(fromHour, hours.length);
-    await db.collection('trafficData').document(parkingAdress).collection('low').
-      where("hour", whereIn: tempHoursList).getDocuments().then((value) {
-        noOfLowRatings = value.documents.length;
-      });
-    return noOfLowRatings;
   }
 
   void reportTraffic(bool isTraffic) async {
