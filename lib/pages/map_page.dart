@@ -268,7 +268,6 @@ class _MapPageState extends State<MapPage> {
         ),
         onPressed: () {
           createDialog(context);
-          showGoogleMaps();
           // do something
         },
         //     ),
@@ -374,21 +373,23 @@ class _MapPageState extends State<MapPage> {
       parkings = await Services.fetchParkering(null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       _controller = controller;
-      _mapController.complete(controller);
+      //_mapController.complete(controller);
 
       setState(() {
         for (final parking in parkings.features) {
-          print(parking.properties.address);
-          final marker = Marker(
-            onTap: () {
-              updateCurrentMarker(parking);
-            },
-            markerId: MarkerId(parking.properties.address),
-            position: LatLng(parking.geometry.coordinates[0][1],
-                parking.geometry.coordinates[0][0]),
-          );
-          _markers[parking.properties.address] = marker;
-          parkMark[parking.properties.address] = parking;
+          if (parking.properties.address != null) {
+            print(parking.properties.address);
+            final marker = Marker(
+              onTap: () {
+                updateCurrentMarker(parking);
+              },
+              markerId: MarkerId(parking.properties.address),
+              position: LatLng(parking.geometry.coordinates[0][1],
+                  parking.geometry.coordinates[0][0]),
+            );
+            _markers[parking.properties.address] = marker;
+            parkMark[parking.properties.address] = parking;
+          }
         }
         updatePinOnMap();
       });
@@ -1022,10 +1023,12 @@ class _MapPageState extends State<MapPage> {
       // retrieve and update the state of the icons
       IconInfo ic = val;
       if (ic != null) {
-        _globalMotorcycleToggled = ic.motorcycleToggled;
-        _globalTruckToggled = ic.truckToggled;
         _globalCarToggled = ic.carToggled;
+        _globalTruckToggled = ic.truckToggled;
+        _globalMotorcycleToggled = ic.motorcycleToggled;
       }
+      _markers.clear();
+      _onMapCreated(_controller);
     });
   }
 
@@ -1053,8 +1056,6 @@ class _MapPageState extends State<MapPage> {
       return OutlineButton(
         borderSide: BorderSide(color: Colors.grey, width: 2),
         onPressed: () => {
-          _markers.clear(),
-          _onMapCreated(_controller),
           Navigator.pop(context, iconInfo),
         },
         child: Text("Stäng", style: TextStyle(fontSize: 17)),
@@ -1075,12 +1076,10 @@ class CarIconButton extends StatelessWidget {
         ),
         onPressed: () {
           iconInfo.car = !iconInfo.carToggled;
-
-          bool truckValue = iconInfo.truckToggled;
-          if (truckValue) iconInfo.truck = !truckValue;
-
-          bool motorcycleValue = iconInfo.motorcycleToggled;
-          if (motorcycleValue) iconInfo.motorcycle = !motorcycleValue;
+          if (iconInfo.carToggled) {
+            iconInfo.motorcycle = false;
+            iconInfo.truck = false;
+          }
         });
   }
 }
@@ -1097,15 +1096,10 @@ class TruckIconButton extends StatelessWidget {
         ),
         onPressed: () {
           iconInfo.truck = !iconInfo.truckToggled;
-
-          bool carValue = iconInfo.carToggled;
-          if (carValue)
-            iconInfo.car = !carValue;
-
-          bool motorcycleValue = iconInfo.truckToggled;
-          if (motorcycleValue)
-            iconInfo.motorcycle = !motorcycleValue;
-
+          if (iconInfo.truckToggled) {
+            iconInfo.car = false;
+            iconInfo.motorcycle = false;
+          }
         }
     );
   }
@@ -1123,12 +1117,10 @@ class MotorcycleIconButton extends StatelessWidget {
         ),
         onPressed: () {
           iconInfo.motorcycle = !iconInfo.motorcycleToggled;
-
-          bool carValue = iconInfo.carToggled;
-          if (carValue) iconInfo.car = !carValue;
-
-          bool truckValue = iconInfo.truckToggled;
-          if (truckValue) iconInfo.truck = !truckValue;
+          if (iconInfo.motorcycleToggled) {
+            iconInfo.car = false;
+            iconInfo.truck = false;
+          }
         });
   }
 }
