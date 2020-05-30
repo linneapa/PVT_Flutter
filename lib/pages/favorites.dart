@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart';
 import 'map_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
 class FavouritesPage extends StatefulWidget {
   @override
@@ -45,13 +44,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: TextField(
-          obscureText: false,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Hitta ny favoritparkering..',
-          ),
-        ),
+        title: Text('Favoritparkeringar')
       ),
       body: Container(
         child: StreamBuilder(

@@ -306,11 +306,14 @@ class _MapPageState extends State<MapPage> {
 
     showDialog(
         context: context,
-        builder: (_) => new AlertDialog(
-            title: duplicate ? Text('Misslyckades') : Text("Success"),
-            content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!')));
-
-    currMarker = null;
+        builder: (context) {
+          Future.delayed(Duration(milliseconds: 2000), () {
+            Navigator.of(context).pop(true);
+          });
+          return AlertDialog(
+              title: duplicate ? Text('Misslyckades') : Text("Success"),
+              content: duplicate ? Text('Parkeringen finns redan i dina favoriter!') : Text(currParking.properties.address + ' tillagd i favoriter!'));
+        });
   }
 
   String getFormattedTimeInfoString() {
@@ -365,6 +368,10 @@ class _MapPageState extends State<MapPage> {
               Icon(Icons.favorite_border, size: 60, color: Colors.orangeAccent),
           onPressed: () {
             if (currMarker != null) addToFavorites();
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              currMarker = null;
+            }
+            );
           }),
     );
   }
