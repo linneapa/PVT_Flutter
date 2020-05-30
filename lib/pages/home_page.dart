@@ -84,12 +84,12 @@ class HomePageState extends State<HomePage> {
                 title: Text('Karta')
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                title: Text('Inställningar')
-            ),
-            BottomNavigationBarItem(
                 icon: Icon(Icons.history),
                 title: Text('Historik')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                title: Text('Inställningar')
             ),
           ],
           onTap: (index) {
