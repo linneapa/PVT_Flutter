@@ -45,21 +45,20 @@ class HomePageState extends State<HomePage> {
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       marker:start,
-          //initPosition: initPosition,
-          //initPosition: initPosition,
-        ),
+      initPosition: initPosition,
+      ),
+    HistoryPage(
+      userId: widget.userId,
+      auth: widget.auth,
+      logoutCallback: widget.logoutCallback,
+      parent: this,
+    ),
     SettingsPage(
       userId: widget.userId,
       auth: widget.auth,
       logoutCallback: widget.logoutCallback,
       parent: this,
     ),
-    HistoryPage(
-      userId: widget.userId,
-      auth: widget.auth,
-      logoutCallback: widget.logoutCallback,
-      parent: this,
-  ),
   ];
 
   @override
@@ -81,12 +80,12 @@ class HomePageState extends State<HomePage> {
                 title: Text('Favoriter')
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.history),
-                title: Text('Historik')
-            ),
-            BottomNavigationBarItem(
                 icon: Icon(Icons.map),
                 title: Text('Karta')
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                title: Text('Historik')
             ),
             BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
