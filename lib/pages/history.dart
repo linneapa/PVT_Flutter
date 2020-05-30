@@ -173,17 +173,10 @@ class _HistoryPageState extends State<HistoryPage> {
 
     this.parent.setState(() {
       HomePageState.currentNavigationIndex = 1;
-      final marker = Marker(
-          markerId: MarkerId(doc['location']),
-          position: LatLng(doc['coordinatesX'], doc['coordinatesY']));
-//      MapPageState.markers.clear();
-//      MapPageState.markers[doc['location']] = marker;
+      HomePageState.doc = doc;
       HomePageState.initPosition = CameraPosition(
-        target: LatLng(doc['coordinatesX'], doc['coordinatesY']),
-        zoom: 12,
-      );
-      //print(doc['coordinatesX']);
-      //print(doc['coordinatesY']);
+          target: LatLng(doc['coordinatesX'], doc['coordinatesY']),
+          zoom: 12);
     });
   }
 

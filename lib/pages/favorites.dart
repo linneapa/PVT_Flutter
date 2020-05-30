@@ -177,13 +177,9 @@ class _FavouritesPageState extends State<FavouritesPage> {
     this.parent.setState(() {
       HomePageState.currentNavigationIndex = 1;
       HomePageState.doc = doc;
-
-//      final marker = Marker(
-//          markerId: MarkerId(doc['location']),
-//          position: LatLng(doc['coordinatesX'], doc['coordinatesY']));
-//      HomePageState.start = marker;
-//      print(doc['coordinatesX']);
-//      print(doc['coordinatesY']);
+      HomePageState.initPosition = CameraPosition(
+          target: LatLng(doc['coordinatesX'], doc['coordinatesY']),
+      zoom: 12);
     });
 
   }

@@ -27,7 +27,6 @@ class HomePageState extends State<HomePage> {
 
   static int currentNavigationIndex = 1;
   static DocumentSnapshot doc;
-
   static CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
     zoom: 12,

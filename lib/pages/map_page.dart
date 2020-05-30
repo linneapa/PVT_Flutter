@@ -369,27 +369,29 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(null, _globalCarToggled,
-        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-    _controller = controller;
-    _mapController.complete(controller);
+      print(_globalCarToggled);
+      print(_globalTruckToggled);
+      parkings = await Services.fetchParkering(null, _globalCarToggled,
+          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+      _controller = controller;
+      _mapController.complete(controller);
 
-    setState(() {
-      _markers.clear();
-      for (final parking in parkings.features) {
-        final marker = Marker(
-          onTap: () {
-            _onMarkerTapped(parking);
-          },
-          markerId: MarkerId(parking.properties.address),
-          position: LatLng(parking.geometry.coordinates[0][1],
-              parking.geometry.coordinates[0][0]),
-        );
-        _markers[parking.properties.address] = marker;
-        parkMark[parking.properties.address] = parking;
-      }
-      updatePinOnMap();
-    });
+      setState(() {
+        for (final parking in parkings.features) {
+          print(parking.properties.address);
+          final marker = Marker(
+            onTap: () {
+              _onMarkerTapped(parking);
+            },
+            markerId: MarkerId(parking.properties.address),
+            position: LatLng(parking.geometry.coordinates[0][1],
+                parking.geometry.coordinates[0][0]),
+          );
+          _markers[parking.properties.address] = marker;
+          parkMark[parking.properties.address] = parking;
+        }
+        updatePinOnMap();
+      });
   }
 
   Widget showGoogleMaps() {
@@ -490,22 +492,14 @@ class _MapPageState extends State<MapPage> {
     singlePark = await Services.fetchParkering(doc, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
 
+    print(singlePark);
     for (final parking in singlePark.features) {
+      print(parking.properties.address);
       if (parking.properties.address == doc['location']){
+        print('correct' + parking.properties.address);
         updateCurrentMarker(parking);
-//        setState((){
-//          final marker = Marker(
-//            onTap: () {_onMarkerTapped(parking);},
-//            icon: BitmapDescriptor.fromAsset('assets/current.png'),
-//            markerId: MarkerId(parking.properties.address),
-//            position: LatLng(parking.geometry.coordinates[0][1],
-//                  parking.geometry.coordinates[0][0]),
-//            );
-//          currMarker = marker;
-//          currParking = parking;
-//          _markers[parking.properties.address] = marker;
-//          parkMark[parking.properties.address] = parking;
-//          });
+        }else{
+        print('not correct' + parking.properties.address);
         }
       }
   }
@@ -544,7 +538,6 @@ class _MapPageState extends State<MapPage> {
       stopCurrentRoute();
       startRoute(LatLng(currParking.geometry.coordinates[0][1],
           currParking.geometry.coordinates[0][0]), currParking.properties.address);
-
     }
   }
 
@@ -1056,7 +1049,9 @@ class _MapPageState extends State<MapPage> {
             Icons.accessible,
             color: handicapToggled ? Colors.orangeAccent : Colors.grey,
           ),
-          onPressed: () => setState(() => handicapToggled = !handicapToggled),
+          onPressed: () => setState((){
+            handicapToggled = !handicapToggled;
+          }),
         ),
       );
     });
@@ -1068,6 +1063,7 @@ class _MapPageState extends State<MapPage> {
       return OutlineButton(
         borderSide: BorderSide(color: Colors.grey, width: 2),
         onPressed: () => {
+          _markers.clear(),
           _onMapCreated(_controller),
           Navigator.pop(context, iconInfo),
         },
