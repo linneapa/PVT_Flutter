@@ -135,7 +135,6 @@ class MapHelper {
       List<MapMarker> markers,
       int minZoom,
       int maxZoom,
-      int radius,
       ) async {
     assert(markers != null);
     assert(minZoom != null);
@@ -144,9 +143,9 @@ class MapHelper {
     return Fluster<MapMarker>(
       minZoom: minZoom,
       maxZoom: maxZoom,
-      radius: radius,
+      radius: 300,
       extent: 2048,
-      nodeSize: 128,
+      nodeSize: 512,
       points: markers,
       createCluster: (
           BaseCluster cluster,
