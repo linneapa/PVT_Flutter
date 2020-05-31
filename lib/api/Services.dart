@@ -4,48 +4,40 @@ import 'package:http/http.dart' as http;
 import 'ParkingSpace.dart';
 
 class Services {
-  static Future<Parkering> fetchParkering(Marker marker, CameraPosition position, bool car, bool lastbil, bool motorcyckel, bool handicaped) async {
-    // https://openparking.stockholm.se/LTF-Tolken/v1/{föreskrift}/{operation}?apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97
+  static Future<Parkering> fetchParkering(Marker marker, CameraPosition position, bool car, bool truck, bool motorcycle, bool handicaped) async {
+    /// https://openparking.stockholm.se/LTF-Tolken/v1/{föreskrift}/{operation}?apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97
+    ///Föreskrift: servicedagar, ptillaten, pbuss, plastbil, pmotorcykel, prorelsegindrad
+    ///Operation: all, weekday, area, street, within, untilNextWeekday
+    ///Parameters: apiKey, MaxFeatures, outputFormat, callback
 
-    /*
-      Föreskrift: servicedagar, ptillaten, pbuss, plastbil, pmotorcykel, prorelsegindrad
-      Operation: all, weekday, area, street, within, untilNextWeekday
-      Parameters: apiKey, MaxFeatures, outputFormat, callback
-       */
     String url;
-    int radius = (21 - position.zoom.toInt()) * 400;
-    if (marker != null){
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' + '59.331376' + '&lng=' + '18.047479' + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-    } else if (car) {
-      if (position != null){
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=' + radius.toString() + '&lat=' + position.target.latitude.toString() + '&lng=' + position.target.longitude.toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-        print(url);
-      }else{
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+    String firstPart;
+    int radius = 1;
+    if (car) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten';
+    } else if (truck) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil';
+    } else if (motorcycle) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel';
+    } else if (handicaped) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad';
+    }
+
+    if (position != null){
+      String operation = '/within?radius=';
+      if (marker == null){
+        radius = (21 - position.zoom.toInt()) * 400;
       }
-    } else if(lastbil) {
-      if (position != null){
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/within?radius=' + radius.toString() + '&lat=' + position.target.latitude.toString() + '&lng=' + position.target.longitude.toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-        print(url);
-      }else{
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      }
-    } else if (motorcyckel){
-      if (position != null){
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel/within?radius=' + radius.toString() + '&lat=' + position.target.latitude.toString() + '&lng=' + position.target.longitude.toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-        print(url);
-      }else{
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel/all?maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      }
-    } else if (handicaped){
-      if (position != null){
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/within?radius=' + radius.toString() + '&lat=' + position.target.latitude.toString() + '&lng=' + position.target.longitude.toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-        print(url);
-      }else{
-        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/all?&maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      }
-    }else {
-      return null;
+      url = firstPart + operation + radius.toString() + '&lat=' +
+          position.target.latitude.toString() + '&lng=' +
+          position.target.longitude.toString() +
+          '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+    } else{
+      String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = firstPart + secondPart;
+    }
+    if (url == null){
+        return null;
     }
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -55,7 +47,6 @@ class Services {
     }
   }
 }
-
 
 // for testing
 class ParkingPost {
