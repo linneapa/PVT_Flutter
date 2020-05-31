@@ -20,6 +20,9 @@ class MapHelper {
   /// time to download the file and set the marker image.
   ///
   /// You can resize the marker image by providing a [targetWidth].
+
+  var _currentZoom = 15;
+
   static Future<BitmapDescriptor> getMarkerImageFromUrl(
       String url, {
         int targetWidth,
@@ -39,6 +42,13 @@ class MapHelper {
 
     return BitmapDescriptor.fromBytes(markerImageBytes);
   }
+
+  ///stuff i added
+  final _cameraZoomController = StreamController<double>.broadcast();
+  Stream<double> get cameraZoom => _cameraZoomController.stream;
+  Function(double) get setCameraZoom => _cameraZoomController.sink.add;
+  StreamSubscription _cameraZoomSubscription;
+
 
   /// Draw a [clusterColor] circle with the [clusterSize] text inside that is [width] wide.
   ///
@@ -133,9 +143,9 @@ class MapHelper {
     return Fluster<MapMarker>(
       minZoom: minZoom,
       maxZoom: maxZoom,
-      radius: 150,
+      radius: 300,
       extent: 2048,
-      nodeSize: 64,
+      nodeSize: 128,
       points: markers,
       createCluster: (
           BaseCluster cluster,

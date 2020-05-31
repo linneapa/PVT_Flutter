@@ -86,7 +86,7 @@ class _MapPageState extends State<MapPage> {
 
   final Map<String,Marker> _markers = Map();
   Fluster<MapMarker> _clusterManager;
-  double _currentZoom = 15;
+  double _currentZoom = 11;
 
   final String _markerImageUrl = 'https://img.icons8.com/office/80/000000/marker.png'; //Temp standard marker
   final Color _clusterColor = Colors.blue;    //Color of cluster circle
@@ -433,6 +433,10 @@ class _MapPageState extends State<MapPage> {
         });
       },
     );
+  }
+
+  void _onCameraMove(CameraPosition cameraPosition) {
+    _currentZoom = cameraPosition.zoom;
   }
 
   // Animated info window
@@ -987,7 +991,7 @@ class _MapPageState extends State<MapPage> {
         parkMark[parking.properties.address] = parking;
       }
 
-    _clusterManager = await MapHelper.initClusterManager(markers, 0, 19,);
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 21);
 
     await _updateMarkers();
   }
@@ -997,6 +1001,8 @@ class _MapPageState extends State<MapPage> {
 
     if(updatedZoom != null){
       _currentZoom = updatedZoom;
+      print(updatedZoom);
+      print(_currentZoom);
     }
 
     final updatedMarkers = await MapHelper.getClusterMarkers(
