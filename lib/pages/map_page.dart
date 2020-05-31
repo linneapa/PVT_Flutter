@@ -54,6 +54,7 @@ class _MapPageState extends State<MapPage> {
 
   _MapPageState(this.currMarker);
 
+  CameraPosition cameraPosition;
   bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
@@ -84,7 +85,7 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<LocationData> _locationSubscription;
 
 
-  final Map<String,Marker> _markers = Map();
+  final Map<String, Marker> _markers = Map();
   Fluster<MapMarker> _clusterManager;
   double _currentZoom = 11;
 
@@ -393,34 +394,62 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    parkings = await Services.fetchParkering(null, _globalCarToggled,
+    parkings = await Services.fetchParkering(null, cameraPosition, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
     _controller = controller;
     _mapController.complete(controller);
-
-//    setState(() {
-//      _markersOld.clear();
-//      for (final parking in parkings.features) {
-//        final marker = MapMarker(
-//          onTap: () {
-//            _onMarkerTapped(parking);
-//          },
-//          id: parking.properties.address,
-//          position: LatLng(parking.geometry.coordinates[0][1],
-//              parking.geometry.coordinates[0][0]),
-//        );
-//        _markersOld[parking.properties.address] = marker;
-//        parkMark[parking.properties.address] = parking;
-//      }
-//      updatePinOnMap();
-//    });
     _initMarkers();
   }
+
+  Future<void> _newMarkers(CameraPosition position) async {
+      double change = 0;
+      if (cameraPosition != null){
+        double changeLong = (position.target.longitude - cameraPosition.target.longitude).abs();
+        double changeLat = (position.target.latitude - cameraPosition.target.latitude).abs();
+        double changeZoom = (position.zoom - cameraPosition.zoom).abs();
+        print(position.zoom);
+        change = changeLong + changeLat + changeZoom;
+        print(change);
+        //TODO: var latestLoad = null;
+      }
+      if (change > 0.005 && position.zoom > 11){
+        print('changing');
+        parkings = await Services.fetchParkering(null, cameraPosition, _globalCarToggled,
+            _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+        if (position.zoom < 15){
+          _initMarkers();
+        }else{
+          setState(() {
+            _markers.clear();
+            _clusterManager = null;
+            for (final parking in parkings.features) {
+              final marker = Marker(
+                onTap: () {
+                  _onMarkerTapped(parking);
+                },
+                markerId: MarkerId(parking.properties.address),
+                position: LatLng(parking.geometry.coordinates[0][1],
+                    parking.geometry.coordinates[0][0]),
+              );
+              _markers[parking.properties.address] = marker;
+              parkMark[parking.properties.address] = parking;
+            }
+            updatePinOnMap();
+          });
+        }
+      }
+
+  }
+
 
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
-      onCameraMove: (position) => _updateMarkers(position.zoom),
+      onCameraMove: (position) {
+        //_updateMarkers(position.zoom);
+        _newMarkers(position);
+        _onCameraMove(position);
+      },
       polylines: _polylines,
       initialCameraPosition: CameraPosition(
         target: const LatLng(59.3293, 18.0686),
@@ -435,8 +464,8 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _onCameraMove(CameraPosition cameraPosition) {
-    _currentZoom = cameraPosition.zoom;
+  void _onCameraMove(CameraPosition position) {
+    cameraPosition = position;
   }
 
   // Animated info window
@@ -991,8 +1020,14 @@ class _MapPageState extends State<MapPage> {
         parkMark[parking.properties.address] = parking;
       }
 
-    _clusterManager = await MapHelper.initClusterManager(markers, 0, 21);
+    int radius;
+    if (cameraPosition == null || cameraPosition.zoom < 12){
+      radius = 300;
+    } else{
+      radius = 150;
+    }
 
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 21, radius);
     await _updateMarkers();
   }
 

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'ParkingSpace.dart';
 
 class Services {
-  static Future<Parkering> fetchParkering(Marker marker, bool car, bool lastbil, bool motorcyckel, bool handicaped) async {
+  static Future<Parkering> fetchParkering(Marker marker, CameraPosition position, bool car, bool lastbil, bool motorcyckel, bool handicaped) async {
     // https://openparking.stockholm.se/LTF-Tolken/v1/{föreskrift}/{operation}?apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97
 
     /*
@@ -16,7 +16,13 @@ class Services {
     if (marker != null){
       url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' + '59.331376' + '&lng=' + '18.047479' + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else if (car) {
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      if (position != null){
+        int radius = (21 - position.zoom.toInt()) * 300;
+        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=' + radius.toString() + '&lat=' + position.target.latitude.toString() + '&lng=' + position.target.longitude.toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+        print(url);
+      }else{
+        url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      }
     } else if(lastbil) {
       url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else if (motorcyckel){
