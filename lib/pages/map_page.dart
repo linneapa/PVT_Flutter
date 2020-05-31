@@ -498,11 +498,12 @@ class _MapPageState extends State<MapPage> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
+            padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.2, bottom: SizeConfig.blockSizeVertical * 1.2),
             margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
-            height: SizeConfig.blockSizeVertical * 28,
+            //height: SizeConfig.blockSizeVertical * 28,
             decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(50)),
+                borderRadius: BorderRadius.all(Radius.circular(35)),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
                     blurRadius: 20,
