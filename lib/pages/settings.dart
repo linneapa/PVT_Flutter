@@ -167,37 +167,33 @@ class _SettingsPageState extends State<SettingsPage> {
             title: Text('Ange standardzoom'),
             content: StatefulBuilder(
               builder: (context, setState) {
-
-              return Row(
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Expanded(
-                    flex: 1,
-                    child: Text("Långt ifrån",
-                      style: TextStyle(
-                      fontSize: SizeConfig.blockSizeVertical * 1.6),),),
-                  Expanded(
-                    flex: 8,
-                    child: Container(
-                      height: SizeConfig.blockSizeVertical * 6,
-                      width: SizeConfig.blockSizeHorizontal * 2,
-                      child: Slider (
-                        value: _zoom,
-                        min: 10,
-                        max: 18,
-                        divisions: 8,
-                        activeColor: Colors.orangeAccent,
-                        inactiveColor: Colors.black,
-                        onChanged: (value){
-                          setState(() {
-                            _zoom = value;
-                          });
-                        },
-                  ))),
-                Expanded(
-                  flex: 1,
-                  child: Text("Nära",
-                    style: TextStyle(
-                    fontSize: SizeConfig.blockSizeVertical * 1.6)))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget> [
+                      Text("Långt ifrån",
+                        style: TextStyle(
+                        fontSize: SizeConfig.blockSizeVertical * 2.5)),
+                      Text("Nära",
+                        style: TextStyle(
+                        fontSize: SizeConfig.blockSizeVertical * 2.5))
+                    ]
+                  ),
+                  Slider (
+                    value: _zoom,
+                    min: 10,
+                    max: 18,
+                    divisions: 8,
+                    activeColor: Colors.orangeAccent,
+                    inactiveColor: Colors.black,
+                    onChanged: (value) {
+                      setState(() {
+                        _zoom = value;
+                      });
+                    },
+                  ),
                 ]);
               }
             ),
