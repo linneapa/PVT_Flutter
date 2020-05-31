@@ -821,17 +821,26 @@ class _MapPageState extends State<MapPage> {
 
       showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (context) {
+            Future.delayed(Duration(milliseconds: 2000), () {
+              Navigator.of(context).pop(true);
+            });
+            return AlertDialog(
               title: Text('Tack för din feedback!'),
-          ),
-      );
+            );
+          });
+
     } else {
-            showDialog(
+      showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (context) {
+            Future.delayed(Duration(milliseconds: 2000), () {
+              Navigator.of(context).pop(true);
+            });
+            return AlertDialog(
               title: Text('Du har lämnat feedback här nyligen!'),
-          ),
-      );
+            );
+          });
     }
   }
 
