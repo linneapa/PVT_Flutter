@@ -50,6 +50,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  bool _isLoading = true;
   var currMarker;
 
   _MapPageState(this.currMarker);
@@ -229,7 +230,8 @@ class _MapPageState extends State<MapPage> {
                 showTopBar(),
                 showWindow(),
                 showMyLocationButton(),
-                showStopRouteButton(), 
+                showStopRouteButton(),
+                _showCircularProgress(),
                 ],
           )
         )
@@ -395,6 +397,13 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  Widget _showCircularProgress() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    return Container( height: 0.0, width: 0.0, );
+  }
+
   Future<void> _onMapCreated(GoogleMapController controller) async {
     parkings = await Services.fetchParkering(null, null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
@@ -402,9 +411,15 @@ class _MapPageState extends State<MapPage> {
     _mapController.complete(controller);
     double zoom = await controller.getZoomLevel();
     _initMarkers(zoom);
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _newMarkers(CameraPosition position) async {
+      setState(() {
+        _isLoading = true;
+      });
       double change = 0;
       double zoomChange = 0;
 
@@ -432,8 +447,12 @@ class _MapPageState extends State<MapPage> {
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
           if(position.zoom == 14){
-            _updateMarkers(position.zoom);
-          }else if(position.zoom > 14){
+//            if (_clusterManager != null){
+//              _updateMarkers(position.zoom);
+//            }else{
+//              _initMarkers(position.zoom);
+//            }
+          }if(position.zoom > 13){
             setState(() {
               _markers.clear();
               _clusterManager = null;
@@ -454,7 +473,9 @@ class _MapPageState extends State<MapPage> {
           }
         }
       }
-
+      setState(() {
+        _isLoading = false;
+      });
   }
 
 
@@ -1057,6 +1078,9 @@ class _MapPageState extends State<MapPage> {
       _markers[v.markerId.toString()] = v;
     }
 
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<LatLng> getCurrentLocation() async {
