@@ -56,6 +56,7 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
+  String currentDestinationAdress;
   String currentParkingActivity;
   var currMarker;
 
@@ -88,6 +89,7 @@ class _MapPageState extends State<MapPage> {
   String _error;
   LatLng currentDestination;
   var currentDestinationMarker;
+  var formerDestinationMarker;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
   final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
@@ -138,25 +140,15 @@ class _MapPageState extends State<MapPage> {
         print(message["notification"]["title"]);
 
       },
-
-
-      /*TODO: so these two below are causing problems. These pieces of code should be executed when the user taps the notification
-              but they aren't. According to the internet (good source), this is because the notifications (being sent from index.ts)
-              doesn't contain data 'FLUTTER_NOTIFICATION_CLICK', but they do, or that the channel name isn't specified in the Manifest, but it is.
-              I do think it has something to do with the channels though because it works when I send a notification from the firebase console
-      **/
       onResume: (message) async { //executed if the app is in the background and the user taps on the notification
         //remember that needs to send some data with the notification as well, when onResume/onLaunch
          setState(() {showArrivedAtDestinationDialog(); });
-         /*TODO: (after the problem above is solved) should open the above dialog but we will need to have saved which parking it regarded
-                Maybe can save it if the user exits the feedback dialog until they give the feedback and just not have currentlyNavigating set to true?
-
-          */
          Workmanager.cancelAll();
          print("notification from background.");
         print(message["data"]["title"]);
       },
       onLaunch: (message) async { //executed if the app is terminated and the user taps on the notification
+        //TODO: make sure this one works properly
         setState(() {showArrivedAtDestinationDialog(); });
         Workmanager.cancelAll();
         print("notification from background.");
@@ -791,7 +783,7 @@ class _MapPageState extends State<MapPage> {
   void reportTraffic(bool isTraffic) async {
     String id = widget.userId;
 
-    String location = currentDestinationMarker.markerId.toString();
+    String location = formerDestinationMarker == null? currentDestinationMarker.markerId.toString(): formerDestinationMarker.markerId.toString();
     location = location.substring(location.indexOf(":") + 1);
     location = location.substring(0, location.indexOf("}"));
     location = location.trim();
@@ -880,7 +872,12 @@ class _MapPageState extends State<MapPage> {
   Widget showExitArrivedAtDestinationWindow() {
     return FlatButton(
       onPressed: () {
-        startBackgroundExecution(); //men då måste spara addressen
+        if(formerDestinationMarker == null)  {// pushed for the first time
+          formerDestinationMarker = currentDestinationMarker;
+          startBackgroundExecution(); //men då måste spara addressen
+        } else { //closing feedback window for the second time
+          formerDestinationMarker = null;
+        }
         Navigator.of(context).pop();
       },
       child: Icon(Icons.close, color: Colors.black54, size: 30),
@@ -904,10 +901,10 @@ class _MapPageState extends State<MapPage> {
                 ]
               ),
               Text(
-                "Du har anlänt vid din destination!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                formerDestinationMarker == null? "Du har anlänt vid din destination!": "Du anlände tidigare vid ${trimAdress(formerDestinationMarker)}.", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Text(
-                "Var snäll och svara om parkeringen är högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                formerDestinationMarker== null? "Var snäll och svara om parkeringen är högtrafikerad.": "Var snäll och svara om parkeringen var högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
@@ -923,6 +920,14 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+  }
+
+  String trimAdress(var marker) {
+    String location = marker.markerId.toString();
+    location = location.substring(location.indexOf(":") + 1);
+    location = location.substring(0, location.indexOf("}"));
+    location = location.trim();
+    return location;
   }
 
   void startBackgroundExecution() async {
@@ -941,14 +946,17 @@ class _MapPageState extends State<MapPage> {
      // 'lat': currentDestination.latitude,
      // 'long': currentDestination.longitude,
       'uid': uid,
-    }, initialDelay: Duration(minutes: 20));
+      'currentDestination': currentDestinationAdress
+    }, initialDelay: Duration(seconds: 10));
   }
 
   void startRoute(LatLng destination, String destinationAdress) async{
     Workmanager.cancelAll(); //to avoid situations where users get lots of push notifications
+    formerDestinationMarker = null;
     if (_markers.containsKey(destinationAdress))
       currentDestinationMarker = _markers[destinationAdress];
     currentDestination = destination;
+    currentDestinationAdress = destinationAdress;
     setPolylines();
     currentlyNavigating = true;
     setState(() {});
@@ -963,7 +971,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   bool reachedDestination() {
-    int radius = 15;
+    int radius = 150000;
     //checks if myLocation is within a x meters radius from destination
     if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude,
             currentDestination.latitude, currentDestination.longitude) <

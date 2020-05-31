@@ -13,6 +13,7 @@ void callbackDispatcher() {
         //double currDestLat = inputData['lat'];
         //double currDestLong = inputData['long'];
         String uid = inputData['uid'];
+        String currentDestinationAdress = inputData['currentDestination']; //TODO: fix so can see adress in notification
        // int counter = 0;
 
         //Position currentPosition = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, locationPermissionLevel: GeolocationPermission.locationAlways);
