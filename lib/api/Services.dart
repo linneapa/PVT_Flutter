@@ -11,10 +11,9 @@ class Services {
     ///Operation: all, weekday, area, street, within, untilNextWeekday
     ///Parameters: apiKey, MaxFeatures, outputFormat, callback
 
-
+    String url;
     String firstPart;
     int radius;
-
     if (car) {
       firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten';
     } else if (truck) {
@@ -27,15 +26,13 @@ class Services {
     if (doc != null) {
       url =
           'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' +
-              doc['coordinatesX'].toString() + '&lng=' +
-              doc['coordinatesY'].toString() +
+              doc['coordinatesX'].toString() +
+              '&lng=' + doc['coordinatesY'].toString() +
               '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
       print(url);
     } else if (position != null){
       String operation = '/within?radius=';
-      if (doc != null){
-        radius = (21 - position.zoom.toInt()) * 400;
-      }
+      radius = (21 - position.zoom.toInt()) * 400;
       url = firstPart + operation + radius.toString() + '&lat=' +
           position.target.latitude.toString() + '&lng=' +
           position.target.longitude.toString() +
