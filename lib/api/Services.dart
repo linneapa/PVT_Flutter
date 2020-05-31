@@ -5,34 +5,47 @@ import 'package:http/http.dart' as http;
 import 'ParkingSpace.dart';
 
 class Services {
-  static Future<Parkering> fetchParkering(DocumentSnapshot doc, bool car, bool truck, bool motorcycle, bool handicaped) async {
-    // https://openparking.stockholm.se/LTF-Tolken/v1/{föreskrift}/{operation}?apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97
+  static Future<Parkering> fetchParkering(DocumentSnapshot doc, CameraPosition position, bool car, bool truck, bool motorcycle, bool handicaped) async {
+    /// https://openparking.stockholm.se/LTF-Tolken/v1/{föreskrift}/{operation}?apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97
+    ///Föreskrift: servicedagar, ptillaten, pbuss, plastbil, pmotorcykel, prorelsegindrad
+    ///Operation: all, weekday, area, street, within, untilNextWeekday
+    ///Parameters: apiKey, MaxFeatures, outputFormat, callback
 
-    /*
-      Föreskrift: servicedagar, ptillaten, pbuss, plastbil, pmotorcykel, prorelsegindrad
-      Operation: all, weekday, area, street, within, untilNextWeekday
-      Parameters: apiKey, MaxFeatures, outputFormat, callback
-       */
 
-    String url;
-    if (doc != null){
-//      String lat = marker.toString().split("LatLng")[1].split(',')[0].replaceAll("(", "");
-//      String lng = marker.toString().split("LatLng")[1].split(',')[1].replaceAll(")", "").trim();
-//      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' + lat + '&lng=' + lng + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' + doc['coordinatesX'].toString() + '&lng=' + doc['coordinatesY'].toString() + '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+    String firstPart;
+    int radius;
+
+    if (car) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten';
+    } else if (truck) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil';
+    } else if (motorcycle) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel';
+    } else if (handicaped) {
+      firstPart = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad';
+    }
+    if (doc != null) {
+      url =
+          'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/within?radius=1&lat=' +
+              doc['coordinatesX'].toString() + '&lng=' +
+              doc['coordinatesY'].toString() +
+              '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
       print(url);
-    } else if (car) {
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      print(url);
-    } else if(truck) {
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/plastbil/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      print(url);
-    } else if (motorcycle){
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/pmotorcykel/all?maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-    } else if (handicaped){
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/all?&maxFeatures=100&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-    } else {
-      return null;
+    } else if (position != null){
+      String operation = '/within?radius=';
+      if (doc != null){
+        radius = (21 - position.zoom.toInt()) * 400;
+      }
+      url = firstPart + operation + radius.toString() + '&lat=' +
+          position.target.latitude.toString() + '&lng=' +
+          position.target.longitude.toString() +
+          '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+    } else{
+      String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      url = firstPart + secondPart;
+    }
+    if (url == null){
+        return null;
     }
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -42,7 +55,6 @@ class Services {
     }
   }
 }
-
 
 // for testing
 class ParkingPost {

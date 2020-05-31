@@ -17,6 +17,9 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'map_marker.dart';
+import 'map_helper.dart';
+import 'package:fluster/fluster.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
 import 'package:workmanager/workmanager.dart';
@@ -49,6 +52,10 @@ class _MapPageState extends State<MapPage> {
 
   DocumentSnapshot doc;
   _MapPageState(this.doc);
+  bool _isLoading = true;
+  var currMarker;
+
+  _MapPageState(this.currMarker);
 
   bool currentlyNavigating = false;
   bool handicapToggled = false;
@@ -59,6 +66,9 @@ class _MapPageState extends State<MapPage> {
   String currentDestinationAdress;
   String currentParkingActivity;
   var currMarker;
+  double latestLong;
+  double latestLat;
+  double latestZoom = 12.0;
 
   Map<String, Feature> parkMark = Map();
   var singlePark;
@@ -74,7 +84,17 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  static Map<String, Marker> _markers = {};
+
+
+  final Map<String, Marker> _markers = Map();
+  Fluster<MapMarker> _clusterManager;
+  double _currentZoom;
+
+  final String _markerImageUrl = 'https://img.icons8.com/office/80/000000/marker.png'; //Temp standard marker
+  final Color _clusterColor = Colors.blue;    //Color of cluster circle
+  final Color _clusterTextColor = Colors.white;   //Color of cluster text
+
+
   BitmapDescriptor arrowIcon;
   BitmapDescriptor carIcon;
   BitmapDescriptor handicapIcon;
@@ -228,7 +248,8 @@ class _MapPageState extends State<MapPage> {
                 showTopBar(),
                 showWindow(),
                 showMyLocationButton(),
-                showStopRouteButton(), 
+                showStopRouteButton(),
+                _showCircularProgress(),
                 ],
           )
         )
@@ -413,53 +434,111 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  Widget _showCircularProgress() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    return Container( height: 0.0, width: 0.0, );
+  }
+
   Future<void> _onMapCreated(GoogleMapController controller) async {
       parkings = await Services.fetchParkering(null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       _controller = controller;
-      //_mapController.complete(controller);
-
+      _mapController.complete(controller);
+      double zoom = await controller.getZoomLevel();
+      _initMarkers(zoom);
       setState(() {
-        BitmapDescriptor _selectedIcon;
-        if(_globalCarToggled){
-          currentIcon = carIcon;
-          print("car toggled");
-        }else if(_globalTruckToggled){
-          currentIcon = truckIcon;
-          print("truck toggled");
-        }else if(_globalMotorcycleToggled){
-          currentIcon = motorcycleIcon;
-          print("cycle toggled");
-        }
-        for (final parking in parkings.features) {
-          if (parking.properties.address != null) {
-            print(parking.properties.address);
-            if(handicapToggled){
-              if(parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
-                currentIcon = handicapIcon;
-                print("handicap toggled");
-              }
-            }
-            final marker = Marker(
-              onTap: () {
-                updateCurrentMarker(parking);
-              },
-              markerId: MarkerId(parking.properties.address),
-              position: LatLng(parking.geometry.coordinates[0][1],
-                  parking.geometry.coordinates[0][0]),
-              icon: currentIcon,
-            );
-            _markers[parking.properties.address] = marker;
-            parkMark[parking.properties.address] = parking;
-          }
-        }
-        updatePinOnMap();
+        _isLoading = false;
       });
+  }
+
+  Future<void> _newMarkers(CameraPosition position) async {
+    setState(() {
+      _isLoading = true;
+      BitmapDescriptor _selectedIcon;
+      if(_globalCarToggled){
+        currentIcon = carIcon;
+        print("car toggled");
+      }else if(_globalTruckToggled){
+        currentIcon = truckIcon;
+        print("truck toggled");
+      }else if(_globalMotorcycleToggled){
+        currentIcon = motorcycleIcon;
+        print("cycle toggled");
+      }
+    });
+    double change = 0;
+    double zoomChange = 0;
+
+    zoomChange = (position.zoom - latestZoom).abs();
+    print('newMarkers positionzoom ' + position.zoom.toString());
+    print('zoomchange ' + zoomChange.toString());
+    if (latestLong != null){
+      double longChange = (position.target.longitude - latestLong).abs();
+      double latChange = (position.target.latitude - latestLat).abs();
+      change = longChange + latChange;
+      print('change ' + change.toString());
+    }
+
+    if (change > 0.005 || zoomChange == 1){
+      latestLat = position.target.latitude;
+      latestLong = position.target.longitude;
+      latestZoom = position.zoom;
+      print('changing');
+
+      if (position.zoom < 13){
+        parkings = await Services.fetchParkering(null, null, _globalCarToggled,
+            _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+        _initMarkers(position.zoom);
+      }else{
+        parkings = await Services.fetchParkering(null, position, _globalCarToggled,
+            _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+        if(position.zoom == 14){
+//            if (_clusterManager != null){
+//              _updateMarkers(position.zoom);
+//            }else{
+//              _initMarkers(position.zoom);
+//            }
+        }if(position.zoom > 13){
+          setState(() {
+            _markers.clear();
+            _clusterManager = null;
+            for (final parking in parkings.features) {
+              if(handicapToggled){
+                if(parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
+                  currentIcon = handicapIcon;
+                  print("handicap toggled");
+                }
+              }
+              final marker = Marker(
+                onTap: () {
+                  updateCurrentMarker(parking);
+                },
+                markerId: MarkerId(parking.properties.address),
+                position: LatLng(parking.geometry.coordinates[0][1],
+                    parking.geometry.coordinates[0][0]),
+                icon: currentIcon,
+              );
+              _markers[parking.properties.address] = marker;
+              parkMark[parking.properties.address] = parking;
+            }
+            updatePinOnMap();
+          });
+        }
+      }
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
+      onCameraMove: (position) {
+        _newMarkers(position);
+      },
       polylines: _polylines,
       initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
@@ -1085,6 +1164,55 @@ class _MapPageState extends State<MapPage> {
 
   void setInitLocation() async {
     initLocation = await getCurrentLocation();
+  }
+
+  void _initMarkers(double currentZoom) async {
+    final List<MapMarker> markers = [];
+    final BitmapDescriptor markerImage = carIcon;   //TODO: change marker image
+
+    for (final parking in parkings.features) {
+        final marker = MapMarker(
+          onTap: () {
+            _onMarkerTapped(parking);
+          },
+          id: parking.properties.address,
+          position: LatLng(parking.geometry.coordinates[0][1],
+              parking.geometry.coordinates[0][0]),
+          icon: markerImage,
+        );
+        markers.add(marker);
+        parkMark[parking.properties.address] = parking;
+      }
+
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 21);
+    await _updateMarkers(currentZoom);
+  }
+
+  Future<void> _updateMarkers([double updatedZoom]) async {
+    if(_clusterManager == null || updatedZoom == _currentZoom) return;
+
+    if(updatedZoom != null){
+      _currentZoom = updatedZoom;
+      print(updatedZoom);
+      print(_currentZoom);
+    }
+
+    final updatedMarkers = await MapHelper.getClusterMarkers(
+      _clusterManager,
+      _currentZoom,
+      _clusterColor,
+      _clusterTextColor,
+      80,
+    );
+    _markers.clear();
+    updatePinOnMap();
+    for(var v in updatedMarkers){
+      _markers[v.markerId.toString()] = v;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<LatLng> getCurrentLocation() async {
