@@ -24,6 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   SizeConfig sizeConfig;
   final db = Firestore.instance;
   HomePageState parent;
+  double _zoom = 15;
 
   @override
   void initState() {
@@ -163,26 +164,27 @@ class _SettingsPageState extends State<SettingsPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-              content:
-                  Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Avstånd i meter',
-                  hintText: 'Radie inom vilken du ser parkeringar',
-                ),
-                onSaved: (String value) {
-                  //Save the distance entered
+            title: Text('Ange standardzoom'),
+            content: StatefulBuilder(
+              builder: (context, setState) {
+              return Container(
+                child: Slider (
+                value: _zoom,
+                min: 10,
+                max: 18,
+                divisions: 8,
+                onChanged: (value){
+                  setState(() {
+                    _zoom = value;
+                  });
                 },
-                validator: (String value) {
-                  return isNumeric(value) ? 'Var god ange ett nummer.' : null;
-                }),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  showCancelButton(context),
-                  showSaveDistButton(context),
-                ]),
-          ]));
+              ),
+            );
+            }
+          ),
+          actions: <Widget>[
+            showDoneButton(context),
+          ]);
         });
   }
 
@@ -194,22 +196,12 @@ class _SettingsPageState extends State<SettingsPage> {
     return double.tryParse(str) != null;
   }
 
-  Widget showCancelButton(BuildContext context) {
+  Widget showDoneButton(BuildContext context) {
     return FlatButton(
         onPressed: () => {
               Navigator.pop(context),
             },
-        child: Text('Avbryt'),
-        color: Colors.orangeAccent);
-  }
-
-  Widget showSaveDistButton(BuildContext context) {
-    return FlatButton(
-        onPressed: () => {
-              //Save content locally
-              Navigator.pop(context),
-            },
-        child: Text('Spara'),
+        child: Text('Färdig'),
         color: Colors.orangeAccent);
   }
 
