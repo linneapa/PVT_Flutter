@@ -52,11 +52,9 @@ class _MapPageState extends State<MapPage> {
 
   DocumentSnapshot doc;
   _MapPageState(this.doc);
+
   bool _isLoading = true;
   var currMarker;
-
-  _MapPageState(this.currMarker);
-
   bool currentlyNavigating = false;
   bool handicapToggled = false;
   var _globalCarToggled = true;
@@ -65,7 +63,6 @@ class _MapPageState extends State<MapPage> {
   var currParking;
   String currentDestinationAdress;
   String currentParkingActivity;
-  var currMarker;
   double latestLong;
   double latestLat;
   double latestZoom = 12.0;
@@ -442,7 +439,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-      parkings = await Services.fetchParkering(null, _globalCarToggled,
+      parkings = await Services.fetchParkering(null, null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
       _controller = controller;
       _mapController.complete(controller);
@@ -667,7 +664,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
   Future<void> upDateParking() async {
-    singlePark = await Services.fetchParkering(doc, _globalCarToggled,
+    singlePark = await Services.fetchParkering(doc, null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
 
     print(singlePark);
@@ -1173,7 +1170,7 @@ class _MapPageState extends State<MapPage> {
     for (final parking in parkings.features) {
         final marker = MapMarker(
           onTap: () {
-            _onMarkerTapped(parking);
+            updateCurrentMarker(parking);
           },
           id: parking.properties.address,
           position: LatLng(parking.geometry.coordinates[0][1],
