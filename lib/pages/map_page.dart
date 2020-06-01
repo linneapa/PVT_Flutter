@@ -652,7 +652,7 @@ class _MapPageState extends State<MapPage> {
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
-              Text('Upptagenhet: $currentParkingActivity',
+              Text('Aktivitet: $currentParkingActivity',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
@@ -672,11 +672,11 @@ class _MapPageState extends State<MapPage> {
     double percentageHighRatings = (noOfHighRatings/totalNoOfRatings);
 
     if(percentageHighRatings < (1/3))
-      currentParkingActivity = "Låg";
+      currentParkingActivity = "Sällan upptagen";
     else if(percentageHighRatings < (2/3))
-      currentParkingActivity = "Medel";
+      currentParkingActivity = "Upptagen ibland";
     else
-      currentParkingActivity = "Hög";
+      currentParkingActivity = "Ofta upptagen";
   }
 
   Widget _buildSimpleLocationInfo() {
