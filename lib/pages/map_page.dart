@@ -54,6 +54,8 @@ class _MapPageState extends State<MapPage> {
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
+
+  bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
@@ -465,7 +467,11 @@ class _MapPageState extends State<MapPage> {
       _controller = controller;
       _mapController.complete(controller);
       double zoom = await controller.getZoomLevel();
-      _initMarkers(zoom);
+      if (showClusters){
+        _initMarkers(zoom);
+      }else{
+        _newMarkers(null);
+      }
       setState(() {
         _isLoading = false;
       });
@@ -475,28 +481,33 @@ class _MapPageState extends State<MapPage> {
 
     double change = 0;
     double zoomChange = 0;
-
-    zoomChange = (position.zoom - latestZoom);
-    print('newMarkers positionzoom ' + position.zoom.toString());
-    print('zoomchange ' + zoomChange.toString());
-    if (latestLong != null){
-      double longChange = (position.target.longitude - latestLong).abs();
-      double latChange = (position.target.latitude - latestLat).abs();
-      change = longChange + latChange;
-      print('change ' + change.toString());
+    if (position != null){
+      zoomChange = (position.zoom - latestZoom);
+      print('newMarkers positionzoom ' + position.zoom.toString());
+      print('zoomchange ' + zoomChange.toString());
+      if (latestLong != null){
+        double longChange = (position.target.longitude - latestLong).abs();
+        double latChange = (position.target.latitude - latestLat).abs();
+        change = longChange + latChange;
+        print('change ' + change.toString());
+      }
     }
 
-    if (change > 0.005 || zoomChange == 1 || newToggle || zoomChange == -1){
-      latestLat = position.target.latitude;
-      latestLong = position.target.longitude;
-      latestZoom = position.zoom;
-      print('changing');
-      print('currentZoom ' + latestZoom.toString());
-      print('newToggle ' + newToggle.toString());
+
+    if (change > 0.005 || zoomChange == 1 || newToggle || zoomChange == -1 || position == null){
+      if (position != null){
+        latestLat = position.target.latitude;
+        latestLong = position.target.longitude;
+        latestZoom = position.zoom;
+        print('changing');
+        print('currentZoom ' + latestZoom.toString());
+        print('newToggle ' + newToggle.toString());
+      }
+
       setState(() {
         _isLoading = true;
       });
-      if (position.zoom < 15){
+      if (showClusters && position.zoom < 15){
         if (_clusterManager != null && !newToggle) {
           _updateMarkers(position.zoom);
         } else {
@@ -505,7 +516,7 @@ class _MapPageState extends State<MapPage> {
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if(position.zoom > 14 || newToggle || zoomChange < 0){
+      }else if(position == null || position.zoom > 14 || newToggle || zoomChange < 0){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
