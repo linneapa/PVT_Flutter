@@ -38,8 +38,18 @@ class Services {
           position.target.longitude.toString() +
           '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     } else{
-      String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      url = firstPart + secondPart;
+      String operation = '/within?radius=';
+      radius = 500;
+      url = firstPart + operation + radius.toString() +
+          '&lat=' + '59.3293' +
+          '&lng=' + '18.0686' +
+          '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+
+
+
+//
+//      String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+//      url = firstPart + secondPart;
     }
 
 
