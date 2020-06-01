@@ -477,6 +477,10 @@ class _MapPageState extends State<MapPage>{
   }
 
   Future<void> _newMarkers(CameraPosition position) async {
+    if (doc != null){
+      doc == null;
+      return;
+    }
 
     double change = 0;
     double zoomChange = 0;
@@ -793,6 +797,19 @@ class _MapPageState extends State<MapPage>{
   }
 
   updateCurrentMarker(var parking){
+    if(_globalCarToggled){
+      currentIcon = carIcon;
+      selectedIcon = carSelectedIcon;
+    }else if(_globalTruckToggled){
+      currentIcon = truckIcon;
+      selectedIcon = truckSelectedIcon;
+    }else if(_globalMotorcycleToggled){
+      currentIcon = motorcycleIcon;
+      selectedIcon = motorcycleSelectedIcon;
+    }else if(_globalHandicapToggled){
+      currentIcon = handicapIcon;
+      selectedIcon = handicapSelectedIcon;
+    }
     BitmapDescriptor _icon = currentIcon;
     BitmapDescriptor _selectIcon = selectedIcon;
     Marker marker;
