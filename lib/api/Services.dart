@@ -32,7 +32,7 @@ class Services {
       print(url);
     } else if (position != null){
       String operation = '/within?radius=';
-      radius = (21 - position.zoom.toInt()) * 400;
+      radius = (21 - position.zoom.toInt()) * 300;
       url = firstPart + operation + radius.toString() + '&lat=' +
           position.target.latitude.toString() + '&lng=' +
           position.target.longitude.toString() +
@@ -41,12 +41,20 @@ class Services {
       String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
       url = firstPart + secondPart;
     }
+
+
     if (url == null){
         return null;
     }
     final response = await http.get(url);
+    Map<String, dynamic> JSON = json.decode(response.body);
+    print(response.body);
+    print(JSON['totalFeatures']);
+    if (JSON['totalFeatures'] == 0){
+      return null;
+    }
     if (response.statusCode == 200) {
-      return Parkering.fromJson(json.decode(response.body));
+      return Parkering.fromJson(JSON);
     } else {
       throw Exception('Failed to load parkering');
     }
