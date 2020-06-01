@@ -54,7 +54,7 @@ class _MapPageState extends State<MapPage> {
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
-  bool rendering = true;
+  bool rendering = false;
   bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
