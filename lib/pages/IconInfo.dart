@@ -7,15 +7,17 @@ This is a helper class to the filter popup dialog in map_page.dart. It is a way 
 
 class IconInfo with ChangeNotifier {
 
-  IconInfo(this._carToggled, this._truckToggled, this._motorcycleToggled);
+  IconInfo(this._carToggled, this._truckToggled, this._motorcycleToggled, this._handicapToggled);
 
   var _carToggled = true;
   var _truckToggled = false;
   var _motorcycleToggled = false;
+  var _handicapToggled = false;
 
   bool get carToggled => _carToggled;
   bool get truckToggled => _truckToggled;
   bool get motorcycleToggled => _motorcycleToggled;
+  bool get handicapToggled => _handicapToggled;
 
   set car(bool newVal) {
     _carToggled = newVal;
@@ -29,6 +31,11 @@ class IconInfo with ChangeNotifier {
 
   set motorcycle(bool newVal) {
     _motorcycleToggled = newVal;
+    notifyListeners();
+  }
+
+  set handicap(bool newVal) {
+    _handicapToggled = newVal;
     notifyListeners();
   }
 }

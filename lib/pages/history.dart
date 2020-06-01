@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'home_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -40,9 +41,9 @@ class _HistoryPageState extends State<HistoryPage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
+        backgroundColor: Colors.orangeAccent,
         automaticallyImplyLeading: false,
-        title: Text('Senast valda destinationer'
-        ),
+        title: Text('Senast valda destinationer', style: TextStyle(color: Colors.white)),
       ),
       body: Container(
         child: StreamBuilder(
@@ -67,6 +68,21 @@ class _HistoryPageState extends State<HistoryPage> {
         .collection('history')
         .snapshots();
   }
+
+  Icon getVehicleTypeIcon(DocumentSnapshot parking) {
+    if (parking['vehicleType'] == 'car') {
+      return new Icon(Icons.directions_car);
+    }
+    else if (parking['vehicleType'] == 'motorcykel') {
+      return new Icon(Icons.motorcycle);
+    }
+    else if (parking['vehicleType'] == 'lastbil') {
+      return new Icon(MdiIcons.truck);
+    }
+    return new Icon(Icons.directions_car);
+  }
+
+
   //TODO: sort cards by timestamp
   Widget buildHistoryCard(BuildContext context, DocumentSnapshot parking) {
     return new Container(
@@ -81,7 +97,8 @@ class _HistoryPageState extends State<HistoryPage> {
                     children: <Widget>[
                       Text(parking['location'],
                           style: new TextStyle(fontSize: 14)),
-                      Icon(Icons.directions_car)
+                      SizedBox(width: 10,),
+                      getVehicleTypeIcon(parking),
                     ],
                   ),
                   Row(

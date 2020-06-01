@@ -17,6 +17,9 @@ import 'package:flutter/widgets.dart';
 import 'SizeConfig.dart';
 import 'dart:math' as Math;
 import 'package:search_map_place/search_map_place.dart';
+import 'map_marker.dart';
+import 'map_helper.dart';
+import 'package:fluster/fluster.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' as platform;
 import 'package:workmanager/workmanager.dart';
@@ -51,15 +54,21 @@ class _MapPageState extends State<MapPage> {
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
+  bool newToggle = false;
+  bool _isLoading = true;
+  var currMarker;
   bool currentlyNavigating = false;
-  bool handicapToggled = false;
+  var _globalHandicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
   String currentDestinationAddress;
   String currentParkingActivity;
-  var currMarker;
+  double latestLong;
+  double latestLat;
+  double latestZoom = 12.0;
+  CameraPosition cameraPosition;
 
   Map<String, Feature> parkMark = Map();
   var singlePark;
@@ -75,13 +84,23 @@ class _MapPageState extends State<MapPage> {
   LocationData _myLocation;
   GoogleMapController _controller;
   StreamSubscription<LocationData> _locationSubscription;
-  static Map<String, Marker> _markers = {};
+
+
+  final Map<String, Marker> _markers = Map();
+  Fluster<MapMarker> _clusterManager;
+  double _currentZoom;
+
+  final Color _clusterColor = Colors.blue;    //Color of cluster circle
+  final Color _clusterTextColor = Colors.white;   //Color of cluster text
+
+
   BitmapDescriptor arrowIcon;
   BitmapDescriptor carIcon;
   BitmapDescriptor handicapIcon;
   BitmapDescriptor motorcycleIcon;
   BitmapDescriptor truckIcon;
   BitmapDescriptor currentIcon;
+  BitmapDescriptor selectedIcon;
   BitmapDescriptor carSelectedIcon;
   BitmapDescriptor motorcycleSelectedIcon;
   BitmapDescriptor truckSelectedIcon;
@@ -121,18 +140,19 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/carOnMapSelected.png', 64).then((onValue) {
+    getBytesFromAsset('assets/carOnMapSelected.png', 72).then((onValue) {
       carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
-      motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
-    });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
-      truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
-    });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+    getBytesFromAsset('assets/handicapOnMapSelected.png', 72).then((onValue) {
       handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
+    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 72).then((onValue) {
+      motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckOnMapSelected.png', 72).then((onValue) {
+      truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+
     //setInitLocation();
 
 
@@ -222,7 +242,8 @@ class _MapPageState extends State<MapPage> {
                 showTopBar(),
                 showWindow(),
                 showMyLocationButton(),
-                showStopRouteButton(), 
+                showStopRouteButton(),
+                _showCircularProgress(),
                 ],
           )
         )
@@ -295,6 +316,21 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  String getVehicleType() {
+
+    if (currentIcon == carIcon) {
+      return 'bil';
+    }
+    else if (currentIcon == motorcycleIcon) {
+      return 'motorcykel';
+    }
+    else if (currentIcon == truckIcon) {
+      return 'lastbil';
+    }
+
+    return 'bil';
+  }
+
   addToFavorites() async {
     String id = widget.userId;
     bool duplicate = false;
@@ -324,7 +360,8 @@ class _MapPageState extends State<MapPage> {
             'coordinatesX': currParking.geometry.coordinates[0][1],
             'coordinatesY': currParking.geometry.coordinates[0][0],
             'info': info,
-            'maxTimmar': maxTimmar
+            'maxTimmar': maxTimmar,
+            'vehicleType': getVehicleType()
           }
       );
     }
@@ -384,7 +421,8 @@ class _MapPageState extends State<MapPage> {
        'coordinatesY': currParking.geometry.coordinates[0][0],
        'timestamp': getFormattedTimeInfoString(),
        'info': info,
-       'maxTimmar': maxTimmar
+       'maxTimmar': maxTimmar,
+       'vehicleType': getVehicleType()
      }
    );
    if(snapshot.documents.length <= 9 && !duplicate){
@@ -407,53 +445,120 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Future<void> _onMapCreated(GoogleMapController controller) async {
-      parkings = await Services.fetchParkering(null, _globalCarToggled,
-          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-      _controller = controller;
-      //_mapController.complete(controller);
+  Widget _showCircularProgress() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    return Container( height: 0.0, width: 0.0, );
+  }
 
+  Future<void> _onMapCreated(GoogleMapController controller) async {
+      parkings = await Services.fetchParkering(null, null, _globalCarToggled,
+          _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
+      _controller = controller;
+      _mapController.complete(controller);
+      double zoom = await controller.getZoomLevel();
+      _initMarkers(zoom);
       setState(() {
-        BitmapDescriptor _selectedIcon;
-        if(_globalCarToggled){
-          currentIcon = carIcon;
-          print("car toggled");
-        }else if(_globalTruckToggled){
-          currentIcon = truckIcon;
-          print("truck toggled");
-        }else if(_globalMotorcycleToggled){
-          currentIcon = motorcycleIcon;
-          print("cycle toggled");
+        _isLoading = false;
+      });
+  }
+
+  Future<void> _newMarkers(CameraPosition position) async {
+
+    double change = 0;
+    double zoomChange = 0;
+
+    zoomChange = (position.zoom - latestZoom);
+    print('newMarkers positionzoom ' + position.zoom.toString());
+    print('zoomchange ' + zoomChange.toString());
+    if (latestLong != null){
+      double longChange = (position.target.longitude - latestLong).abs();
+      double latChange = (position.target.latitude - latestLat).abs();
+      change = longChange + latChange;
+      print('change ' + change.toString());
+    }
+
+    if (change > 0.005 || zoomChange == 1 || newToggle || zoomChange == -1){
+      latestLat = position.target.latitude;
+      latestLong = position.target.longitude;
+      latestZoom = position.zoom;
+      print('changing');
+      print('currentZoom ' + latestZoom.toString());
+      print('newToggle ' + newToggle.toString());
+      setState(() {
+        _isLoading = true;
+      });
+      if (position.zoom < 15){
+        if (_clusterManager != null && !newToggle) {
+          _updateMarkers(position.zoom);
+        } else {
+          _markers.clear();
+          parkings = await Services.fetchParkering(null, null, _globalCarToggled,
+              _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
+          _initMarkers(position.zoom);
         }
-        for (final parking in parkings.features) {
-          if (parking.properties.address != null) {
-            print(parking.properties.address);
-            if(handicapToggled){
-              if(parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
-                currentIcon = handicapIcon;
-                print("handicap toggled");
+      }else if(position.zoom > 14 || newToggle || zoomChange < 0){
+          parkings = await Services.fetchParkering(null, position, _globalCarToggled,
+              _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
+          setState(() {
+            _markers.clear();
+            _clusterManager = null;
+            BitmapDescriptor _icon;
+            if(_globalCarToggled){
+              currentIcon = carIcon;
+              selectedIcon = carSelectedIcon;
+            }else if(_globalTruckToggled){
+              currentIcon = truckIcon;
+              selectedIcon = truckSelectedIcon;
+            }else if(_globalMotorcycleToggled){
+              currentIcon = motorcycleIcon;
+              selectedIcon = motorcycleSelectedIcon;
+            }else if(_globalHandicapToggled){
+              currentIcon = handicapIcon;
+              selectedIcon = handicapSelectedIcon;
+            }
+            if (parkings != null){
+              for (final parking in parkings.features) {
+                _icon = currentIcon;
+                if (!_globalHandicapToggled) {
+                  if (parking.properties.vfPlatsTyp ==
+                      "Reserverad p-plats rörelsehindrad") {
+                    _icon = handicapIcon;
+                  }
+                }
+                if (parking.properties.address != null) {
+                  final marker = Marker(
+                    onTap: () {
+                      updateCurrentMarker(parking);
+                    },
+                    markerId: MarkerId(parking.properties.address),
+                    position: LatLng(parking.geometry.coordinates[0][1],
+                        parking.geometry.coordinates[0][0]),
+                    icon: _icon,
+                  );
+                  _markers[parking.properties.address] = marker;
+                  parkMark[parking.properties.address] = parking;
+                }
               }
             }
-            final marker = Marker(
-              onTap: () {
-                updateCurrentMarker(parking);
-              },
-              markerId: MarkerId(parking.properties.address),
-              position: LatLng(parking.geometry.coordinates[0][1],
-                  parking.geometry.coordinates[0][0]),
-              icon: currentIcon,
-            );
-            _markers[parking.properties.address] = marker;
-            parkMark[parking.properties.address] = parking;
-          }
+            updatePinOnMap();
+          });
         }
-        updatePinOnMap();
+      }
+      setState(() {
+        _isLoading = false;
+        newToggle = false;
       });
   }
 
   Widget showGoogleMaps() {
     return GoogleMap(
       onMapCreated: _onMapCreated,
+      onCameraMove: (position) {
+        _newMarkers(position);
+        _updateCamera(position);
+      },
       polylines: _polylines,
       initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
@@ -463,6 +568,10 @@ class _MapPageState extends State<MapPage> {
         });
       },
     );
+  }
+
+  _updateCamera(CameraPosition position){
+    cameraPosition = position;
   }
 
   // Animated info window
@@ -543,7 +652,7 @@ class _MapPageState extends State<MapPage> {
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
-              Text('Snittaktivitet: $currentParkingActivity',
+              Text('Aktivitet: $currentParkingActivity',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
@@ -563,11 +672,11 @@ class _MapPageState extends State<MapPage> {
     double percentageHighRatings = (noOfHighRatings/totalNoOfRatings);
 
     if(percentageHighRatings < (1/3))
-      currentParkingActivity = "Låg";
+      currentParkingActivity = "Sällan upptagen";
     else if(percentageHighRatings < (2/3))
-      currentParkingActivity = "Medelhög";
+      currentParkingActivity = "Upptagen ibland";
     else
-      currentParkingActivity = "Hög";
+      currentParkingActivity = "Ofta upptagen";
   }
 
   Widget _buildSimpleLocationInfo() {
@@ -582,8 +691,8 @@ class _MapPageState extends State<MapPage> {
     }
   }
   Future<void> upDateParking() async {
-    singlePark = await Services.fetchParkering(doc, _globalCarToggled,
-        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+    singlePark = await Services.fetchParkering(doc, null, _globalCarToggled,
+        _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
 
     print(singlePark);
     for (final parking in singlePark.features) {
@@ -653,26 +762,40 @@ class _MapPageState extends State<MapPage> {
   }
 
   updateCurrentMarker(var parking){
+    BitmapDescriptor _icon = currentIcon;
+    BitmapDescriptor _selectIcon = selectedIcon;
     setState(() {
       if (currParking != null) {
         var thisParking = currParking;
         String oldAddress = thisParking.properties.address;
+        if(!_globalHandicapToggled){
+          if (thisParking.properties.vfPlatsTyp ==
+              "Reserverad p-plats rörelsehindrad") {
+            _icon = handicapIcon;
+          }
+        }
         Marker oldMarker = Marker(
           onTap: () {
             updateCurrentMarker(thisParking);
           },
-          icon: currentIcon,
+          icon: _icon,
           markerId: MarkerId(oldAddress),
           position: LatLng(thisParking.geometry.coordinates[0][1],
               thisParking.geometry.coordinates[0][0]),
         );
         _markers[oldAddress] = oldMarker;
       }
+      if(!_globalHandicapToggled){
+        if (parking.properties.vfPlatsTyp ==
+            "Reserverad p-plats rörelsehindrad") {
+          _selectIcon = handicapSelectedIcon;
+        }
+      }
       final marker = Marker(
         onTap: () {
           updateCurrentMarker(parking);
         },
-        icon: BitmapDescriptor.defaultMarkerWithHue(240),
+        icon: _selectIcon,
         markerId: MarkerId(parking.properties.address),
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
@@ -821,17 +944,26 @@ class _MapPageState extends State<MapPage> {
 
       showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (context) {
+            Future.delayed(Duration(milliseconds: 2000), () {
+              Navigator.of(context).pop(true);
+            });
+            return AlertDialog(
               title: Text('Tack för din feedback!'),
-          ),
-      );
+            );
+          });
+
     } else {
-            showDialog(
+      showDialog(
           context: context,
-          builder: (_) => AlertDialog(
+          builder: (context) {
+            Future.delayed(Duration(milliseconds: 2000), () {
+              Navigator.of(context).pop(true);
+            });
+            return AlertDialog(
               title: Text('Du har lämnat feedback här nyligen!'),
-          ),
-      );
+            );
+          });
     }
   }
 
@@ -843,7 +975,7 @@ class _MapPageState extends State<MapPage> {
         elevation: 10,
         color: Colors.redAccent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
-        child: new Text("Hög", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+        child: new Text("Nej", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           address == null?reportTraffic(true): reportTraffic(true, address: address);
@@ -860,7 +992,7 @@ class _MapPageState extends State<MapPage> {
         // highlightColor: Colors.green,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
         color: Colors.greenAccent,
-         child: Text("Låg", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+         child: Text("Ja", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           address == null?reportTraffic(false): reportTraffic(false, address: address);
@@ -904,8 +1036,9 @@ class _MapPageState extends State<MapPage> {
               Text(
                 "Du har anlänt vid din destination!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
+              Row(children: <Widget> [Text('')]), //Empty row for extra space
               Text(
-                "Var snäll och svara om parkeringen är högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                "Hittade du en ledig plats?.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
@@ -1134,6 +1267,77 @@ class _MapPageState extends State<MapPage> {
     initLocation = await getCurrentLocation();
   }
 
+  void _initMarkers(double currentZoom) async {
+    setState(() {
+      if(_globalCarToggled){
+        currentIcon = carIcon;
+        selectedIcon = carSelectedIcon;
+        print("car toggled");
+      }else if(_globalTruckToggled){
+        currentIcon = truckIcon;
+        selectedIcon = truckSelectedIcon;
+        print("truck toggled");
+      }else if(_globalMotorcycleToggled){
+        currentIcon = motorcycleIcon;
+        selectedIcon = motorcycleSelectedIcon;
+        print("cycle toggled");
+      }else if(_globalHandicapToggled){
+        currentIcon = handicapIcon;
+        selectedIcon = handicapSelectedIcon;
+        print("handicap toggled");
+      }
+    });
+    _clusterManager = null;
+    final List<MapMarker> markers = [];
+
+    if (parkings != null){
+      for (final parking in parkings.features) {
+        if (parking.properties.address != null){
+          final marker = MapMarker(
+            onTap: () {
+              updateCurrentMarker(parking);
+            },
+            id: parking.properties.address,
+            position: LatLng(parking.geometry.coordinates[0][1],
+                parking.geometry.coordinates[0][0]),
+            icon: currentIcon,
+          );
+          markers.add(marker);
+          parkMark[parking.properties.address] = parking;
+        }
+      }
+    }
+
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 15);
+    await _updateMarkers(currentZoom);
+  }
+
+  Future<void> _updateMarkers([double updatedZoom]) async {
+    if(_clusterManager == null || updatedZoom == _currentZoom) return;
+
+    if(updatedZoom != null){
+      _currentZoom = updatedZoom;
+      print(updatedZoom);
+      print(_currentZoom);
+    }
+
+    final updatedMarkers = await MapHelper.getClusterMarkers(
+      _clusterManager,
+      _currentZoom,
+      _clusterColor,
+      _clusterTextColor,
+      80,
+    );
+    _markers.clear();
+    updatePinOnMap();
+    for(var v in updatedMarkers){
+      _markers[v.markerId.toString()] = v;
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   Future<LatLng> getCurrentLocation() async {
     _myLocation = await location.getLocation();
     return LatLng(_myLocation.latitude, _myLocation.longitude);
@@ -1154,7 +1358,7 @@ class _MapPageState extends State<MapPage> {
       builder: (context) {
         return ChangeNotifierProvider(
           create: (context) => IconInfo(
-              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
+              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled),
           child: StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -1186,7 +1390,7 @@ class _MapPageState extends State<MapPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          showHandicapIconButton(),
+                          HandicapIconButton(),
                           showCloseButton(context),
                         ],
                       )
@@ -1205,9 +1409,13 @@ class _MapPageState extends State<MapPage> {
         _globalCarToggled = ic.carToggled;
         _globalTruckToggled = ic.truckToggled;
         _globalMotorcycleToggled = ic.motorcycleToggled;
+        _globalHandicapToggled = ic.handicapToggled;
       }
       _markers.clear();
-      _onMapCreated(_controller);
+      setState(() {
+        newToggle = true;
+      });
+      _newMarkers(cameraPosition);
     });
   }
 
@@ -1215,15 +1423,8 @@ class _MapPageState extends State<MapPage> {
     return StatefulBuilder(builder: (context, setState) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: IconButton(
-          iconSize: 50,
-          icon: Icon(
-            Icons.accessible,
-            color: handicapToggled ? Colors.orangeAccent : Colors.grey,
-          ),
-          onPressed: () => setState(() => handicapToggled = !handicapToggled),
-        ),
-      );
+        child: HandicapIconButton(),
+        );
     });
   }
 
@@ -1238,6 +1439,28 @@ class _MapPageState extends State<MapPage> {
         child: Text("Stäng", style: TextStyle(fontSize: 17)),
       );
     });
+  }
+}
+
+class HandicapIconButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return IconButton(
+      iconSize: 50,
+    icon: Icon(
+    Icons.accessible,
+    color: iconInfo.handicapToggled ? Colors.orangeAccent : Colors.grey,
+    ),
+    onPressed: () {
+        iconInfo.handicap = !iconInfo.handicapToggled;
+        if(iconInfo.handicapToggled){
+          iconInfo.motorcycle = false;
+          iconInfo.truck = false;
+          iconInfo.car = false;
+        }
+    },
+    );
   }
 }
 
@@ -1256,6 +1479,7 @@ class CarIconButton extends StatelessWidget {
           if (iconInfo.carToggled) {
             iconInfo.motorcycle = false;
             iconInfo.truck = false;
+            iconInfo.handicap = false;
           }
         });
   }
@@ -1276,6 +1500,7 @@ class TruckIconButton extends StatelessWidget {
           if (iconInfo.truckToggled) {
             iconInfo.car = false;
             iconInfo.motorcycle = false;
+            iconInfo.handicap = false;
           }
         }
     );
@@ -1297,6 +1522,7 @@ class MotorcycleIconButton extends StatelessWidget {
           if (iconInfo.motorcycleToggled) {
             iconInfo.car = false;
             iconInfo.truck = false;
+            iconInfo.handicap = false;
           }
         });
   }
