@@ -595,9 +595,7 @@ class _MapPageState extends State<MapPage>{
       initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
-        setState(() {
-          currMarker = null;
-        });
+        updateCurrentMarker(null);
       },
     );
   }
@@ -797,16 +795,11 @@ class _MapPageState extends State<MapPage>{
   updateCurrentMarker(var parking){
     BitmapDescriptor _icon = currentIcon;
     BitmapDescriptor _selectIcon = selectedIcon;
+    Marker marker;
     setState(() {
       if (currParking != null) {
         var thisParking = currParking;
         String oldAddress = thisParking.properties.address;
-        if(!_globalHandicapToggled){
-          if (thisParking.properties.vfPlatsTyp ==
-              "Reserverad p-plats rörelsehindrad") {
-            _icon = handicapIcon;
-          }
-        }
         Marker oldMarker = Marker(
           onTap: () {
             updateCurrentMarker(thisParking);
@@ -820,13 +813,8 @@ class _MapPageState extends State<MapPage>{
         print(oldMarker.position.latitude);
         print(oldMarker.position.longitude);
       }
-      if(!_globalHandicapToggled){
-        if (parking.properties.vfPlatsTyp ==
-            "Reserverad p-plats rörelsehindrad") {
-          _selectIcon = handicapSelectedIcon;
-        }
-      }
-      final marker = Marker(
+      if(parking != null){
+      marker = Marker(
         onTap: () {
           updateCurrentMarker(parking);
         },
@@ -835,9 +823,12 @@ class _MapPageState extends State<MapPage>{
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
       );
+      }
       currMarker = marker;
       currParking = parking;
-      _markers[parking.properties.address] = marker;
+      if(parking != null) {
+        _markers[parking.properties.address] = marker;
+      }
     });
   }
 
