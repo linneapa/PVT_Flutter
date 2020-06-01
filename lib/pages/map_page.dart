@@ -55,7 +55,7 @@ class _MapPageState extends State<MapPage> {
   _MapPageState(this.doc);
 
   bool rendering = false;
-  bool showClusters = true;
+  bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
