@@ -155,8 +155,6 @@ class _MapPageState extends State<MapPage> {
       truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
 
-    //setInitLocation();
-
 
     _fcm.configure(
       onMessage: (Map<String, dynamic> message) async { //executed if the app is in the foreground
