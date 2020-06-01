@@ -55,7 +55,7 @@ class _MapPageState extends State<MapPage> {
   _MapPageState(this.doc);
 
   bool rendering = false;
-  bool showClusters = false;
+  bool showClusters = true;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
@@ -558,27 +558,7 @@ class _MapPageState extends State<MapPage> {
                     !_globalCarToggled ||
                     (rendering && position != null && position.zoom > 13)
                 ) {
-/*
-Properties:
-                  int fid;
-                  int featureObjectId;
-                  int featureVersionId;
-                  int extentNo;
-                  DateTime validFrom;
-                  int startTime;
-                  int endTime;
-                  String startWeekday;
-                  int maxHours;
-                  String citation;
-                  String streetName;
-                  String cityDistrict;
-                  String parkingDistrict;
-                  String address;
-                  String vfPlatsTyp;
-                  String otherInfo;
-                  String rdtUrl;
-                  int vfMeter;
-*/
+
                   counter ++;
                   final marker = Marker(
                     onTap: () {
@@ -1349,16 +1329,9 @@ Properties:
     if (parkings != null){
       int counter = 0;
       for (final parking in parkings.features) {
-        if (parking.properties.address != '<Adress saknas>' &&
-            parking.properties.otherInfo != null &&
-            //parking.properties.maxHours != null &&
-            //parking.properties.streetName != null &&
-            //parking.properties.startTime != null &&
-            //parking.properties.maxHours != null &&
-            //parking.properties.maxHours != null &&
-            parking.properties.cityDistrict != null ||
-            !_globalCarToggled
-        ) {
+        if ((parking.properties.address != '<Adress saknas>' &&
+            parking.properties.vfMeter != null) ||
+            !_globalCarToggled) {
           counter ++;
           final marker = MapMarker(
             onTap: () {
