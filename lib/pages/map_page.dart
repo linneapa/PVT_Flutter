@@ -55,7 +55,7 @@ class _MapPageState extends State<MapPage> {
   _MapPageState(this.doc);
 
 
-  bool showClusters = true;
+  bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
@@ -542,6 +542,7 @@ class _MapPageState extends State<MapPage> {
             }
 
             if (parkings != null){
+              int counter = 0;
               for (final parking in parkings.features) {
                 _icon = currentIcon;
                 if (_globalCarToggled){
@@ -553,7 +554,8 @@ class _MapPageState extends State<MapPage> {
                     continue;
                   }
                 }
-                if (parking.properties.address != null) {
+                if (parking.properties.address != '<Adress saknas>' && parking.properties.otherInfo != null && parking.properties.cityDistrict != null) {
+                  counter ++;
                   final marker = Marker(
                     onTap: () {
                       updateCurrentMarker(parking);
@@ -567,6 +569,7 @@ class _MapPageState extends State<MapPage> {
                   parkMark[parking.properties.address] = parking;
                 }
               }
+              print('loaded ' + counter.toString() + ' to screen');
             }
             updatePinOnMap();
           });
@@ -1318,9 +1321,9 @@ class _MapPageState extends State<MapPage> {
     final List<MapMarker> markers = [];
 
     if (parkings != null){
-      int counter;
+      int counter = 0;
       for (final parking in parkings.features) {
-        if (parking.properties.address != '<Adress saknas>'){
+        if (parking.properties.address != '<Adress saknas>' && parking.properties.otherInfo != null){
           counter ++;
           final marker = MapMarker(
             onTap: () {
