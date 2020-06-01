@@ -14,6 +14,7 @@ class MapMarker extends Clusterable {
   final String id;
   final LatLng position;
   BitmapDescriptor icon;
+  var onTap;
 
   MapMarker({
     @required this.id,
@@ -23,7 +24,7 @@ class MapMarker extends Clusterable {
     clusterId,
     pointsSize,
     childMarkerId,
-    onTap,
+    this.onTap,
   }) : super(
     markerId: id,
     latitude: position.latitude,
@@ -40,6 +41,7 @@ class MapMarker extends Clusterable {
       position.latitude,
       position.longitude,
     ),
+    onTap: this.onTap,
     icon: icon,
   );
 }

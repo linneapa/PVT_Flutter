@@ -55,7 +55,7 @@ class _MapPageState extends State<MapPage> {
   _MapPageState(this.doc);
 
 
-  bool showClusters = false;
+  bool showClusters = true;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
@@ -482,7 +482,7 @@ class _MapPageState extends State<MapPage> {
     double change = 0;
     double zoomChange = 0;
     if (position != null){
-      zoomChange = (position.zoom - latestZoom);
+      zoomChange = (position.zoom - latestZoom).abs();
       print('newMarkers positionzoom ' + position.zoom.toString());
       print('zoomchange ' + zoomChange.toString());
       if (latestLong != null){
@@ -494,21 +494,25 @@ class _MapPageState extends State<MapPage> {
     }
 
 
-    if (change > 0.005 || zoomChange == 1 || newToggle || zoomChange == -1 || position == null){
+    if (zoomChange == 1 || newToggle || position == null){
+      print('changing');
+      print('currentZoom ' + latestZoom.toString());
+      print('newToggle ' + newToggle.toString());
       if (position != null){
-        latestLat = position.target.latitude;
-        latestLong = position.target.longitude;
         latestZoom = position.zoom;
-        print('changing');
-        print('currentZoom ' + latestZoom.toString());
-        print('newToggle ' + newToggle.toString());
+        if (change > 0.005){
+          latestLat = position.target.latitude;
+          latestLong = position.target.longitude;
+        }
+
       }
 
       setState(() {
         _isLoading = true;
       });
-      if (showClusters && position.zoom < 15){
+      if (showClusters){
         if (_clusterManager != null && !newToggle) {
+          print('updating cluster markers');
           _updateMarkers(position.zoom);
         } else {
           _markers.clear();
@@ -516,7 +520,7 @@ class _MapPageState extends State<MapPage> {
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if(position == null || position.zoom > 14 || newToggle || zoomChange < 0){
+      }else if(!showClusters && position == null){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
