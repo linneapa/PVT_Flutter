@@ -520,13 +520,17 @@ class _MapPageState extends State<MapPage> {
               currentIcon = handicapIcon;
               selectedIcon = handicapSelectedIcon;
             }
+
             if (parkings != null){
               for (final parking in parkings.features) {
                 _icon = currentIcon;
-                if (!_globalHandicapToggled) {
-                  if (parking.properties.vfPlatsTyp ==
-                      "Reserverad p-plats rörelsehindrad") {
-                    _icon = handicapIcon;
+                if (_globalCarToggled){
+                  if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörselsehindrad"){
+                    continue;
+                  } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats lastbil"){
+                    continue;
+                  } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats motorcykel"){
+                    continue;
                   }
                 }
                 if (parking.properties.address != null) {
