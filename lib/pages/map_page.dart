@@ -1318,8 +1318,10 @@ class _MapPageState extends State<MapPage> {
     final List<MapMarker> markers = [];
 
     if (parkings != null){
+      int counter;
       for (final parking in parkings.features) {
-        if (parking.properties.address != null){
+        if (parking.properties.address != '<Adress saknas>'){
+          counter ++;
           final marker = MapMarker(
             onTap: () {
               updateCurrentMarker(parking);
@@ -1333,6 +1335,7 @@ class _MapPageState extends State<MapPage> {
           parkMark[parking.properties.address] = parking;
         }
       }
+      print('loaded ' + counter.toString() + ' to screen');
     }
 
     _clusterManager = await MapHelper.initClusterManager(markers, 0, 15);
