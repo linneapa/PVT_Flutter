@@ -191,6 +191,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) {
                       setState(() {
                         _zoom = value;
+                        changeFirebaseSetting();
+
                       });
                     },
                   ),
@@ -335,4 +337,9 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
+  void changeFirebaseSetting() {
+    var doc = db.
+  }
 }
+
+
