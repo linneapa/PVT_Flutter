@@ -525,7 +525,7 @@ class _MapPageState extends State<MapPage> {
               for (final parking in parkings.features) {
                 _icon = currentIcon;
                 if (_globalCarToggled){
-                  if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörselsehindrad"){
+                  if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
                     continue;
                   } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats lastbil"){
                     continue;
