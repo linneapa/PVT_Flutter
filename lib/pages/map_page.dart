@@ -142,20 +142,18 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/carOnMapSelected.png', 72).then((onValue) {
+    getBytesFromAsset('assets/carOnMapSelected.png', 84).then((onValue) {
       carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/handicapOnMapSelected.png', 72).then((onValue) {
+    getBytesFromAsset('assets/handicapOnMapSelected.png', 84).then((onValue) {
       handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 72).then((onValue) {
+    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 84).then((onValue) {
       motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/truckOnMapSelected.png', 72).then((onValue) {
+    getBytesFromAsset('assets/truckOnMapSelected.png', 84).then((onValue) {
       truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-
-    //setInitLocation();
 
 
     _fcm.configure(
