@@ -99,6 +99,7 @@ class _MapPageState extends State<MapPage> {
   BitmapDescriptor motorcycleIcon;
   BitmapDescriptor truckIcon;
   BitmapDescriptor currentIcon;
+  BitmapDescriptor selectedIcon;
   BitmapDescriptor carSelectedIcon;
   BitmapDescriptor motorcycleSelectedIcon;
   BitmapDescriptor truckSelectedIcon;
@@ -138,18 +139,19 @@ class _MapPageState extends State<MapPage> {
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/carOnMapSelected.png', 64).then((onValue) {
+    getBytesFromAsset('assets/carOnMapSelected.png', 72).then((onValue) {
       carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
-      motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
-    });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
-      truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
-    });
-    getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
+    getBytesFromAsset('assets/handicapOnMapSelected.png', 72).then((onValue) {
       handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
+    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 72).then((onValue) {
+      motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    getBytesFromAsset('assets/truckOnMapSelected.png', 72).then((onValue) {
+      truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+
     //setInitLocation();
 
 
@@ -508,23 +510,27 @@ class _MapPageState extends State<MapPage> {
           setState(() {
             _markers.clear();
             _clusterManager = null;
-            BitmapDescriptor _selectedIcon;
+            BitmapDescriptor _icon;
             if(_globalCarToggled){
               currentIcon = carIcon;
+              selectedIcon = carSelectedIcon;
             }else if(_globalTruckToggled){
               currentIcon = truckIcon;
+              selectedIcon = truckSelectedIcon;
             }else if(_globalMotorcycleToggled){
               currentIcon = motorcycleIcon;
+              selectedIcon = motorcycleSelectedIcon;
             }else if(_globalHandicapToggled){
               currentIcon = handicapIcon;
+              selectedIcon = handicapSelectedIcon;
             }
             if (parkings != null){
               for (final parking in parkings.features) {
-                _selectedIcon = currentIcon;
+                _icon = currentIcon;
                 if (!_globalHandicapToggled) {
                   if (parking.properties.vfPlatsTyp ==
                       "Reserverad p-plats rörelsehindrad") {
-                    _selectedIcon = handicapIcon;
+                    _icon = handicapIcon;
                   }
                 }
                 if (parking.properties.address != null) {
@@ -535,7 +541,7 @@ class _MapPageState extends State<MapPage> {
                     markerId: MarkerId(parking.properties.address),
                     position: LatLng(parking.geometry.coordinates[0][1],
                         parking.geometry.coordinates[0][0]),
-                    icon: _selectedIcon,
+                    icon: _icon,
                   );
                   _markers[parking.properties.address] = marker;
                   parkMark[parking.properties.address] = parking;
@@ -762,26 +768,40 @@ class _MapPageState extends State<MapPage> {
   }
 
   updateCurrentMarker(var parking){
+    BitmapDescriptor _icon = currentIcon;
+    BitmapDescriptor _selectIcon = selectedIcon;
     setState(() {
       if (currParking != null) {
         var thisParking = currParking;
         String oldAddress = thisParking.properties.address;
+        if(!_globalHandicapToggled){
+          if (thisParking.properties.vfPlatsTyp ==
+              "Reserverad p-plats rörelsehindrad") {
+            _icon = handicapIcon;
+          }
+        }
         Marker oldMarker = Marker(
           onTap: () {
             updateCurrentMarker(thisParking);
           },
-          icon: currentIcon,
+          icon: _icon,
           markerId: MarkerId(oldAddress),
           position: LatLng(thisParking.geometry.coordinates[0][1],
               thisParking.geometry.coordinates[0][0]),
         );
         _markers[oldAddress] = oldMarker;
       }
+      if(!_globalHandicapToggled){
+        if (parking.properties.vfPlatsTyp ==
+            "Reserverad p-plats rörelsehindrad") {
+          _selectIcon = handicapSelectedIcon;
+        }
+      }
       final marker = Marker(
         onTap: () {
           updateCurrentMarker(parking);
         },
-        icon: carSelectedIcon,
+        icon: _selectIcon,
         markerId: MarkerId(parking.properties.address),
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
@@ -1194,15 +1214,20 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       if(_globalCarToggled){
         currentIcon = carIcon;
+        selectedIcon = carSelectedIcon;
         print("car toggled");
       }else if(_globalTruckToggled){
         currentIcon = truckIcon;
+        selectedIcon = truckSelectedIcon;
         print("truck toggled");
       }else if(_globalMotorcycleToggled){
         currentIcon = motorcycleIcon;
+        selectedIcon = motorcycleSelectedIcon;
         print("cycle toggled");
       }else if(_globalHandicapToggled){
         currentIcon = handicapIcon;
+        selectedIcon = handicapSelectedIcon;
+        print("handicap toggled");
       }
     });
     _clusterManager = null;
