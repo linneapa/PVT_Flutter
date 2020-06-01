@@ -54,7 +54,7 @@ class _MapPageState extends State<MapPage> {
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
-
+  bool rendering = true;
   bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
@@ -504,7 +504,6 @@ class _MapPageState extends State<MapPage> {
           latestLat = position.target.latitude;
           latestLong = position.target.longitude;
         }
-
       }
 
       setState(() {
@@ -520,7 +519,7 @@ class _MapPageState extends State<MapPage> {
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if(!showClusters && (position == null || newToggle)){
+      }else if((!showClusters && position == null) || newToggle || (rendering && position.zoom > 13 && change > 0.005)){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
@@ -554,28 +553,10 @@ class _MapPageState extends State<MapPage> {
                     continue;
                   }
                 }
-                if (parking.properties.address != '<Adress saknas>' &&
-//                    parking.properties.fid != null &&
-//                    parking.properties.featureObjectId != null &&
-//                    parking.properties.featureVersionId != null &&
-//                    parking.properties.extentNo != null &&
-//                    parking.properties.validFrom != null &&
-//                    parking.properties.startTime != null &&
-//                    parking.properties.endTime != null &&
-//                    parking.properties.startWeekday != null &&
-//                    parking.properties.maxHours != null &&
-//                    parking.properties.citation != null &&
-//                    parking.properties.streetName != null &&
-//                    parking.properties.parkingDistrict != null &&
-//                    parking.properties.vfPlatsTyp != null &&
-//                    parking.properties.otherInfo != null &&
-//                    parking.properties.rdtUrl != null &&
-                    parking.properties.vfMeter != null &&
-//                    parking.geometry.type != null &&
-//                    parking.geometryName != null &&
-//                    parking.type != null &&
-                    parking.properties.cityDistrict != null ||
-                    !_globalCarToggled
+                if ((parking.properties.address != '<Adress saknas>' &&
+                    parking.properties.vfMeter != null) ||
+                    !_globalCarToggled ||
+                    (rendering && position != null && position.zoom > 13)
                 ) {
 /*
 Properties:
@@ -1613,3 +1594,47 @@ class MotorcycleIconButton extends StatelessWidget {
         });
   }
 }
+
+//                    parking.properties.fid != null &&
+//                    parking.properties.featureObjectId != null &&
+//                    parking.properties.featureVersionId != null &&
+//                    parking.properties.extentNo != null &&
+//                    parking.properties.validFrom != null &&
+//                    parking.properties.startTime != null &&
+//                    parking.properties.endTime != null &&
+//                    parking.properties.startWeekday != null &&
+//                    parking.properties.maxHours != null &&
+//                    parking.properties.citation != null &&
+//                    parking.properties.streetName != null &&
+//                    parking.properties.parkingDistrict != null &&
+//                    parking.properties.vfPlatsTyp != null &&
+//                    parking.properties.otherInfo != null &&
+//                    parking.properties.rdtUrl != null &&
+//parking.properties.vfMeter != null ||
+//                    parking.geometry.type != null &&
+//                    parking.geometryName != null &&
+//                    parking.type != null &&
+//                    parking.properties.cityDistrict != null ||
+//!_globalCarToggled
+//) {
+/*
+Properties:
+                  int fid;
+                  int featureObjectId;
+                  int featureVersionId;
+                  int extentNo;
+                  DateTime validFrom;
+                  int startTime;
+                  int endTime;
+                  String startWeekday;
+                  int maxHours;
+                  String citation;
+                  String streetName;
+                  String cityDistrict;
+                  String parkingDistrict;
+                  String address;
+                  String vfPlatsTyp;
+                  String otherInfo;
+                  String rdtUrl;
+                  int vfMeter;
+*/
