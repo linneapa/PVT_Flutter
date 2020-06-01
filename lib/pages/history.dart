@@ -65,7 +65,7 @@ class _HistoryPageState extends State<HistoryPage> {
     yield* Firestore.instance
         .collection('userData')
         .document(uId)
-        .collection('history')
+        .collection('history').orderBy('timestamp', descending: true)
         .snapshots();
   }
 

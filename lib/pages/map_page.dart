@@ -397,7 +397,7 @@ class _MapPageState extends State<MapPage> {
    QuerySnapshot snapshot = await Firestore.instance
        .collection('userData')
        .document(id)
-       .collection('history')
+       .collection('history').orderBy('timestamp', descending: true)
        .getDocuments();
 
    for(var v in snapshot.documents){
@@ -427,8 +427,13 @@ class _MapPageState extends State<MapPage> {
        'vehicleType': getVehicleType()
      }
    );
-   if(snapshot.documents.length <= 9 && !duplicate){
-     //TODO: remove oldest document
+    if(snapshot.documents.length+1 > 10){
+      db
+          .collection('userData')
+          .document(id)
+          .collection('history')
+          .document(snapshot.documents.last.documentID)
+          .delete();
    }
   }
 
