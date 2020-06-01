@@ -48,8 +48,6 @@ class Services {
     }
     final response = await http.get(url);
     Map<String, dynamic> JSON = json.decode(response.body);
-    print(response.body);
-    print(JSON['totalFeatures']);
     if (JSON['totalFeatures'] == 0){
       return null;
     }

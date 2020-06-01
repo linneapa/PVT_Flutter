@@ -453,6 +453,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _newMarkers(CameraPosition position) async {
+
     double change = 0;
     double zoomChange = 0;
 
@@ -466,35 +467,31 @@ class _MapPageState extends State<MapPage> {
       print('change ' + change.toString());
     }
 
-    if (change > 0.005 || zoomChange == 1 || newToggle){
+    if (change > 0.005 || zoomChange == 1 || newToggle || zoomChange == -1){
       latestLat = position.target.latitude;
       latestLong = position.target.longitude;
       latestZoom = position.zoom;
       print('changing');
       print('currentZoom ' + latestZoom.toString());
       print('newToggle ' + newToggle.toString());
-
-
-      if (position.zoom < 13){
-        parkings = await Services.fetchParkering(null, null, _globalCarToggled,
-            _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-        _initMarkers(position.zoom);
-      }else{
-//        if(position.zoom == 14){
-//          parkings = await Services.fetchParkering(null, position, _globalCarToggled,
-//              _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-//            if (_clusterManager != null){
-//              _updateMarkers(position.zoom);
-//            }else{
-//              _initMarkers(position.zoom);
-//            }
-        if(position.zoom > 14 || newToggle || zoomChange < 0){
-          setState(() {
-            _isLoading = true;
-          });
+      setState(() {
+        _isLoading = true;
+      });
+      if (position.zoom < 15){
+        if (_clusterManager != null && !newToggle) {
+          _updateMarkers(position.zoom);
+        } else {
+          _markers.clear();
+          parkings = await Services.fetchParkering(null, null, _globalCarToggled,
+              _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+          _initMarkers(position.zoom);
+        }
+      }else if(position.zoom > 14 || newToggle || zoomChange < 0){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
           setState(() {
+            _markers.clear();
+            _clusterManager = null;
             BitmapDescriptor _selectedIcon;
             if(_globalCarToggled){
               currentIcon = carIcon;
@@ -506,8 +503,6 @@ class _MapPageState extends State<MapPage> {
               currentIcon = motorcycleIcon;
               print("cycle toggled");
             }
-            _markers.clear();
-            _clusterManager = null;
             if (parkings != null){
               for (final parking in parkings.features) {
                 if (handicapToggled) {
@@ -536,11 +531,10 @@ class _MapPageState extends State<MapPage> {
           });
         }
       }
-    }
-    setState(() {
-      _isLoading = false;
-      newToggle = false;
-    });
+      setState(() {
+        _isLoading = false;
+        newToggle = false;
+      });
   }
 
   Widget showGoogleMaps() {
@@ -1182,10 +1176,25 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _initMarkers(double currentZoom) async {
+    setState(() {
+      BitmapDescriptor _selectedIcon;
+      if(_globalCarToggled){
+        currentIcon = carIcon;
+        print("car toggled");
+      }else if(_globalTruckToggled){
+        currentIcon = truckIcon;
+        print("truck toggled");
+      }else if(_globalMotorcycleToggled){
+        currentIcon = motorcycleIcon;
+        print("cycle toggled");
+      }
+    });
+    _clusterManager = null;
     final List<MapMarker> markers = [];
-    final BitmapDescriptor markerImage = carIcon;   //TODO: change marker image
+    final BitmapDescriptor markerImage = currentIcon;
 
-    for (final parking in parkings.features) {
+    if (parkings != null){
+      for (final parking in parkings.features) {
         if (parking.properties.address != null){
           final marker = MapMarker(
             onTap: () {
@@ -1200,8 +1209,9 @@ class _MapPageState extends State<MapPage> {
           parkMark[parking.properties.address] = parking;
         }
       }
+    }
 
-    _clusterManager = await MapHelper.initClusterManager(markers, 0, 21);
+    _clusterManager = await MapHelper.initClusterManager(markers, 0, 15);
     await _updateMarkers(currentZoom);
   }
 
