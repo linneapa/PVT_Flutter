@@ -57,7 +57,7 @@ class _MapPageState extends State<MapPage> {
   bool _isLoading = true;
   var currMarker;
   bool currentlyNavigating = false;
-  bool handicapToggled = false;
+  var _globalHandicapToggled = false;
   var _globalCarToggled = true;
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
@@ -89,7 +89,6 @@ class _MapPageState extends State<MapPage> {
   Fluster<MapMarker> _clusterManager;
   double _currentZoom;
 
-  final String _markerImageUrl = 'https://img.icons8.com/office/80/000000/marker.png'; //Temp standard marker
   final Color _clusterColor = Colors.blue;    //Color of cluster circle
   final Color _clusterTextColor = Colors.white;   //Color of cluster text
 
@@ -459,7 +458,7 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
       parkings = await Services.fetchParkering(null, null, _globalCarToggled,
-          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+          _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
       _controller = controller;
       _mapController.complete(controller);
       double zoom = await controller.getZoomLevel();
@@ -500,33 +499,32 @@ class _MapPageState extends State<MapPage> {
         } else {
           _markers.clear();
           parkings = await Services.fetchParkering(null, null, _globalCarToggled,
-              _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+              _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
       }else if(position.zoom > 14 || newToggle || zoomChange < 0){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
-              _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+              _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
             _markers.clear();
             _clusterManager = null;
             BitmapDescriptor _selectedIcon;
             if(_globalCarToggled){
               currentIcon = carIcon;
-              print("car toggled");
             }else if(_globalTruckToggled){
               currentIcon = truckIcon;
-              print("truck toggled");
             }else if(_globalMotorcycleToggled){
               currentIcon = motorcycleIcon;
-              print("cycle toggled");
+            }else if(_globalHandicapToggled){
+              currentIcon = handicapIcon;
             }
             if (parkings != null){
               for (final parking in parkings.features) {
-                if (handicapToggled) {
+                _selectedIcon = currentIcon;
+                if (!_globalHandicapToggled) {
                   if (parking.properties.vfPlatsTyp ==
                       "Reserverad p-plats rörelsehindrad") {
-                    currentIcon = handicapIcon;
-                    print("handicap toggled");
+                    _selectedIcon = handicapIcon;
                   }
                 }
                 if (parking.properties.address != null) {
@@ -537,7 +535,7 @@ class _MapPageState extends State<MapPage> {
                     markerId: MarkerId(parking.properties.address),
                     position: LatLng(parking.geometry.coordinates[0][1],
                         parking.geometry.coordinates[0][0]),
-                    icon: currentIcon,
+                    icon: _selectedIcon,
                   );
                   _markers[parking.properties.address] = marker;
                   parkMark[parking.properties.address] = parking;
@@ -694,7 +692,7 @@ class _MapPageState extends State<MapPage> {
   }
   Future<void> upDateParking() async {
     singlePark = await Services.fetchParkering(doc, null, _globalCarToggled,
-        _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
+        _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
 
     print(singlePark);
     for (final parking in singlePark.features) {
@@ -1194,7 +1192,6 @@ class _MapPageState extends State<MapPage> {
 
   void _initMarkers(double currentZoom) async {
     setState(() {
-      BitmapDescriptor _selectedIcon;
       if(_globalCarToggled){
         currentIcon = carIcon;
         print("car toggled");
@@ -1204,11 +1201,12 @@ class _MapPageState extends State<MapPage> {
       }else if(_globalMotorcycleToggled){
         currentIcon = motorcycleIcon;
         print("cycle toggled");
+      }else if(_globalHandicapToggled){
+        currentIcon = handicapIcon;
       }
     });
     _clusterManager = null;
     final List<MapMarker> markers = [];
-    final BitmapDescriptor markerImage = currentIcon;
 
     if (parkings != null){
       for (final parking in parkings.features) {
@@ -1220,7 +1218,7 @@ class _MapPageState extends State<MapPage> {
             id: parking.properties.address,
             position: LatLng(parking.geometry.coordinates[0][1],
                 parking.geometry.coordinates[0][0]),
-            icon: markerImage,
+            icon: currentIcon,
           );
           markers.add(marker);
           parkMark[parking.properties.address] = parking;
@@ -1278,7 +1276,7 @@ class _MapPageState extends State<MapPage> {
       builder: (context) {
         return ChangeNotifierProvider(
           create: (context) => IconInfo(
-              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled),
+              _globalCarToggled, _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled),
           child: StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -1310,7 +1308,7 @@ class _MapPageState extends State<MapPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          showHandicapIconButton(),
+                          HandicapIconButton(),
                           showCloseButton(context),
                         ],
                       )
@@ -1329,6 +1327,7 @@ class _MapPageState extends State<MapPage> {
         _globalCarToggled = ic.carToggled;
         _globalTruckToggled = ic.truckToggled;
         _globalMotorcycleToggled = ic.motorcycleToggled;
+        _globalHandicapToggled = ic.handicapToggled;
       }
       _markers.clear();
       setState(() {
@@ -1342,15 +1341,8 @@ class _MapPageState extends State<MapPage> {
     return StatefulBuilder(builder: (context, setState) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: IconButton(
-          iconSize: 50,
-          icon: Icon(
-            Icons.accessible,
-            color: handicapToggled ? Colors.orangeAccent : Colors.grey,
-          ),
-          onPressed: () => setState(() => handicapToggled = !handicapToggled),
-        ),
-      );
+        child: HandicapIconButton(),
+        );
     });
   }
 
@@ -1365,6 +1357,28 @@ class _MapPageState extends State<MapPage> {
         child: Text("Stäng", style: TextStyle(fontSize: 17)),
       );
     });
+  }
+}
+
+class HandicapIconButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var iconInfo = Provider.of<IconInfo>(context);
+    return IconButton(
+      iconSize: 50,
+    icon: Icon(
+    Icons.accessible,
+    color: iconInfo.handicapToggled ? Colors.orangeAccent : Colors.grey,
+    ),
+    onPressed: () {
+        iconInfo.handicap = !iconInfo.handicapToggled;
+        if(iconInfo.handicapToggled){
+          iconInfo.motorcycle = false;
+          iconInfo.truck = false;
+          iconInfo.car = false;
+        }
+    },
+    );
   }
 }
 
@@ -1383,6 +1397,7 @@ class CarIconButton extends StatelessWidget {
           if (iconInfo.carToggled) {
             iconInfo.motorcycle = false;
             iconInfo.truck = false;
+            iconInfo.handicap = false;
           }
         });
   }
@@ -1403,6 +1418,7 @@ class TruckIconButton extends StatelessWidget {
           if (iconInfo.truckToggled) {
             iconInfo.car = false;
             iconInfo.motorcycle = false;
+            iconInfo.handicap = false;
           }
         }
     );
@@ -1424,6 +1440,7 @@ class MotorcycleIconButton extends StatelessWidget {
           if (iconInfo.motorcycleToggled) {
             iconInfo.car = false;
             iconInfo.truck = false;
+            iconInfo.handicap = false;
           }
         });
   }
