@@ -83,6 +83,9 @@ class _FavouritesPageState extends State<FavouritesPage> {
     else if (parking['vehicleType'] == 'lastbil') {
       return new Icon(MdiIcons.truck);
     }
+    else if (parking['vehicleType'] == 'handicap') {
+      return new Icon(Icons.accessible);
+    }
     return new Icon(Icons.directions_car);
   }
 

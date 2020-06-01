@@ -327,7 +327,9 @@ class _MapPageState extends State<MapPage> {
     else if (currentIcon == truckIcon) {
       return 'lastbil';
     }
-
+    else if (currentIcon == handicapIcon) {
+      return 'handicap';
+    }
     return 'bil';
   }
 
@@ -1365,8 +1367,7 @@ class _MapPageState extends State<MapPage> {
                 content: Container(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1383,14 +1384,14 @@ class _MapPageState extends State<MapPage> {
                         children: <Widget>[
                           CarIconButton(),
                           TruckIconButton(),
-                          MotorcycleIconButton()
+                          MotorcycleIconButton(),
+                          HandicapIconButton(),
                         ],
                       ),
 
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          HandicapIconButton(),
                           showCloseButton(context),
                         ],
                       )
@@ -1447,7 +1448,7 @@ class HandicapIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return IconButton(
-      iconSize: 50,
+      iconSize: 42,
     icon: Icon(
     Icons.accessible,
     color: iconInfo.handicapToggled ? Colors.orangeAccent : Colors.grey,
@@ -1469,7 +1470,7 @@ class CarIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return IconButton(
-        iconSize: 50,
+        iconSize: 42,
         icon: Icon(
           Icons.directions_car,
           color: iconInfo.carToggled ? Colors.orangeAccent : Colors.grey,
@@ -1490,7 +1491,7 @@ class TruckIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return IconButton(
-        iconSize: 50,
+        iconSize: 42,
         icon: Icon(
           MdiIcons.truck,
           color: iconInfo.truckToggled ? Colors.orangeAccent : Colors.grey,
@@ -1512,7 +1513,7 @@ class MotorcycleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     var iconInfo = Provider.of<IconInfo>(context);
     return IconButton(
-        iconSize: 50,
+        iconSize: 42,
         icon: Icon(
           Icons.motorcycle,
           color: iconInfo.motorcycleToggled ? Colors.orangeAccent : Colors.grey,
