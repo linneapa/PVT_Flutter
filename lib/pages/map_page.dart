@@ -42,7 +42,8 @@ class MapPage extends StatefulWidget {
   CameraPosition initPosition;
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage>{
+
 
   @override
   void setState(fn) {

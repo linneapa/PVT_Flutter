@@ -33,6 +33,7 @@ class HomePageState extends State<HomePage> {
   );
 
 
+
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
@@ -61,13 +62,18 @@ class HomePageState extends State<HomePage> {
     ),
   ];
 
+
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabs = _tabs();
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: tabs[currentNavigationIndex],
+      body: IndexedStack(
+        children: _tabs(),
+        index: currentNavigationIndex,
+      ),
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentNavigationIndex,
           type: BottomNavigationBarType.fixed,
