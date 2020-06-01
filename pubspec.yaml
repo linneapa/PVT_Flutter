@@ -76,6 +76,7 @@ flutter:
     - assets/motorcycleAvailableNotFavorite.png
     - assets/handicapAvailableNotFavorite.png
     - assets/carAvailableNotFavorite.png
+    - assets/carOnMapSelected.png
   #    - assets/driver.png
   #    - assets/pin.png
     - assets/carpin.png

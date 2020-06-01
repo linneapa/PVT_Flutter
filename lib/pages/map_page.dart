@@ -783,7 +783,7 @@ class _MapPageState extends State<MapPage> {
         onTap: () {
           updateCurrentMarker(parking);
         },
-        icon: BitmapDescriptor.defaultMarkerWithHue(240),
+        icon: carSelectedIcon,
         markerId: MarkerId(parking.properties.address),
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
