@@ -599,7 +599,9 @@ class _MapPageState extends State<MapPage>{
       initialCameraPosition: widget.initPosition,
       markers: _markers.values.toSet(),
       onTap: (LatLng location) {
-        updateCurrentMarker(null);
+        setState((){
+          updateCurrentMarker(null);
+        });
       },
     );
   }
