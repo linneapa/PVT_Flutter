@@ -608,15 +608,15 @@ class _MapPageState extends State<MapPage> {
     }
     if (currMarker != null && currParking != null) {
       return AnimatedPositioned(
-        bottom: 40,
-        right: 0,
+        bottom: 0,
+        right: 47,
         left: 0,
         duration: Duration(milliseconds: 100),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
-            padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.2, bottom: SizeConfig.blockSizeVertical * 1.2),
-            margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical * 3.5),
+            padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.2, bottom: SizeConfig.blockSizeVertical),
+            margin: EdgeInsets.only(left: SizeConfig.blockSizeHorizontal, right: SizeConfig.blockSizeHorizontal, bottom: SizeConfig.blockSizeVertical),
             //height: SizeConfig.blockSizeVertical * 28,
             decoration: BoxDecoration(
                 color: Colors.white,
@@ -645,7 +645,7 @@ class _MapPageState extends State<MapPage> {
   Widget _buildLocationInfo() {
     getParkingActivity(currParking.properties.address);
       return Container(
-          margin: EdgeInsets.only(top: 10),
+          margin: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -654,28 +654,28 @@ class _MapPageState extends State<MapPage> {
                 currParking.properties.address == null
                     ? '\r'
                     : currParking.properties.address,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.cityDistrict == null
                     ? '\r'
                     : 'Stadsdel: ' + currParking.properties.cityDistrict,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.otherInfo == null
                     ? '\r'
                     : 'Info: ' + currParking.properties.otherInfo,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
               Text(
                 currParking.properties.maxHours == null
                     ? '\r'
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
               Text('Aktivitet: $currentParkingActivity',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
             ],
           ));
@@ -769,13 +769,14 @@ class _MapPageState extends State<MapPage> {
   Widget _showFavBtnAndDirectionBtn() {
     return Container(
         child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Container(
           child: showChooseParkingBtn(),
           alignment: Alignment.bottomLeft,
         ),
         Container(
+          padding: EdgeInsets.only(right: SizeConfig.blockSizeHorizontal * 2.5),
           child: showFavoritesButton(),
           alignment: Alignment.bottomRight,
         ),
