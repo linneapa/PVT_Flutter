@@ -520,7 +520,7 @@ class _MapPageState extends State<MapPage> {
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if(!showClusters && position == null){
+      }else if(!showClusters && (position == null || newToggle)){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
@@ -555,12 +555,25 @@ class _MapPageState extends State<MapPage> {
                   }
                 }
                 if (parking.properties.address != '<Adress saknas>' &&
-                    parking.properties.otherInfo != null &&
-                    //parking.properties.maxHours != null &&
-                    //parking.properties.streetName != null &&
-                    //parking.properties.startTime != null &&
-                    //parking.properties.maxHours != null &&
-                    //parking.properties.maxHours != null &&
+//                    parking.properties.fid != null &&
+//                    parking.properties.featureObjectId != null &&
+//                    parking.properties.featureVersionId != null &&
+//                    parking.properties.extentNo != null &&
+//                    parking.properties.validFrom != null &&
+//                    parking.properties.startTime != null &&
+//                    parking.properties.endTime != null &&
+//                    parking.properties.startWeekday != null &&
+//                    parking.properties.maxHours != null &&
+//                    parking.properties.citation != null &&
+//                    parking.properties.streetName != null &&
+//                    parking.properties.parkingDistrict != null &&
+//                    parking.properties.vfPlatsTyp != null &&
+//                    parking.properties.otherInfo != null &&
+//                    parking.properties.rdtUrl != null &&
+                    parking.properties.vfMeter != null &&
+//                    parking.geometry.type != null &&
+//                    parking.geometryName != null &&
+//                    parking.type != null &&
                     parking.properties.cityDistrict != null ||
                     !_globalCarToggled
                 ) {
@@ -844,6 +857,8 @@ Properties:
               thisParking.geometry.coordinates[0][0]),
         );
         _markers[oldAddress] = oldMarker;
+        print(oldMarker.position.latitude);
+        print(oldMarker.position.longitude);
       }
       if(!_globalHandicapToggled){
         if (parking.properties.vfPlatsTyp ==
