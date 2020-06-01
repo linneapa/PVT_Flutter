@@ -321,6 +321,21 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  String getVehicleType() {
+
+    if (currentIcon == carIcon) {
+      return 'bil';
+    }
+    else if (currentIcon == motorcycleIcon) {
+      return 'motorcykel';
+    }
+    else if (currentIcon == truckIcon) {
+      return 'lastbil';
+    }
+
+    return 'bil';
+  }
+
   addToFavorites() async {
     String id = widget.userId;
     bool duplicate = false;
@@ -350,7 +365,8 @@ class _MapPageState extends State<MapPage> {
             'coordinatesX': currParking.geometry.coordinates[0][1],
             'coordinatesY': currParking.geometry.coordinates[0][0],
             'info': info,
-            'maxTimmar': maxTimmar
+            'maxTimmar': maxTimmar,
+            'vehicleType': getVehicleType()
           }
       );
     }
@@ -410,7 +426,8 @@ class _MapPageState extends State<MapPage> {
        'coordinatesY': currParking.geometry.coordinates[0][0],
        'timestamp': getFormattedTimeInfoString(),
        'info': info,
-       'maxTimmar': maxTimmar
+       'maxTimmar': maxTimmar,
+       'vehicleType': getVehicleType()
      }
    );
    if(snapshot.documents.length <= 9 && !duplicate){

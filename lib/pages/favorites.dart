@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ezsgame/firebase/authentication.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'home_page.dart';
 import 'map_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -27,6 +28,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
   HomePageState parent;
   MapPage map;
 
+
   _FavouritesPageState(this.value, this.parent, this.map);
 
   @override
@@ -43,6 +45,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
+        backgroundColor: Colors.orangeAccent,
         automaticallyImplyLeading: false,
         title: Text('Favoritparkeringar')
       ),
@@ -70,7 +73,22 @@ class _FavouritesPageState extends State<FavouritesPage> {
         .snapshots();
   }
 
+  Icon getVehicleTypeIcon(DocumentSnapshot parking) {
+    if (parking['vehicleType'] == 'car') {
+      return new Icon(Icons.directions_car);
+    }
+    else if (parking['vehicleType'] == 'motorcykel') {
+      return new Icon(Icons.motorcycle);
+    }
+    else if (parking['vehicleType'] == 'lastbil') {
+      return new Icon(MdiIcons.truck);
+    }
+    return new Icon(Icons.directions_car);
+  }
+
   Widget buildFavoriteCard(BuildContext context, DocumentSnapshot parking) {
+
+
     return new Container(
         child: new GestureDetector(
       onTap: () => showOnCardTapDialogue(parking),
@@ -83,7 +101,8 @@ class _FavouritesPageState extends State<FavouritesPage> {
                     children: <Widget>[
                       Text(parking['location'],
                           style: new TextStyle(fontSize: 14)),
-                      Icon(Icons.directions_car)
+                      SizedBox(width: 10,),
+                      getVehicleTypeIcon(parking),
                     ],
                   ),
                   Row(
