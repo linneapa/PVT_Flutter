@@ -47,7 +47,7 @@ class _FavouritesPageState extends State<FavouritesPage> {
       appBar: AppBar(
         backgroundColor: Colors.orangeAccent,
         automaticallyImplyLeading: false,
-        title: Text('Favoritparkeringar')
+        title: Text('Favoritparkeringar', style: TextStyle(color: Colors.white)),
       ),
       body: Container(
         child: StreamBuilder(

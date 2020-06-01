@@ -43,8 +43,7 @@ class _HistoryPageState extends State<HistoryPage> {
       appBar: AppBar(
         backgroundColor: Colors.orangeAccent,
         automaticallyImplyLeading: false,
-        title: Text('Senast valda destinationer'
-        ),
+        title: Text('Senast valda destinationer', style: TextStyle(color: Colors.white)),
       ),
       body: Container(
         child: StreamBuilder(
