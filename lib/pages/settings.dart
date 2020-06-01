@@ -24,14 +24,16 @@ class _SettingsPageState extends State<SettingsPage> {
   SizeConfig sizeConfig;
   final db = Firestore.instance;
   HomePageState parent;
-  double _zoom = 15;
+  double _zoom;
+  double localZoom;
 
   @override
   void initState() {
     super.initState();
+    _zoom = HomePageState.settingsZoom;
     HomePageState.initPosition = CameraPosition(
       target: LatLng(59.3293, 18.0686),
-      zoom: 12,
+      zoom: _zoom,
     );
   }
 
@@ -160,6 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   createStandardDistanceDialog(BuildContext context) {
+    localZoom = _zoom;
     showDialog(
         context: context,
         builder: (context) {
@@ -182,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ]
                   ),
                   Slider (
-                    value: _zoom,
+                    value: localZoom,
                     min: 10,
                     max: 18,
                     divisions: 8,
@@ -190,9 +193,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     inactiveColor: Colors.black,
                     onChanged: (value) {
                       setState(() {
-                        _zoom = value;
-                        changeFirebaseSetting();
-
+                        localZoom = value;
                       });
                     },
                   ),
@@ -206,16 +207,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   //Borrowed from https://stackoverflow.com/questions/24085385/checking-if-string-is-numeric-in-dart
-  bool isNumeric(String str) {
-    if (str == null) {
-      return false;
-    }
-    return double.tryParse(str) != null;
-  }
 
   Widget showDoneButton(BuildContext context) {
     return FlatButton(
         onPressed: () => {
+              _zoom = localZoom,
+              changeFirebaseSetting(localZoom),
               Navigator.pop(context),
             },
         child: Text('Färdig'),
@@ -337,8 +334,22 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
-  void changeFirebaseSetting() {
-    var doc = db.
+  void changeFirebaseSetting(double newVal) async{
+    String uId = widget.userId;
+
+    db.collection('userData')
+        .document(uId)
+        .collection('settings')
+        .document('SettingsData')
+        .setData({
+        'zoom' : newVal,
+    });
+    setState(() {
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(59.3293, 18.0686),
+        zoom: _zoom,
+      );
+    });
   }
 }
 

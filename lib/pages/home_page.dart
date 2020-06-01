@@ -27,12 +27,18 @@ class HomePageState extends State<HomePage> {
 
   static int currentNavigationIndex = 2;
   static DocumentSnapshot doc;
+  static double settingsZoom;
   static CameraPosition initPosition = CameraPosition(
     target: LatLng(59.3293, 18.0686),
-    zoom: 12,
+    zoom: settingsZoom,
   );
+  final db = Firestore.instance;
 
-
+  @override
+  void initState() {
+    super.initState();
+    settingsZoom = getZoom();
+  }
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
@@ -99,5 +105,18 @@ class HomePageState extends State<HomePage> {
           }
       ),
     );
+  }
+
+  getZoom() async{
+    DocumentSnapshot snap = await db.collection('userData')
+        .document(widget.userId)
+        .collection('settings').document('SettingsData').get();
+    if(settingsZoom != null){
+      return settingsZoom;
+    }else if(snap.exists) {
+      return settingsZoom = double.parse(snap.data['zoom']);
+      }else{
+      return settingsZoom = 12;
+    }
   }
 }
