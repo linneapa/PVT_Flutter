@@ -70,10 +70,11 @@ class HomePageState extends State<HomePage> {
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      body: IndexedStack(
-        children: _tabs(),
-        index: currentNavigationIndex,
-      ),
+      body: tabs[currentNavigationIndex],
+//      IndexedStack(
+//        children: _tabs(),
+//        index: currentNavigationIndex,
+//      ),
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentNavigationIndex,
           type: BottomNavigationBarType.fixed,
