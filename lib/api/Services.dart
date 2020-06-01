@@ -41,7 +41,7 @@ class Services {
       String operation = '/within?radius=';
       radius = 3750;
       url = firstPart + operation + radius.toString() +
-          '&lat=' + '59.3293' +
+          '&lat=' + '59.4293' +
           '&lng=' + '18.0686' +
           '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
 
