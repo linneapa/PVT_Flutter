@@ -29,9 +29,9 @@ export const sendToDevice = functions.firestore
     //construct push notification
     const payload: admin.messaging.MessagingPayload = {
       notification: {
-        title: 'Du anlände vid din destination!',
+        title: 'Du anlände nyligen vid '+currentNotification!.parkingAddress,
         body: 'Ge gärna feedback på trafiken :)',
-        click_action: 'FLUTTER_NOTIFICATION_CLICK'
+        click_action: 'FLUTTER_NOTIFICATION_CLICK',
       }
     };
 

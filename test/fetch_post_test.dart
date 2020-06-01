@@ -14,7 +14,7 @@ main() {
       when(client.get(any))
           .thenAnswer((_) async => http.Response('{"title": "Test"}', 200));
 
-      expect(await fetchParkingPost(client, true, false, false, false), const TypeMatcher<ParkingPost>());
+      expect(await fetchParkingPost(client, null, null, true, false, false, false), const TypeMatcher<ParkingPost>());
     });
 
     test('throws an exception if the http call completes with an error', () {
@@ -25,7 +25,7 @@ main() {
       when(client.get(any))
           .thenAnswer((_) async => http.Response('Not Found', 404));
 
-      expect(fetchParkingPost(client, true, false, false, false), throwsException);
+      expect(fetchParkingPost(client, null, null, true, false, false, false), throwsException);
     });
 
 //    test('returns null if no vehicle i chosen', () {
@@ -36,7 +36,7 @@ main() {
 //      when(client.get(any))
 //          .thenAnswer((_) async => http.Response('Not Found', 404));
 //
-//      expect(fetchParkingPost(client, false, false, false, false), throwsException);
+//      expect(fetchParkingPost(client, null, null, false, false, false, false), null);
 //    });
   });
 }

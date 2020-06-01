@@ -27,6 +27,7 @@ import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
 import 'package:ezsgame/api/ParkingSpace.dart';
 
 
+
 class MapPage extends StatefulWidget {
   @override
   _MapPageState createState() => _MapPageState(this.doc);
@@ -62,7 +63,7 @@ class _MapPageState extends State<MapPage> {
   var _globalTruckToggled = false;
   var _globalMotorcycleToggled = false;
   var currParking;
-  String currentDestinationAdress;
+  String currentDestinationAddress;
   String currentParkingActivity;
   double latestLong;
   double latestLat;
@@ -108,7 +109,7 @@ class _MapPageState extends State<MapPage> {
   String _error;
   LatLng currentDestination;
   var currentDestinationMarker;
-  var formerDestinationMarker;
+  String formerDestination;
   final weekDays =['Monday', 'Tuesday', 'Wednesday', 'Thursday','Friday','Saturday','Sunday'];
   final hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
 
@@ -156,23 +157,16 @@ class _MapPageState extends State<MapPage> {
 
 
     _fcm.configure(
-      onMessage: (message) async { //executed if the app is in the foreground
-        print(message["notification"]["title"]);
+      onMessage: (Map<String, dynamic> message) async { //executed if the app is in the foreground
+        print((message["notification"]["title"]).substring(23));
 
       },
-      onResume: (message) async { //executed if the app is in the background and the user taps on the notification
-        //remember that needs to send some data with the notification as well, when onResume/onLaunch
-         setState(() {showArrivedAtDestinationDialog(); });
-         Workmanager.cancelAll();
-         print("notification from background.");
-        print(message["data"]["title"]);
+      onResume: (Map<String, dynamic> message) async { //executed if the app is in the background and the user taps on the notification
+           showArrivedEarlierAtDestinationDialog();
       },
-      onLaunch: (message) async { //executed if the app is terminated and the user taps on the notification
-        //TODO: make sure this one works properly
-        setState(() {showArrivedAtDestinationDialog(); });
-        Workmanager.cancelAll();
-        print("notification from background.");
-        print(message["data"]["title"]);
+      onLaunch: (Map<String, dynamic> message) async { //executed if the app is terminated and the user taps on the notification
+          showArrivedEarlierAtDestinationDialog();
+
       },
     );
 
@@ -874,18 +868,18 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAdress) async {
+  Future<int> getAmountOfHighTrafficRatingsForParking(String parkingAddress) async {
     int noOfHighRatings = -1;
-    await db.collection('trafficData').document(parkingAdress).collection('high').
+    await db.collection('trafficData').document(parkingAddress).collection('high').
       getDocuments().then((value) {
         noOfHighRatings = value.documents.length;
       });
     return noOfHighRatings;
   }
 
-  Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAdress) async {
+  Future<int> getAmountOfLowTrafficRatingsForParking(String parkingAddress) async {
     int noOfLowRatings = -1;
-    await db.collection('trafficData').document(parkingAdress).collection('low').
+    await db.collection('trafficData').document(parkingAddress).collection('low').
       getDocuments().then((value) {
         noOfLowRatings = value.documents.length;
       });
@@ -893,23 +887,29 @@ class _MapPageState extends State<MapPage> {
   }
 
   //returns amount of high traffic ratings between specified hours (although cannot be an interval longer than 10 hours... :) ) (and yes, it has an incredibly long name)
-  Future<int> getAmountOfHighTrafficRatingsForParkingDuringCertainHours(String parkingAdress, int fromHour, int untilHour) async {
+  Future<int> getAmountOfHighTrafficRatingsForParkingDuringCertainHours(String parkingAddress, int fromHour, int untilHour) async {
     int noOfHighRatings = -1;
     var tempHoursList = fromHour < untilHour? hours.sublist(fromHour, untilHour) : hours.sublist(0, untilHour) + hours.sublist(fromHour, hours.length);
-    await db.collection('trafficData').document(parkingAdress).collection('high').
+    await db.collection('trafficData').document(parkingAddress).collection('high').
       where("hour", whereIn: tempHoursList).getDocuments().then((value) {
         noOfHighRatings = value.documents.length;
       });
     return noOfHighRatings;
   }
 
-  void reportTraffic(bool isTraffic) async {
+  void reportTraffic(bool isTraffic, {String address}) async {
     String id = widget.userId;
+    String location;
 
-    String location = formerDestinationMarker == null? currentDestinationMarker.markerId.toString(): formerDestinationMarker.markerId.toString();
+    if(address == null) {
+    location =currentDestinationMarker.markerId.toString() ;
     location = location.substring(location.indexOf(":") + 1);
     location = location.substring(0, location.indexOf("}"));
     location = location.trim();
+    } else { //reportTraffic is called from the feedback reminder pop up
+      location = address;
+      db.collection('pushNotifications').document(id).delete();
+    }
 
     DateTime now = new DateTime.now();
 
@@ -925,7 +925,7 @@ class _MapPageState extends State<MapPage> {
               if(value.documents.isNotEmpty)
                 leftFeedbackHereRecently = true;
             });
-    if(leftFeedbackHereRecently)
+    if(!leftFeedbackHereRecently)
         await db.collection('trafficData').document(location).collection('low').
             where("byUser", isEqualTo: id).where("date", isEqualTo: date).where("hour", isEqualTo: hourOfDay).getDocuments().then((value) {
               if(value.documents.isNotEmpty)
@@ -967,7 +967,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  Widget showMuchTrafficBtn() {
+  Widget showMuchTrafficBtn({String address}) {
     return ButtonTheme(
       minWidth: 100.0,
       height: 50.0,
@@ -978,13 +978,13 @@ class _MapPageState extends State<MapPage> {
         child: new Text("Nej", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
-          reportTraffic(true);
+          address == null?reportTraffic(true): reportTraffic(true, address: address);
         },
       ),
     );
   }
 
-  Widget showNotMuchTrafficBtn() {
+  Widget showNotMuchTrafficBtn({String address}) {
     return ButtonTheme(
       minWidth: 100.0,
       height: 50.0,
@@ -995,7 +995,7 @@ class _MapPageState extends State<MapPage> {
          child: Text("Ja", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
-          reportTraffic(false);
+          address == null?reportTraffic(false): reportTraffic(false, address: address);
         },
       ),
     );
@@ -1004,11 +1004,11 @@ class _MapPageState extends State<MapPage> {
   Widget showExitArrivedAtDestinationWindow() {
     return FlatButton(
       onPressed: () {
-        if(formerDestinationMarker == null)  {// pushed for the first time
-          formerDestinationMarker = currentDestinationMarker;
+        if(formerDestination == null)  {// pushed for the first time
           startBackgroundExecution(); //men då måste spara addressen
         } else { //closing feedback window for the second time
-          formerDestinationMarker = null;
+          formerDestination = null;
+          db.collection('pushNotifications').document(widget.userId).delete();
         }
         Navigator.of(context).pop();
       },
@@ -1017,6 +1017,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void showArrivedAtDestinationDialog() {
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1033,11 +1034,11 @@ class _MapPageState extends State<MapPage> {
                 ]
               ),
               Text(
-                formerDestinationMarker == null? "Du har anlänt vid din destination!": "Du anlände tidigare vid ${trimAdress(formerDestinationMarker)}.", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                "Du har anlänt vid din destination!", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Text(
-                formerDestinationMarker== null? "Hittade du en ledig plats?": "Hittade du en ledig plats?", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                "Hittade du en ledig plats?.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
@@ -1055,7 +1056,62 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  String trimAdress(var marker) {
+  //called when app is launched/resumed thorugh tapping a push notification
+  void showArrivedEarlierAtDestinationDialog() async {
+    bool show = true; //preventing the dialog from popping up when it shouldn't
+    await db.collection('pushNotifications').where('user', isEqualTo: widget.userId).getDocuments().then((event) {
+      if (event.documents.isNotEmpty) {
+        Map<String, dynamic> documentData = event.documents.single.data;//if it is a single document
+        formerDestination = documentData['parkingAddress'];
+      } else {
+        show = false;
+      }
+    }).catchError((e)=> print("error fetching data: $e"));
+
+    if(show) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+              side: BorderSide(color: Colors.black, width: 1),),
+            content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        showExitArrivedAtDestinationWindow()
+                      ]
+                  ),
+                  Text(
+                    "Du anlände tidigare vid $formerDestination.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  Text(
+                    "Var snäll och svara om parkeringen var högtrafikerad.",
+                    textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                  ),
+                  Row(children: <Widget>[Text('')]), //Empty row for extra space
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      showMuchTrafficBtn(address: formerDestination),
+                      //Text("              "),
+                      showNotMuchTrafficBtn(address: formerDestination),
+                    ],
+                  ),
+                ]
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  String trimAddress(var marker) {
     String location = marker.markerId.toString();
     location = location.substring(location.indexOf(":") + 1);
     location = location.substring(0, location.indexOf("}"));
@@ -1079,17 +1135,17 @@ class _MapPageState extends State<MapPage> {
      // 'lat': currentDestination.latitude,
      // 'long': currentDestination.longitude,
       'uid': uid,
-      'currentDestination': currentDestinationAdress
+      'currentDestination': currentDestinationAddress
     }, initialDelay: Duration(minutes: 20));
   }
 
-  void startRoute(LatLng destination, String destinationAdress) async{
+  void startRoute(LatLng destination, String destinationAddress) async{
     Workmanager.cancelAll(); //to avoid situations where users get lots of push notifications
-    formerDestinationMarker = null;
-    if (_markers.containsKey(destinationAdress))
-      currentDestinationMarker = _markers[destinationAdress];
+    formerDestination = null;
+    if (_markers.containsKey(destinationAddress))
+      currentDestinationMarker = _markers[destinationAddress];
     currentDestination = destination;
-    currentDestinationAdress = destinationAdress;
+    currentDestinationAddress = destinationAddress;
     setPolylines();
     currentlyNavigating = true;
     setState(() {});
