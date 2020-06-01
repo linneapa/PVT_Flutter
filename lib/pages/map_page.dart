@@ -652,7 +652,7 @@ class _MapPageState extends State<MapPage> {
                     : 'Max antal timmar: ' + currParking.properties.maxHours.toString(),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
-              Text('Snittaktivitet: $currentParkingActivity',
+              Text('Upptagenhet: $currentParkingActivity',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
@@ -674,7 +674,7 @@ class _MapPageState extends State<MapPage> {
     if(percentageHighRatings < (1/3))
       currentParkingActivity = "Låg";
     else if(percentageHighRatings < (2/3))
-      currentParkingActivity = "Medelhög";
+      currentParkingActivity = "Medel";
     else
       currentParkingActivity = "Hög";
   }
@@ -955,7 +955,7 @@ class _MapPageState extends State<MapPage> {
         elevation: 10,
         color: Colors.redAccent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
-        child: new Text("Hög", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+        child: new Text("Nej", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           reportTraffic(true);
@@ -972,7 +972,7 @@ class _MapPageState extends State<MapPage> {
         // highlightColor: Colors.green,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
         color: Colors.greenAccent,
-         child: Text("Låg", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
+         child: Text("Ja", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
         onPressed: () {
           Navigator.of(context).pop();
           reportTraffic(false);
@@ -1015,8 +1015,9 @@ class _MapPageState extends State<MapPage> {
               Text(
                 formerDestinationMarker == null? "Du har anlänt vid din destination!": "Du anlände tidigare vid ${trimAdress(formerDestinationMarker)}.", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
+              Row(children: <Widget> [Text('')]), //Empty row for extra space
               Text(
-                formerDestinationMarker== null? "Var snäll och svara om parkeringen är högtrafikerad.": "Var snäll och svara om parkeringen var högtrafikerad.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                formerDestinationMarker== null? "Hittade du en ledig plats?": "Hittade du en ledig plats?", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
