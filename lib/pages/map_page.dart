@@ -879,9 +879,6 @@ class _MapPageState extends State<MapPage>{
       currMarker = marker;
       currParking = parking;
       _markers[parking.properties.address] = marker;
-      }else{
-        currMarker = null;
-        currParking = null;
       }
     });
   }
