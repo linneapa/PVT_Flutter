@@ -150,7 +150,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(
                         fontSize: SizeConfig.blockSizeVertical * 2.2)),
                 onTap: () {
-                  createStandardDistanceDialog(context);
+                  getZoom().then((double value) {
+                    _zoom = value;
+                    HomePageState.initPosition = CameraPosition(
+                      target: LatLng(59.3293, 18.0686),
+                      zoom: _zoom,
+                    );
+                    createStandardDistanceDialog(context);
+                  }
                 },
               ),
               ListTile(
@@ -217,7 +224,7 @@ class _SettingsPageState extends State<SettingsPage> {
               changeZoomSetting(localZoom),
               Navigator.pop(context),
             },
-        child: Text('Färdig'),
+        child: Text('Spara'),
         textColor: Colors.black,
         color: Colors.orangeAccent);
   }
