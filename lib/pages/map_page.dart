@@ -242,9 +242,9 @@ class _MapPageState extends State<MapPage>{
               children: <Widget>[
                 showGoogleMaps(),
                 showTopBar(),
+                showStopRouteButton(),
                 showWindow(),
                 showMyLocationButton(),
-                showStopRouteButton(),
                 _showCircularProgress(),
                 ],
           )
@@ -1207,8 +1207,8 @@ class _MapPageState extends State<MapPage>{
       currentDestinationMarker = _markers[destinationAddress];
     currentDestination = destination;
     currentDestinationAddress = destinationAddress;
-    setPolylines();
     currentlyNavigating = true;
+    setPolylines();
     setState(() {});
   }
 
@@ -1285,7 +1285,9 @@ class _MapPageState extends State<MapPage>{
       // add the constructed polyline as a set of points
       // to the polyline set, which will eventually
       // end up showing up on the map
-      _polylines.add(polyline);
+      if(currentlyNavigating)
+        _polylines.add(polyline);
+      
     });
   }
 
