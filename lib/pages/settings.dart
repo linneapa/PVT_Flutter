@@ -157,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       zoom: _zoom,
                     );
                     createStandardDistanceDialog(context);
-                  }
+                  });
                 },
               ),
               ListTile(
