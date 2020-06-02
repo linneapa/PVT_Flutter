@@ -305,6 +305,8 @@ class _MapPageState extends State<MapPage>{
             controller.animateCamera(
                 CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
             _updateMarkers(cameraPosition.zoom);
+            currMarker = null;
+            currParking = null;
           });
         });
   }
