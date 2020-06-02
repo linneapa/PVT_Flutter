@@ -448,6 +448,9 @@ class _MapPageState extends State<MapPage>{
             if (currMarker != null) addToFavorites();
             Future.delayed(const Duration(milliseconds: 1500), () {
               currMarker = null;
+              setState(() {
+                updateCurrentMarker(null);
+              });
             }
             );
           }),
@@ -1215,6 +1218,7 @@ class _MapPageState extends State<MapPage>{
       _polylines.clear();
       currentDestination = null;
       currentlyNavigating = false;
+      updateCurrentMarker(null);
     });
   }
 
