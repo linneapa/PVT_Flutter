@@ -30,11 +30,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _zoom = HomePageState.settingsZoom;
-    HomePageState.initPosition = CameraPosition(
-      target: LatLng(59.3293, 18.0686),
-      zoom: _zoom,
-    );
+    getZoom().then((double value) {
+      _zoom = value;
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(59.3293, 18.0686),
+        zoom: _zoom,
+      );
+    });
   }
 
   signOut() async {
@@ -186,9 +188,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   Slider (
                     value: localZoom,
-                    min: 10,
+                    min: 15,
                     max: 18,
-                    divisions: 8,
+                    divisions: 3,
                     activeColor: Colors.orangeAccent,
                     inactiveColor: Colors.black,
                     onChanged: (value) {
@@ -212,7 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return FlatButton(
         onPressed: () => {
               _zoom = localZoom,
-              changeFirebaseSetting(localZoom),
+              changeZoomSetting(localZoom),
               Navigator.pop(context),
             },
         child: Text('Färdig'),
@@ -334,7 +336,7 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
-  void changeFirebaseSetting(double newVal) async{
+  void changeZoomSetting(double newVal) async{
     String uId = widget.userId;
 
     db.collection('userData')
@@ -350,6 +352,25 @@ class _SettingsPageState extends State<SettingsPage> {
         zoom: _zoom,
       );
     });
+  }
+
+  Future<double> getZoom() async{
+    DocumentSnapshot snap = await db.collection('userData')
+        .document(widget.userId)
+        .collection('settings').document('SettingsData').get();
+    if(snap.exists) {
+      return snap.data["zoom"];
+    }else{
+      String uId = widget.userId;
+      db.collection('userData')
+          .document(uId)
+          .collection('settings')
+          .document('SettingsData')
+          .setData({
+        'zoom' : 15,
+      });
+      return 15;
+    }
   }
 }
 
