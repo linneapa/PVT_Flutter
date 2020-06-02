@@ -1099,7 +1099,7 @@ class _MapPageState extends State<MapPage>{
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Text(
-                "Hittade du en ledig plats?.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                "Hittade du en ledig plats?", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
@@ -1152,7 +1152,7 @@ class _MapPageState extends State<MapPage>{
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    "Var snäll och svara om parkeringen var högtrafikerad.",
+                    "Hittade du en ledig plats?",
                     textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
                   ),
                   Row(children: <Widget>[Text('')]), //Empty row for extra space
