@@ -779,7 +779,7 @@ class _MapPageState extends State<MapPage>{
           navigateMe();
           setState(() {
             currMarker = null;
-            showInfo = false;
+            showInfo = true;
           });
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
