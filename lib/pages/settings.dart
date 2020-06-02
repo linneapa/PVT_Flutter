@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezsgame/pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -150,14 +152,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(
                         fontSize: SizeConfig.blockSizeVertical * 2.2)),
                 onTap: () {
-                  getZoom().then((double value) {
-                    _zoom = value;
-                    HomePageState.initPosition = CameraPosition(
-                      target: LatLng(59.3293, 18.0686),
-                      zoom: _zoom,
-                    );
+                    if(_zoom == null ||_zoom < 15 ||_zoom >18) {
+                      _zoom = 15;
+                    }
+
                     createStandardDistanceDialog(context);
-                  });
                 },
               ),
               ListTile(
@@ -374,9 +373,9 @@ class _SettingsPageState extends State<SettingsPage> {
           .collection('settings')
           .document('SettingsData')
           .setData({
-        'zoom' : 15,
+        'zoom' : 15.0,
       });
-      return 15;
+      return 15.0;
     }
   }
 }

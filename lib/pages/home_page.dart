@@ -132,9 +132,9 @@ class HomePageState extends State<HomePage> {
           .collection('settings')
           .document('SettingsData')
           .setData({
-        'zoom' : 15,
+        'zoom' : 15.0,
       });
-      return 15;
+      return 15.0;
     }
   }
 }
