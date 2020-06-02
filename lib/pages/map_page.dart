@@ -93,6 +93,7 @@ class _MapPageState extends State<MapPage>{
   final Map<String, Marker> _markers = Map();
   Fluster<MapMarker> _clusterManager;
   double _currentZoom;
+  double _settingsZoom;
 
   final Color _clusterColor = Colors.blue;    //Color of cluster circle
   final Color _clusterTextColor = Colors.white;   //Color of cluster text
