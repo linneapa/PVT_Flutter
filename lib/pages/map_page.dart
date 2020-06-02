@@ -57,12 +57,13 @@ class _MapPageState extends State<MapPage>{
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
+  bool showInfo = true;
   bool divedDeep = false;
   bool mixedShowing = false;
-  bool showClusters = false;
+  bool showClusters = true;
   bool newToggle = false;
   bool _isLoading = true;
-  var currMarker;
+  Marker currMarker;
   bool currentlyNavigating = false;
   var _globalHandicapToggled = false;
   var _globalCarToggled = true;
@@ -73,7 +74,7 @@ class _MapPageState extends State<MapPage>{
   String currentParkingActivity;
   double latestLong;
   double latestLat;
-  double latestZoom = 12.0;
+  double latestZoom = 15.0;
   CameraPosition cameraPosition;
 
 
@@ -151,16 +152,16 @@ class _MapPageState extends State<MapPage>{
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/carOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/carOnMapSelected.png', 100).then((onValue) {
       carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/handicapOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/handicapOnMapSelected.png', 100).then((onValue) {
       handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 100).then((onValue) {
       motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/truckOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/truckOnMapSelected.png', 100).then((onValue) {
       truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
 
@@ -284,14 +285,13 @@ class _MapPageState extends State<MapPage>{
   }
 
   Widget showSearchTextField() {
-    int zoom = 300;
     return SearchMapPlaceWidget(
         apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
         // The language of the autocompletion
         language: 'se',
         // The position used to give better recomendations.
         location: LatLng(59.3293, 18.0686),
-        radius: zoom,
+        radius: 30000,
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
@@ -301,11 +301,13 @@ class _MapPageState extends State<MapPage>{
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
-            //_updateMarkers(zoom.toDouble());
             controller
                 .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
                 CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+            _updateMarkers(cameraPosition.zoom);
+            currMarker = null;
+            currParking = null;
           });
         });
   }
@@ -474,6 +476,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
+      docLoader();
       parkings = await Services.fetchParkering(null, null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
       _controller = controller;
@@ -490,10 +493,6 @@ class _MapPageState extends State<MapPage>{
   }
 
   Future<void> _newMarkers(CameraPosition position) async {
-    if (doc != null){
-      doc = null;
-      return;
-    }
 
     double change = 0;
     double zoomChange = 0;
@@ -512,7 +511,7 @@ class _MapPageState extends State<MapPage>{
     }
 
 
-    if (absZoomChange == 1 || newToggle || position == null || (mixedShowing && change > 0.005)){
+    if (absZoomChange > 1 || newToggle || position == null || (mixedShowing && change > 0.005)){
       print('changing');
       print('currentZoom ' + latestZoom.toString());
       print('newToggle ' + newToggle.toString());
@@ -556,7 +555,9 @@ class _MapPageState extends State<MapPage>{
 
   loadMarkers(CameraPosition position){
     setState(() {
-      _markers.clear();
+      if (doc == null){
+        _markers.clear();
+      }
       _clusterManager = null;
       BitmapDescriptor _icon;
       if(_globalCarToggled){
@@ -576,6 +577,7 @@ class _MapPageState extends State<MapPage>{
       if (parkings != null){
         int counter = 0;
         for (final parking in parkings.features) {
+          print(currMarker.toString());
           _icon = currentIcon;
           if (_globalCarToggled){
             if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
@@ -606,9 +608,14 @@ class _MapPageState extends State<MapPage>{
             parkMark[parking.properties.address] = parking;
           }
         }
+
+        if (currMarker != null){
+          _markers[currMarker.markerId.value] = currMarker;
+        }
         print('loaded ' + counter.toString() + ' to screen');
       }
       updatePinOnMap();
+      doc = null;
     });
   }
 
@@ -619,7 +626,7 @@ class _MapPageState extends State<MapPage>{
       onCameraMove: (position) {
         _newMarkers(position);
         _updateCamera(position);
-        _updateMarkers(position.zoom);
+      //  _updateMarkers(position.zoom);
       },
       polylines: _polylines,
       initialCameraPosition: widget.initPosition,
@@ -627,6 +634,8 @@ class _MapPageState extends State<MapPage>{
       onTap: (LatLng location) {
         setState((){
           updateCurrentMarker(null);
+          currMarker = null;
+          currParking = null;
         });
       },
     );
@@ -636,17 +645,21 @@ class _MapPageState extends State<MapPage>{
     cameraPosition = position;
   }
 
-  // Animated info window
-  Widget showWindow() {
+  docLoader(){
     if (currParking == null && doc != null){
-      //String name = currMarker.toString().split(":")[2].split("}")[0].trim();
       if (parkMark.containsKey(doc['location'])){
         updateCurrentMarker(parkMark[doc['location']]);
       }else{
         upDateParking();
       }
     }
-    if (currMarker != null && currParking != null) {
+  }
+
+  // Animated info window
+  Widget showWindow() {
+    if (currMarker != null && showInfo || currParking != null && showInfo) {
+      print(currMarker.toString());
+      print(currParking.toString());
       return AnimatedPositioned(
         bottom: 0,
         right: 47,
@@ -741,17 +754,6 @@ class _MapPageState extends State<MapPage>{
       currentParkingActivity = "Ofta upptagen";
   }
 
-  Widget _buildSimpleLocationInfo() {
-    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
-    if (parkMark.containsKey(name)) {
-      currParking = parkMark[name];
-      return _buildLocationInfo();
-    } else {
-//      parkings = await Services.fetchParkering(null, _globalCarToggled,
-//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-      print(name);
-    }
-  }
   Future<void> upDateParking() async {
     singlePark = await Services.fetchParkering(doc, null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
@@ -771,8 +773,13 @@ class _MapPageState extends State<MapPage>{
       child: FlatButton(
         onPressed: () {
           addToHistory();
+          setState(() {
+            showInfo = false;
+          });
           navigateMe();
-          currMarker = null;
+          setState(() {
+            currMarker = null;
+          });
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
@@ -825,6 +832,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   updateCurrentMarker(var parking){
+    showInfo = true;
     if(_globalCarToggled){
       currentIcon = carIcon;
       selectedIcon = carSelectedIcon;
@@ -868,11 +876,9 @@ class _MapPageState extends State<MapPage>{
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
       );
-      }
       currMarker = marker;
       currParking = parking;
-      if(parking != null) {
-        _markers[parking.properties.address] = marker;
+      _markers[parking.properties.address] = marker;
       }
     });
   }
@@ -1109,7 +1115,7 @@ class _MapPageState extends State<MapPage>{
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Text(
-                "Hittade du en ledig plats?.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
+                "Hittade du en ledig plats?", textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
               ),
               Row(children: <Widget> [Text('')]), //Empty row for extra space
               Row(
@@ -1162,7 +1168,7 @@ class _MapPageState extends State<MapPage>{
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    "Var snäll och svara om parkeringen var högtrafikerad.",
+                    "Hittade du en ledig plats?",
                     textAlign: TextAlign.center, style: TextStyle(fontSize: 16),
                   ),
                   Row(children: <Widget>[Text('')]), //Empty row for extra space
@@ -1207,7 +1213,7 @@ class _MapPageState extends State<MapPage>{
      // 'long': currentDestination.longitude,
       'uid': uid,
       'currentDestination': currentDestinationAddress
-    }, initialDelay: Duration(minutes: 20));
+    }, initialDelay: Duration(seconds: 20));
   }
 
   void startRoute(LatLng destination, String destinationAddress) async{
@@ -1233,7 +1239,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   bool reachedDestination() {
-    int radius = 15;
+    int radius = 30;
     //checks if myLocation is within a x meters radius from destination
     if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude,
             currentDestination.latitude, currentDestination.longitude) <
@@ -1410,6 +1416,9 @@ class _MapPageState extends State<MapPage>{
     updatePinOnMap();
     for(var v in updatedMarkers){
       _markers[v.markerId.toString()] = v;
+    }
+    if (currMarker != null){
+      _markers[currMarker.markerId.value] = currMarker;
     }
     setState(() {
       _isLoading = false;
