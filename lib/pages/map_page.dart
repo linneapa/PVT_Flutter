@@ -25,6 +25,7 @@ import 'dart:io' as platform;
 import 'package:workmanager/workmanager.dart';
 import 'package:ezsgame/callbackDispatcher.dart' as CallbackDispatcher;
 import 'package:ezsgame/api/ParkingSpace.dart';
+import 'home_page.dart';
 
 
 
@@ -40,6 +41,7 @@ class MapPage extends StatefulWidget {
   final String userId;
   final DocumentSnapshot doc;
   CameraPosition initPosition;
+
 }
 
 class _MapPageState extends State<MapPage>{
@@ -74,6 +76,7 @@ class _MapPageState extends State<MapPage>{
   double latestZoom = 12.0;
   CameraPosition cameraPosition;
 
+
   Map<String, Feature> parkMark = Map();
   var singlePark;
   var parkings;
@@ -93,7 +96,7 @@ class _MapPageState extends State<MapPage>{
   final Map<String, Marker> _markers = Map();
   Fluster<MapMarker> _clusterManager;
   double _currentZoom;
-  double _settingsZoom;
+  double _zoom;
 
   final Color _clusterColor = Colors.blue;    //Color of cluster circle
   final Color _clusterTextColor = Colors.white;   //Color of cluster text
@@ -130,6 +133,9 @@ class _MapPageState extends State<MapPage>{
   @override
   void initState() {
     super.initState();
+    getZoom().then((double value) {
+      _zoom = value;
+    });
     getBytesFromAsset('assets/direction-arrow.png', 64).then((onValue) {
       arrowIcon = BitmapDescriptor.fromBytes(onValue);
     });
@@ -1326,10 +1332,8 @@ class _MapPageState extends State<MapPage>{
     _myLocation = await location.getLocation();
     _controller = controller;
     _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
-        bearing: 0,
         target: LatLng(_myLocation.latitude, _myLocation.longitude),
-        tilt: 0,
-        zoom: 16)));
+        zoom: _zoom)));
   }
 
   void setInitLocation() async {
@@ -1513,6 +1517,24 @@ class _MapPageState extends State<MapPage>{
       );
     });
   }
+  Future<double> getZoom() async{
+    DocumentSnapshot snap = await db.collection('userData')
+        .document(widget.userId)
+        .collection('settings').document('SettingsData').get();
+    if(snap.exists && snap.data["zoom"] != null) {
+      return snap.data["zoom"];
+    }else{
+      String uId = widget.userId;
+      db.collection('userData')
+          .document(uId)
+          .collection('settings')
+          .document('SettingsData')
+          .setData({
+        'zoom' : 15.0,
+      });
+      return 15.0;
+    }
+  }
 }
 
 class HandicapIconButton extends StatelessWidget {
@@ -1599,6 +1621,7 @@ class MotorcycleIconButton extends StatelessWidget {
           }
         });
   }
+
 }
 
 //                    parking.properties.fid != null &&
