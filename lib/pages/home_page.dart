@@ -123,7 +123,7 @@ class HomePageState extends State<HomePage> {
     DocumentSnapshot snap = await db.collection('userData')
         .document(widget.userId)
         .collection('settings').document('SettingsData').get();
-    if(snap.exists) {
+    if(snap.exists && snap.data["zoom"] != null) {
       return snap.data["zoom"];
     }else{
       String uId = widget.userId;
