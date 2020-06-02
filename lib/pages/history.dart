@@ -65,7 +65,7 @@ class _HistoryPageState extends State<HistoryPage> {
     yield* Firestore.instance
         .collection('userData')
         .document(uId)
-        .collection('history')
+        .collection('history').orderBy('timestamp', descending: true)
         .snapshots();
   }
 
@@ -78,6 +78,9 @@ class _HistoryPageState extends State<HistoryPage> {
     }
     else if (parking['vehicleType'] == 'lastbil') {
       return new Icon(MdiIcons.truck);
+    }
+    else if (parking['vehicleType'] == 'handicap') {
+      return new Icon(Icons.accessible);
     }
     return new Icon(Icons.directions_car);
   }

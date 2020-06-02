@@ -32,14 +32,22 @@ class Services {
       print(url);
     } else if (position != null){
       String operation = '/within?radius=';
-      radius = (21 - position.zoom.toInt()) * 300;
+      radius = (21 - position.zoom.toInt()) * 250;
       url = firstPart + operation + radius.toString() + '&lat=' +
           position.target.latitude.toString() + '&lng=' +
           position.target.longitude.toString() +
           '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      print(url);
+
     } else{
-      String secondPart = '/all?&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-      url = firstPart + secondPart;
+      String operation = '/within?radius=';
+      radius = 3750;
+      url = firstPart + operation + radius.toString() +
+          '&lat=' + '59.3350' +
+          '&lng=' + '18.0600' +
+          '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
+      print(url);
+      //url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     }
 
 
@@ -48,6 +56,7 @@ class Services {
     }
     final response = await http.get(url);
     Map<String, dynamic> JSON = json.decode(response.body);
+    print('Loaded parkingspaces: ' + JSON['totalFeatures'].toString());
     if (JSON['totalFeatures'] == 0){
       return null;
     }

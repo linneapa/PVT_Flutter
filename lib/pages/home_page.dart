@@ -39,6 +39,7 @@ class HomePageState extends State<HomePage> {
     super.initState();
     settingsZoom = getZoom();
   }
+
   List<Widget> _tabs() => [
     FavouritesPage(
       userId: widget.userId,
@@ -67,6 +68,8 @@ class HomePageState extends State<HomePage> {
     ),
   ];
 
+
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabs = _tabs();
@@ -74,6 +77,10 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: tabs[currentNavigationIndex],
+//      IndexedStack(
+//        children: _tabs(),
+//        index: currentNavigationIndex,
+//      ),
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentNavigationIndex,
           type: BottomNavigationBarType.fixed,
