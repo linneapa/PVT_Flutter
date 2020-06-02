@@ -55,7 +55,6 @@ class _MapPageState extends State<MapPage>{
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
-  bool rendering = false;
   bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
@@ -478,7 +477,7 @@ class _MapPageState extends State<MapPage>{
 
   Future<void> _newMarkers(CameraPosition position) async {
     if (doc != null){
-      doc == null;
+      doc = null;
       return;
     }
 
@@ -522,7 +521,7 @@ class _MapPageState extends State<MapPage>{
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if((!showClusters && position == null) || newToggle || (rendering && position.zoom > 13 && change > 0.005)){
+      }else if((!showClusters && position == null) || newToggle){
           parkings = await Services.fetchParkering(null, position, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           setState(() {
@@ -557,9 +556,9 @@ class _MapPageState extends State<MapPage>{
                   }
                 }
                 if ((parking.properties.address != '<Adress saknas>' &&
-                    parking.properties.vfMeter != null) ||
-                    !_globalCarToggled ||
-                    (rendering && position != null && position.zoom > 13)
+                    parking.properties.vfMeter != null &&
+                    parking.properties.otherInfo != null) ||
+                    !_globalCarToggled
                 ) {
 
                   counter ++;

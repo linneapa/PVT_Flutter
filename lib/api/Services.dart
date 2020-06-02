@@ -47,8 +47,7 @@ class Services {
           '&lng=' + '18.0600' +
           '&outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
       print(url);
-      url = 'https://openparking.stockholm.se/LTF-Tolken/v1/servicedagar/weekday/m%C3%A5ndag?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
-
+      //url = 'https://openparking.stockholm.se/LTF-Tolken/v1/ptillaten/all?outputFormat=json&apiKey=c9e27b4b-e374-41b5-b741-00b90cbe2d97';
     }
 
 
