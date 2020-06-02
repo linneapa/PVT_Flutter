@@ -57,7 +57,7 @@ class _MapPageState extends State<MapPage>{
 
   bool divedDeep = false;
   bool mixedShowing = true;
-  bool showClusters = false;
+  bool showClusters = true;
   bool newToggle = false;
   bool _isLoading = true;
   var currMarker;
