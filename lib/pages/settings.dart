@@ -24,14 +24,19 @@ class _SettingsPageState extends State<SettingsPage> {
   SizeConfig sizeConfig;
   final db = Firestore.instance;
   HomePageState parent;
+  double _zoom;
+  double localZoom;
 
   @override
   void initState() {
     super.initState();
-    HomePageState.initPosition = CameraPosition(
-      target: LatLng(59.3293, 18.0686),
-      zoom: 12,
-    );
+    getZoom().then((double value) {
+      _zoom = value;
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(59.3293, 18.0686),
+        zoom: _zoom,
+      );
+    });
   }
 
   signOut() async {
@@ -159,57 +164,61 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   createStandardDistanceDialog(BuildContext context) {
+    localZoom = _zoom;
     showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-              content:
-                  Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Avstånd i meter',
-                  hintText: 'Radie inom vilken du ser parkeringar',
-                ),
-                onSaved: (String value) {
-                  //Save the distance entered
-                },
-                validator: (String value) {
-                  return isNumeric(value) ? 'Var god ange ett nummer.' : null;
-                }),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            title: Text('Ange standardzoom'),
+            content: StatefulBuilder(
+              builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  showCancelButton(context),
-                  showSaveDistButton(context),
-                ]),
-          ]));
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget> [
+                      Text("Långt ifrån",
+                        style: TextStyle(
+                        fontSize: SizeConfig.blockSizeVertical * 2.5)),
+                      Text("Nära",
+                        style: TextStyle(
+                        fontSize: SizeConfig.blockSizeVertical * 2.5))
+                    ]
+                  ),
+                  Slider (
+                    value: localZoom,
+                    min: 15,
+                    max: 18,
+                    divisions: 3,
+                    activeColor: Colors.orangeAccent,
+                    inactiveColor: Colors.black,
+                    onChanged: (value) {
+                      setState(() {
+                        localZoom = value;
+                      });
+                    },
+                  ),
+                ]);
+              }
+            ),
+            actions: <Widget>[
+            showDoneButton(context),
+          ]);
         });
   }
 
   //Borrowed from https://stackoverflow.com/questions/24085385/checking-if-string-is-numeric-in-dart
-  bool isNumeric(String str) {
-    if (str == null) {
-      return false;
-    }
-    return double.tryParse(str) != null;
-  }
 
-  Widget showCancelButton(BuildContext context) {
+  Widget showDoneButton(BuildContext context) {
     return FlatButton(
         onPressed: () => {
+              _zoom = localZoom,
+              changeZoomSetting(localZoom),
               Navigator.pop(context),
             },
-        child: Text('Avbryt'),
-        color: Colors.orangeAccent);
-  }
-
-  Widget showSaveDistButton(BuildContext context) {
-    return FlatButton(
-        onPressed: () => {
-              //Save content locally
-              Navigator.pop(context),
-            },
-        child: Text('Spara'),
+        child: Text('Färdig'),
+        textColor: Colors.black,
         color: Colors.orangeAccent);
   }
 
@@ -327,4 +336,42 @@ class _SettingsPageState extends State<SettingsPage> {
     signOut();
   }
 
+  void changeZoomSetting(double newVal) async{
+    String uId = widget.userId;
+
+    db.collection('userData')
+        .document(uId)
+        .collection('settings')
+        .document('SettingsData')
+        .setData({
+        'zoom' : newVal,
+    });
+    setState(() {
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(59.3293, 18.0686),
+        zoom: _zoom,
+      );
+    });
+  }
+
+  Future<double> getZoom() async{
+    DocumentSnapshot snap = await db.collection('userData')
+        .document(widget.userId)
+        .collection('settings').document('SettingsData').get();
+    if(snap.exists) {
+      return snap.data["zoom"];
+    }else{
+      String uId = widget.userId;
+      db.collection('userData')
+          .document(uId)
+          .collection('settings')
+          .document('SettingsData')
+          .setData({
+        'zoom' : 15,
+      });
+      return 15;
+    }
+  }
 }
+
+

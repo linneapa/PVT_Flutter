@@ -24,6 +24,7 @@ class _HistoryPageState extends State<HistoryPage> {
   String value;
   final db = Firestore.instance;
   HomePageState parent;
+  double _zoom;
 
   _HistoryPageState(this.value, this.parent);
 
@@ -31,10 +32,13 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
     HomePageState.doc = null;
-    HomePageState.initPosition = CameraPosition(
-      target: LatLng(59.3293, 18.0686),
-      zoom: 12,
-    );
+    getZoom().then((double value) {
+      _zoom = value;
+      HomePageState.initPosition = CameraPosition(
+        target: LatLng(59.3293, 18.0686),
+        zoom: _zoom,
+      );
+    });
   }
 
   Widget build(BuildContext context) {
@@ -219,7 +223,7 @@ class _HistoryPageState extends State<HistoryPage> {
       HomePageState.doc = doc;
       HomePageState.initPosition = CameraPosition(
           target: LatLng(doc['coordinatesX'], doc['coordinatesY']),
-          zoom: 12);
+          zoom: _zoom);
     });
   }
 
@@ -234,6 +238,25 @@ class _HistoryPageState extends State<HistoryPage> {
           .delete();
     } catch (e) {
       print('Error: $e');
+    }
+  }
+
+  Future<double> getZoom() async{
+    DocumentSnapshot snap = await db.collection('userData')
+        .document(widget.userId)
+        .collection('settings').document('SettingsData').get();
+    if(snap.exists) {
+      return snap.data["zoom"];
+    }else{
+      String uId = widget.userId;
+      db.collection('userData')
+          .document(uId)
+          .collection('settings')
+          .document('SettingsData')
+          .setData({
+        'zoom' : 15,
+      });
+      return 15;
     }
   }
 }
