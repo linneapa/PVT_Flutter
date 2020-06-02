@@ -58,11 +58,11 @@ class _MapPageState extends State<MapPage>{
   _MapPageState(this.doc);
 
   bool divedDeep = false;
-  bool mixedShowing = true;
-  bool showClusters = true;
+  bool mixedShowing = false;
+  bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
-  var currMarker;
+  Marker currMarker;
   bool currentlyNavigating = false;
   var _globalHandicapToggled = false;
   var _globalCarToggled = true;
@@ -151,16 +151,16 @@ class _MapPageState extends State<MapPage>{
     getBytesFromAsset('assets/truckAvailableNotFavorite.png', 64).then((onValue) {
       truckIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/carOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/carOnMapSelected.png', 100).then((onValue) {
       carSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/handicapOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/handicapOnMapSelected.png', 100).then((onValue) {
       handicapSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/motorcycleOnMapSelected.png', 100).then((onValue) {
       motorcycleSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    getBytesFromAsset('assets/truckOnMapSelected.png', 84).then((onValue) {
+    getBytesFromAsset('assets/truckOnMapSelected.png', 100).then((onValue) {
       truckSelectedIcon = BitmapDescriptor.fromBytes(onValue);
     });
 
@@ -490,10 +490,6 @@ class _MapPageState extends State<MapPage>{
   }
 
   Future<void> _newMarkers(CameraPosition position) async {
-    if (doc != null){
-      doc = null;
-      return;
-    }
 
     double change = 0;
     double zoomChange = 0;
@@ -556,7 +552,9 @@ class _MapPageState extends State<MapPage>{
 
   loadMarkers(CameraPosition position){
     setState(() {
-      _markers.clear();
+      if (doc == null){
+        _markers.clear();
+      }
       _clusterManager = null;
       BitmapDescriptor _icon;
       if(_globalCarToggled){
@@ -576,6 +574,11 @@ class _MapPageState extends State<MapPage>{
       if (parkings != null){
         int counter = 0;
         for (final parking in parkings.features) {
+          print(currMarker.toString());
+          if (currMarker != null && currMarker.markerId.value == parking.properties.address){
+            _markers[parking.properties.address] = currMarker;
+            continue;
+          }
           _icon = currentIcon;
           if (_globalCarToggled){
             if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
@@ -639,7 +642,6 @@ class _MapPageState extends State<MapPage>{
   // Animated info window
   Widget showWindow() {
     if (currParking == null && doc != null){
-      //String name = currMarker.toString().split(":")[2].split("}")[0].trim();
       if (parkMark.containsKey(doc['location'])){
         updateCurrentMarker(parkMark[doc['location']]);
       }else{
