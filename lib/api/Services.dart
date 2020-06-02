@@ -32,7 +32,7 @@ class Services {
       print(url);
     } else if (position != null){
       String operation = '/within?radius=';
-      radius = (21 - position.zoom.toInt()) * 300;
+      radius = (21 - position.zoom.toInt()) * 250;
       url = firstPart + operation + radius.toString() + '&lat=' +
           position.target.latitude.toString() + '&lng=' +
           position.target.longitude.toString() +

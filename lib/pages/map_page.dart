@@ -55,6 +55,8 @@ class _MapPageState extends State<MapPage>{
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
+  bool divedDeep = false;
+  bool mixedShowing = true;
   bool showClusters = false;
   bool newToggle = false;
   bool _isLoading = true;
@@ -483,8 +485,10 @@ class _MapPageState extends State<MapPage>{
 
     double change = 0;
     double zoomChange = 0;
+    double absZoomChange = 0;
     if (position != null){
-      zoomChange = (position.zoom - latestZoom).abs();
+      zoomChange = (position.zoom - latestZoom);
+      absZoomChange = (position.zoom - latestZoom).abs();
       print('newMarkers positionzoom ' + position.zoom.toString());
       print('zoomchange ' + zoomChange.toString());
       if (latestLong != null){
@@ -496,7 +500,7 @@ class _MapPageState extends State<MapPage>{
     }
 
 
-    if (zoomChange == 1 || newToggle || position == null){
+    if (absZoomChange == 1 || newToggle || position == null || (mixedShowing && change > 0.005)){
       print('changing');
       print('currentZoom ' + latestZoom.toString());
       print('newToggle ' + newToggle.toString());
@@ -511,7 +515,12 @@ class _MapPageState extends State<MapPage>{
       setState(() {
         _isLoading = true;
       });
-      if (showClusters){
+      if (mixedShowing && position != null && position.zoom > 14){
+        divedDeep = true;
+        parkings = await Services.fetchParkering(null, position, _globalCarToggled,
+            _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
+        loadMarkers(position);
+      }else if (showClusters){
         if (_clusterManager != null && !newToggle) {
           print('updating cluster markers');
           _updateMarkers(position.zoom);
@@ -521,64 +530,10 @@ class _MapPageState extends State<MapPage>{
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
           _initMarkers(position.zoom);
         }
-      }else if((!showClusters && position == null) || newToggle){
-          parkings = await Services.fetchParkering(null, position, _globalCarToggled,
+      }else if((!showClusters && position == null) || newToggle || (mixedShowing && position.zoom < 14)){
+          parkings = await Services.fetchParkering(null, null, _globalCarToggled,
               _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
-          setState(() {
-            _markers.clear();
-            _clusterManager = null;
-            BitmapDescriptor _icon;
-            if(_globalCarToggled){
-              currentIcon = carIcon;
-              selectedIcon = carSelectedIcon;
-            }else if(_globalTruckToggled){
-              currentIcon = truckIcon;
-              selectedIcon = truckSelectedIcon;
-            }else if(_globalMotorcycleToggled){
-              currentIcon = motorcycleIcon;
-              selectedIcon = motorcycleSelectedIcon;
-            }else if(_globalHandicapToggled){
-              currentIcon = handicapIcon;
-              selectedIcon = handicapSelectedIcon;
-            }
-
-            if (parkings != null){
-              int counter = 0;
-              for (final parking in parkings.features) {
-                _icon = currentIcon;
-                if (_globalCarToggled){
-                  if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
-                    continue;
-                  } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats lastbil"){
-                    continue;
-                  } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats motorcykel"){
-                    continue;
-                  }
-                }
-                if ((parking.properties.address != '<Adress saknas>' &&
-                    parking.properties.vfMeter != null &&
-                    parking.properties.otherInfo != null) ||
-                    !_globalCarToggled
-                ) {
-
-                  counter ++;
-                  final marker = Marker(
-                    onTap: () {
-                      updateCurrentMarker(parking);
-                    },
-                    markerId: MarkerId(parking.properties.address),
-                    position: LatLng(parking.geometry.coordinates[0][1],
-                        parking.geometry.coordinates[0][0]),
-                    icon: _icon,
-                  );
-                  _markers[parking.properties.address] = marker;
-                  parkMark[parking.properties.address] = parking;
-                }
-              }
-              print('loaded ' + counter.toString() + ' to screen');
-            }
-            updatePinOnMap();
-          });
+          loadMarkers(null);
         }
       }
       setState(() {
@@ -586,6 +541,65 @@ class _MapPageState extends State<MapPage>{
         newToggle = false;
       });
   }
+
+  loadMarkers(CameraPosition position){
+    setState(() {
+      _markers.clear();
+      _clusterManager = null;
+      BitmapDescriptor _icon;
+      if(_globalCarToggled){
+        currentIcon = carIcon;
+        selectedIcon = carSelectedIcon;
+      }else if(_globalTruckToggled){
+        currentIcon = truckIcon;
+        selectedIcon = truckSelectedIcon;
+      }else if(_globalMotorcycleToggled){
+        currentIcon = motorcycleIcon;
+        selectedIcon = motorcycleSelectedIcon;
+      }else if(_globalHandicapToggled){
+        currentIcon = handicapIcon;
+        selectedIcon = handicapSelectedIcon;
+      }
+
+      if (parkings != null){
+        int counter = 0;
+        for (final parking in parkings.features) {
+          _icon = currentIcon;
+          if (_globalCarToggled){
+            if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
+              continue;
+            } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats lastbil"){
+              continue;
+            } else if (parking.properties.vfPlatsTyp == "Reserverad p-plats motorcykel"){
+              continue;
+            }
+          }
+          if ((parking.properties.address != '<Adress saknas>' &&
+              parking.properties.vfMeter != null) ||
+              !_globalCarToggled ||
+              (mixedShowing && position != null && position.zoom > 14)
+          ) {
+
+            counter ++;
+            final marker = Marker(
+              onTap: () {
+                updateCurrentMarker(parking);
+              },
+              markerId: MarkerId(parking.properties.address),
+              position: LatLng(parking.geometry.coordinates[0][1],
+                  parking.geometry.coordinates[0][0]),
+              icon: _icon,
+            );
+            _markers[parking.properties.address] = marker;
+            parkMark[parking.properties.address] = parking;
+          }
+        }
+        print('loaded ' + counter.toString() + ' to screen');
+      }
+      updatePinOnMap();
+    });
+  }
+
 
   Widget showGoogleMaps() {
     return GoogleMap(
