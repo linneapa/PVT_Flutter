@@ -301,7 +301,7 @@ class _MapPageState extends State<MapPage>{
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
-            //_updateMarkers(zoom.toDouble());
+            _updateMarkers(zoom.toDouble());
             controller
                 .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
@@ -575,10 +575,6 @@ class _MapPageState extends State<MapPage>{
         int counter = 0;
         for (final parking in parkings.features) {
           print(currMarker.toString());
-          if (currMarker != null && currMarker.markerId.value == parking.properties.address){
-            _markers[parking.properties.address] = currMarker;
-            continue;
-          }
           _icon = currentIcon;
           if (_globalCarToggled){
             if (parking.properties.vfPlatsTyp == "Reserverad p-plats rörelsehindrad"){
@@ -608,6 +604,10 @@ class _MapPageState extends State<MapPage>{
             _markers[parking.properties.address] = marker;
             parkMark[parking.properties.address] = parking;
           }
+        }
+
+        if (currMarker != null){
+          _markers[currMarker.markerId.value] = currMarker;
         }
         print('loaded ' + counter.toString() + ' to screen');
       }
@@ -1402,7 +1402,9 @@ class _MapPageState extends State<MapPage>{
     for(var v in updatedMarkers){
       _markers[v.markerId.toString()] = v;
     }
-    _markers[currMarker.markerId.value] = currMarker;
+    if (currMarker != null){
+      _markers[currMarker.markerId.value] = currMarker;
+    }
     setState(() {
       _isLoading = false;
     });
