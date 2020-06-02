@@ -73,7 +73,7 @@ class _MapPageState extends State<MapPage>{
   String currentParkingActivity;
   double latestLong;
   double latestLat;
-  double latestZoom = 12.0;
+  double latestZoom = 15.0;
   CameraPosition cameraPosition;
 
 
@@ -473,6 +473,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
+      docLoader();
       parkings = await Services.fetchParkering(null, null, _globalCarToggled,
           _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
       _controller = controller;
@@ -611,6 +612,7 @@ class _MapPageState extends State<MapPage>{
         print('loaded ' + counter.toString() + ' to screen');
       }
       updatePinOnMap();
+      doc = null;
     });
   }
 
@@ -629,6 +631,8 @@ class _MapPageState extends State<MapPage>{
       onTap: (LatLng location) {
         setState((){
           updateCurrentMarker(null);
+          currMarker = null;
+          currParking = null;
         });
       },
     );
@@ -638,8 +642,7 @@ class _MapPageState extends State<MapPage>{
     cameraPosition = position;
   }
 
-  // Animated info window
-  Widget showWindow() {
+  docLoader(){
     if (currParking == null && doc != null){
       if (parkMark.containsKey(doc['location'])){
         updateCurrentMarker(parkMark[doc['location']]);
@@ -647,7 +650,13 @@ class _MapPageState extends State<MapPage>{
         upDateParking();
       }
     }
-    if (currMarker != null && currParking != null) {
+  }
+
+  // Animated info window
+  Widget showWindow() {
+    if (currMarker != null || currParking != null) {
+      print(currMarker.toString());
+      print(currParking.toString());
       return AnimatedPositioned(
         bottom: 0,
         right: 47,
@@ -858,11 +867,12 @@ class _MapPageState extends State<MapPage>{
         position: LatLng(parking.geometry.coordinates[0][1],
             parking.geometry.coordinates[0][0]),
       );
-      }
       currMarker = marker;
       currParking = parking;
-      if(parking != null) {
-        _markers[parking.properties.address] = marker;
+      _markers[parking.properties.address] = marker;
+      }else{
+        currMarker = null;
+        currParking = null;
       }
     });
   }
