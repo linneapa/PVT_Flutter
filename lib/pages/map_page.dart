@@ -277,13 +277,14 @@ class _MapPageState extends State<MapPage>{
   }
 
   Widget showSearchTextField() {
+    int zoom = 300;
     return SearchMapPlaceWidget(
         apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
         // The language of the autocompletion
         language: 'se',
         // The position used to give better recomendations.
         location: LatLng(59.3293, 18.0686),
-        radius: 30000,
+        radius: zoom,
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
@@ -293,6 +294,7 @@ class _MapPageState extends State<MapPage>{
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
+            _updateMarkers(zoom.toDouble());
             controller
                 .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
