@@ -1210,11 +1210,12 @@ class _MapPageState extends State<MapPage>{
   }
 
   void stopCurrentRoute() {
-    polylineCoordinates.clear();
-    _polylines.clear();
-    currentDestination = null;
-    currentlyNavigating = false;
-    setState(() {});
+    setState(() {
+      polylineCoordinates.clear();
+      _polylines.clear();
+      currentDestination = null;
+      currentlyNavigating = false;
+    });
   }
 
   bool reachedDestination() {
