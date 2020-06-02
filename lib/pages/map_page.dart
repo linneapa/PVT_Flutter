@@ -779,7 +779,6 @@ class _MapPageState extends State<MapPage>{
           navigateMe();
           setState(() {
             currMarker = null;
-            showInfo = true;
           });
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
@@ -833,6 +832,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   updateCurrentMarker(var parking){
+    showInfo = true;
     if(_globalCarToggled){
       currentIcon = carIcon;
       selectedIcon = carSelectedIcon;
