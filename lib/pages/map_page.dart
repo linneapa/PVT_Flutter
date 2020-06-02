@@ -508,7 +508,7 @@ class _MapPageState extends State<MapPage>{
     }
 
 
-    if (absZoomChange == 1 || newToggle || position == null || (mixedShowing && change > 0.005)){
+    if (absZoomChange > 1 || newToggle || position == null || (mixedShowing && change > 0.005)){
       print('changing');
       print('currentZoom ' + latestZoom.toString());
       print('newToggle ' + newToggle.toString());
