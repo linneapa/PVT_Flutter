@@ -295,7 +295,7 @@ class _MapPageState extends State<MapPage>{
           final GoogleMapController controller = await _mapController.future;
 
           setState(() {
-            _updateMarkers(zoom.toDouble());
+            //_updateMarkers(zoom.toDouble());
             controller
                 .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
@@ -613,6 +613,7 @@ class _MapPageState extends State<MapPage>{
       onCameraMove: (position) {
         _newMarkers(position);
         _updateCamera(position);
+        _updateMarkers(position.zoom);
       },
       polylines: _polylines,
       initialCameraPosition: widget.initPosition,

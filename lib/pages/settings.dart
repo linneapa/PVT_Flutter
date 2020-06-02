@@ -125,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5),
                 ),
                 subtitle: Text(
-                    'Ändra lösenord, ta bort konto',
+                    'Ändra lösenord, ta bort konto.',
                     style: TextStyle(
                         fontSize: SizeConfig.blockSizeVertical * 2.2)),
                 onTap: () {
@@ -148,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontSize: SizeConfig.blockSizeVertical * 3.5),
                 ),
                 subtitle: Text(
-                    'Ställ in radien från din destination du vill se parkeringar (EJ IMPLEMENTERAT)',
+                    'Ställ in radien från din destination inom vilken du vill se parkeringar.',
                     style: TextStyle(
                         fontSize: SizeConfig.blockSizeVertical * 2.2)),
                 onTap: () {
@@ -213,8 +213,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ]);
         });
   }
-
-  //Borrowed from https://stackoverflow.com/questions/24085385/checking-if-string-is-numeric-in-dart
 
   Widget showDoneButton(BuildContext context) {
     return FlatButton(
