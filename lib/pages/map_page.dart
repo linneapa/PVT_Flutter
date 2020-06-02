@@ -59,7 +59,7 @@ class _MapPageState extends State<MapPage>{
 
   bool divedDeep = false;
   bool mixedShowing = false;
-  bool showClusters = false;
+  bool showClusters = true;
   bool newToggle = false;
   bool _isLoading = true;
   Marker currMarker;
@@ -743,17 +743,6 @@ class _MapPageState extends State<MapPage>{
       currentParkingActivity = "Ofta upptagen";
   }
 
-  Widget _buildSimpleLocationInfo() {
-    String name = currMarker.toString().split(":")[2].split("}")[0].trim();
-    if (parkMark.containsKey(name)) {
-      currParking = parkMark[name];
-      return _buildLocationInfo();
-    } else {
-//      parkings = await Services.fetchParkering(null, _globalCarToggled,
-//          _globalTruckToggled, _globalMotorcycleToggled, handicapToggled);
-      print(name);
-    }
-  }
   Future<void> upDateParking() async {
     singlePark = await Services.fetchParkering(doc, null, _globalCarToggled,
         _globalTruckToggled, _globalMotorcycleToggled, _globalHandicapToggled);
@@ -1413,6 +1402,7 @@ class _MapPageState extends State<MapPage>{
     for(var v in updatedMarkers){
       _markers[v.markerId.toString()] = v;
     }
+    _markers[currMarker.markerId.value] = currMarker;
     setState(() {
       _isLoading = false;
     });
