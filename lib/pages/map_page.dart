@@ -57,6 +57,7 @@ class _MapPageState extends State<MapPage>{
   DocumentSnapshot doc;
   _MapPageState(this.doc);
 
+  bool showInfo = true;
   bool divedDeep = false;
   bool mixedShowing = false;
   bool showClusters = true;
@@ -656,7 +657,7 @@ class _MapPageState extends State<MapPage>{
 
   // Animated info window
   Widget showWindow() {
-    if (currMarker != null || currParking != null) {
+    if (currMarker != null && showInfo || currParking != null && showInfo) {
       print(currMarker.toString());
       print(currParking.toString());
       return AnimatedPositioned(
@@ -772,8 +773,14 @@ class _MapPageState extends State<MapPage>{
       child: FlatButton(
         onPressed: () {
           addToHistory();
+          setState(() {
+            showInfo = false;
+          });
           navigateMe();
-          currMarker = null;
+          setState(() {
+            currMarker = null;
+            showInfo = false;
+          });
         },
         child: Text(isAlreadyNavigatingHere()? 'Välj bort':'Välj Parkering',
             style: TextStyle(color: Colors.orangeAccent)),
