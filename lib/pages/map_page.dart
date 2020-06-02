@@ -1213,7 +1213,7 @@ class _MapPageState extends State<MapPage>{
      // 'long': currentDestination.longitude,
       'uid': uid,
       'currentDestination': currentDestinationAddress
-    }, initialDelay: Duration(minutes: 20));
+    }, initialDelay: Duration(seconds: 20));
   }
 
   void startRoute(LatLng destination, String destinationAddress) async{
@@ -1239,7 +1239,7 @@ class _MapPageState extends State<MapPage>{
   }
 
   bool reachedDestination() {
-    int radius = 15;
+    int radius = 30;
     //checks if myLocation is within a x meters radius from destination
     if (distanceBetweenPoints(_myLocation.latitude, _myLocation.longitude,
             currentDestination.latitude, currentDestination.longitude) <
