@@ -284,14 +284,13 @@ class _MapPageState extends State<MapPage>{
   }
 
   Widget showSearchTextField() {
-    int zoom = 300;
     return SearchMapPlaceWidget(
         apiKey: "AIzaSyBLNOKl2W5s0vuY0aZ-ll_PNoeldgko12w",
         // The language of the autocompletion
         language: 'se',
         // The position used to give better recomendations.
         location: LatLng(59.3293, 18.0686),
-        radius: zoom,
+        radius: 30000,
         //darkMode: true,
         placeholder: "Sök gata, adress, etc.",
         onSelected: (Place place) async {
@@ -305,6 +304,7 @@ class _MapPageState extends State<MapPage>{
                 .animateCamera(CameraUpdate.newLatLng(geolocation.coordinates));
             controller.animateCamera(
                 CameraUpdate.newLatLngBounds(geolocation.bounds, 0));
+            _updateMarkers(cameraPosition.zoom);
           });
         });
   }
@@ -621,7 +621,7 @@ class _MapPageState extends State<MapPage>{
       onCameraMove: (position) {
         _newMarkers(position);
         _updateCamera(position);
-        _updateMarkers(position.zoom);
+      //  _updateMarkers(position.zoom);
       },
       polylines: _polylines,
       initialCameraPosition: widget.initPosition,
