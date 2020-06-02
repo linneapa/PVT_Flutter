@@ -1328,6 +1328,7 @@ class _MapPageState extends State<MapPage>{
             backgroundColor: Color.fromRGBO(255, 165, 0, 1.0),
             onPressed: () {
               stopCurrentRoute();
+              showInfo = false;
             }),
       );
     else
